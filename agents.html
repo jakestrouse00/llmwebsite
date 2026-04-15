@@ -3,91 +3,94 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agents – LLMPersonality</title>
-  <meta name="description" content="Explore the six distinct agent personas in the LLMPersonality framework.">
-  
-  <!-- Skip link for keyboard accessibility -->
-  <a href="#main-content" class="skip-link">Skip to main content</a>
-  
-  <!-- Root-relative base for sub-path compatibility -->
-  <base href="./">
-  
-  <!-- Zero-FOUC Theme + Contrast Preloader -->
-  <script>
-    (function() {
-      var storedTheme = localStorage.getItem('theme_v1');
-      var storedContrast = localStorage.getItem('contrast_v1');
-      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      var theme = (storedTheme === 'dark' || storedTheme === 'light') ? storedTheme : (prefersDark ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', theme);
-      if (storedContrast === 'high') {
-        document.documentElement.setAttribute('data-contrast', 'high');
-      }
-    })();
-  </script>
-  
-  <link rel="stylesheet" href="css/tokens.css">
-  <link rel="stylesheet" href="css/reset.css">
-  <link rel="stylesheet" href="css/components.css">
+  <title>Agent Explorer — LLMPersonality</title>
+  <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-  <header class="site-header">
-    <nav class="nav container">
-      <a href="index.html" class="nav-logo">LLMPersonality</a>
-      <ul class="nav-links">
-        <li><a href="index.html" class="nav-link">Home</a></li>
-        <li><a href="agents.html" class="nav-link active">Agents</a></li>
-        <li><a href="about.html" class="nav-link">About</a></li>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__brand">
+        <svg class="nav__brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l10 10-10 10L2 12z"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+        LLMPersonality
+      </a>
+
+      <button id="nav-toggle" aria-label="Toggle navigation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+
+      <ul id="nav-links" class="nav__links">
+        <li><a href="index.html" class="nav-link">Home <span class="nav-link__phase">Clarify</span></a></li>
+        <li><a href="agents.html" class="nav-link nav-link--active">Agents <span class="nav-link__phase">Narrow</span></a></li>
+        <li><a href="docs.html" class="nav-link">Docs <span class="nav-link__phase">Execute</span></a></li>
       </ul>
-      <div class="nav-toggles">
-        <button id="contrast-toggle" class="nav-toggle" aria-label="Toggle high contrast mode" title="High contrast">
-          <span class="toggle-icon">◐</span>
-        </button>
-        <button id="theme-toggle" class="nav-toggle" aria-label="Toggle dark/light mode" title="Dark mode">
-          <span class="toggle-icon">🌙</span>
-        </button>
-      </div>
-    </nav>
-  </header>
 
-  <main id="main-content" class="agents-main container">
-    <section class="agents-header">
-      <h1 class="page-title reveal">Agent Explorer</h1>
-      <p class="page-desc reveal">Browse, filter, and deep-dive into each agent's role, personality traits, and example responses.</p>
-    </section>
-
-    <section class="agents-filter">
-      <div class="filter-group reveal">
-        <button class="filter-btn active" data-filter="all">All Agents</button>
-        <button class="filter-btn" data-filter="process">Process</button>
-        <button class="filter-btn" data-filter="creative">Creative</button>
-        <button class="filter-btn" data-filter="critical">Critical</button>
-        <button class="filter-btn" data-filter="knowledge">Knowledge</button>
-      </div>
-    </section>
-
-    <section class="agents-grid" id="agents-grid">
-      <!-- Cards rendered by agents-ui.js -->
-    </section>
-  </main>
-
-  <!-- Modal for agent deep-dive -->
-  <div id="agent-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
-    <div class="modal-backdrop"></div>
-    <div class="modal-content">
-      <button class="modal-close" aria-label="Close modal">&times;</button>
-      <div class="modal-body" id="modal-body">
-        <!-- Content injected by agents-ui.js -->
+      <div class="nav__actions">
+        <button id="theme-toggle" aria-label="Toggle theme"></button>
       </div>
     </div>
-  </div>
+  </nav>
 
-  <footer class="site-footer">
+  <!-- Hero -->
+  <section class="agents-hero">
     <div class="container">
-      <p>&copy; 2024 LLMPersonality. Open-source under MIT License.</p>
+      <span class="section__label">Agent Explorer</span>
+      <h1>Meet the Personalities</h1>
+      <p>Six agents. Six roles. One structured discussion. Click any card to dive deep into their personality, traits, and example responses.</p>
+    </div>
+  </section>
+
+  <!-- Filter Bar -->
+  <section class="container">
+    <div id="filter-bar" class="filter-bar" role="group" aria-label="Filter agents by category"></div>
+  </section>
+
+  <!-- Agent Grid -->
+  <section class="section">
+    <div class="container">
+      <div id="agent-grid" class="agent-grid"></div>
+    </div>
+  </section>
+
+  <!-- Modal -->
+  <dialog id="agent-modal">
+    <div class="modal__content">
+      <div class="modal__header">
+        <div class="modal__icon"></div>
+        <button class="modal__close" aria-label="Close modal">&times;</button>
+      </div>
+      <h2 class="modal__name"></h2>
+      <span class="modal__category"></span>
+      <p class="modal__tagline"></p>
+
+      <div class="modal__section-title">About</div>
+      <p class="modal__bio"></p>
+
+      <div class="modal__section-title">Personality Traits</div>
+      <div class="modal__traits"></div>
+
+      <div class="modal__section-title">Active in Phases</div>
+      <div class="modal__phases"></div>
+
+      <div class="modal__section-title">Example Response</div>
+      <div class="modal__example">
+        <div class="modal__example-label">Input</div>
+        <p class="modal__example-input"></p>
+        <div class="modal__example-label">Output</div>
+        <p class="modal__example-output"></p>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>LLMPersonality · Open-Source Multi-Agent Discussion Framework · Built with vanilla HTML, CSS &amp; JS</p>
     </div>
   </footer>
 
-  <script type="module" src="js/main.js"></script>
+  <script src="js/agents.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>
