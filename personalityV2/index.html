@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLMPersonality — Multi-Agent Discussion Framework</title>
+  <meta name="description" content="LLMPersonality is an open-source framework for structured multi-agent discussions powered by local LLMs via Ollama.">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <span class="nav-brand-icon">🧠</span>
+        <span>LLMPersonality</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html" class="active">Overview</a></li>
+        <li><a href="agents.html">Agents</a></li>
+        <li><a href="capabilities.html">Capabilities</a></li>
+      </ul>
+      <div class="nav-controls">
+        <button class="theme-toggle" aria-label="Toggle theme">
+          <span class="theme-toggle-icon">🌙</span>
+          <span class="theme-toggle-label">Dark</span>
+        </button>
+        <button class="mobile-menu-btn" aria-label="Menu">☰</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero container">
+    <div class="hero-badge animate-on-scroll">🧠 Open-Source Multi-Agent Framework</div>
+    <h1 class="hero-title animate-on-scroll delay-1">
+      Structured AI Discussions,<br><span class="accent">Real Results</span>
+    </h1>
+    <p class="hero-description animate-on-scroll delay-2">
+      LLMPersonality orchestrates multiple AI agents — each with a distinct role and personality — through a strict phase-driven loop to produce concrete, verified deliverables.
+    </p>
+    <div class="hero-actions animate-on-scroll delay-3">
+      <a href="agents.html" class="btn btn-primary">Explore the Agents →</a>
+      <a href="capabilities.html" class="btn btn-secondary">View Capabilities</a>
+    </div>
+  </section>
+
+  <!-- Core Orchestration Loop -->
+  <section class="section container">
+    <div class="section-header">
+      <div class="section-label animate-on-scroll">How It Works</div>
+      <h2 class="section-title animate-on-scroll delay-1">The Orchestration Loop</h2>
+      <p class="section-subtitle animate-on-scroll delay-2">
+        Every discussion follows a strict phase progression enforced by the Moderator. No phase is skipped. No shortcuts.
+      </p>
+    </div>
+
+    <div class="phase-loop animate-on-scroll delay-3">
+      <div class="phase-step" data-phase="clarify">
+        <div class="phase-icon">🔍</div>
+        <div class="phase-name">Clarify</div>
+        <div class="phase-desc">Gather specs, identify open decisions</div>
+      </div>
+      <div class="phase-arrow">→</div>
+      <div class="phase-step" data-phase="explore">
+        <div class="phase-icon">🧭</div>
+        <div class="phase-name">Explore</div>
+        <div class="phase-desc">Propose approaches, generate options</div>
+      </div>
+      <div class="phase-arrow">→</div>
+      <div class="phase-step" data-phase="narrow">
+        <div class="phase-icon">🎯</div>
+        <div class="phase-name">Narrow</div>
+        <div class="phase-desc">Converge on the best approach</div>
+      </div>
+      <div class="phase-arrow">→</div>
+      <div class="phase-step" data-phase="execute">
+        <div class="phase-icon">⚙️</div>
+        <div class="phase-name">Execute</div>
+        <div class="phase-desc">Build the concrete deliverable</div>
+      </div>
+      <div class="phase-arrow">→</div>
+      <div class="phase-step" data-phase="debrief">
+        <div class="phase-icon">📋</div>
+        <div class="phase-name">Debrief</div>
+        <div class="phase-desc">Review outcomes, capture lessons</div>
+      </div>
+      <div class="phase-arrow">→</div>
+      <div class="phase-step" data-phase="stop">
+        <div class="phase-icon">🏁</div>
+        <div class="phase-name">Stop</div>
+        <div class="phase-desc">Deliverables complete, discussion ends</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Key Features -->
+  <section class="section container">
+    <div class="section-header">
+      <div class="section-label animate-on-scroll">Key Features</div>
+      <h2 class="section-title animate-on-scroll delay-1">Built for Real Work</h2>
+      <p class="section-subtitle animate-on-scroll delay-2">
+        Every feature exists to solve a real problem in multi-agent orchestration. Nothing is decorative.
+      </p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card animate-on-scroll">
+        <div class="feature-card-icon">🖥️</div>
+        <div class="feature-card-title">Local LLMs via Ollama</div>
+        <div class="feature-card-text">Runs entirely on local models through Ollama. No cloud dependencies, no API costs, full data privacy.</div>
+      </div>
+      <div class="feature-card animate-on-scroll delay-1">
+        <div class="feature-card-icon">📊</div>
+        <div class="feature-card-title">PySide6 Real-Time GUI</div>
+        <div class="feature-card-text">Monitor agent states, iteration progress, and discussion flow in real time through a native desktop interface.</div>
+      </div>
+      <div class="feature-card animate-on-scroll delay-2">
+        <div class="feature-card-icon">🔔</div>
+        <div class="feature-card-title">Discord Webhook Integration</div>
+        <div class="feature-card-text">Receive notifications for phase advances and key discussion milestones directly in your Discord channels.</div>
+      </div>
+      <div class="feature-card animate-on-scroll delay-3">
+        <div class="feature-card-icon">✅</div>
+        <div class="feature-card-title">Verified Tool Execution</div>
+        <div class="feature-card-text">Agents use verified tools — write_file, read_file, list_files, web_search, web_fetch — with system‑confirmed execution.</div>
+      </div>
+      <div class="feature-card animate-on-scroll delay-4">
+        <div class="feature-card-icon">🧑‍💼</div>
+        <div class="feature-card-title">Dynamic Expert Provisioning</div>
+        <div class="feature-card-text">The Moderator can summon temporary expert agents with specialized knowledge for niche problems, then dismiss them.</div>
+      </div>
+      <div class="feature-card animate-on-scroll delay-5">
+        <div class="feature-card-icon">🔒</div>
+        <div class="feature-card-title">Strict Role Boundaries</div>
+        <div class="feature-card-text">Each agent has enforced rules — only the Moderator saves files, the Pragmatist drafts deliverables, the Librarian grounds facts. No role overlap.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section container text-center">
+    <h2 class="section-title animate-on-scroll">Meet the Agents</h2>
+    <p class="section-subtitle animate-on-scroll delay-1">
+      Six distinct personalities, one unified mission. Explore how each agent contributes to the discussion.
+    </p>
+    <div class="mt-24 animate-on-scroll delay-2">
+      <a href="agents.html" class="btn btn-primary">Open Agent Explorer →</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>LLMPersonality — Open-source multi-agent discussion framework. Built with <a href="https://ollama.com">Ollama</a> &amp; PySide6.</p>
+    </div>
+  </footer>
+
+  <!-- Modal (shared) -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="modal-content"></div>
+  </div>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

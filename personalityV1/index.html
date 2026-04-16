@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLMPersonality — Multi-Agent Discussion Framework</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__brand">
+        <svg class="nav__brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l10 10-10 10L2 12z"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+        LLMPersonality
+      </a>
+
+      <button id="nav-toggle" aria-label="Toggle navigation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+
+      <ul id="nav-links" class="nav__links">
+        <li><a href="index.html" class="nav-link nav-link--active">Home <span class="nav-link__phase">Clarify</span></a></li>
+        <li><a href="agents.html" class="nav-link">Agents <span class="nav-link__phase">Narrow</span></a></li>
+        <li><a href="docs.html" class="nav-link">Docs <span class="nav-link__phase">Execute</span></a></li>
+      </ul>
+
+      <div class="nav__actions">
+        <button id="theme-toggle" aria-label="Toggle theme"></button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <span class="hero__badge">Open-Source Framework</span>
+      <h1 id="hero-headline">All voices matter. But someone has to decide which one matters right now.</h1>
+      <p id="hero-tagline" class="hero__tagline">The one who keeps the wheels turning.</p>
+      <span id="voice-label" class="hero__voice-label">— Moderator</span>
+
+      <div class="voice-selector" role="group" aria-label="View through an agent's voice">
+        <button class="voice-btn voice-btn--active" data-voice="moderator">Moderator</button>
+        <button class="voice-btn" data-voice="pragmatist">Pragmatist</button>
+        <button class="voice-btn" data-voice="creative">Creative</button>
+        <button class="voice-btn" data-voice="cynical">Cynical</button>
+        <button class="voice-btn" data-voice="librarian">Librarian</button>
+        <button class="voice-btn" data-voice="provocateur">Provocateur</button>
+      </div>
+
+      <a href="agents.html" class="hero__cta">Explore the Agents →</a>
+    </div>
+  </section>
+
+  <!-- Loop Visualization -->
+  <section class="loop-section">
+    <div class="container">
+      <div class="text-center">
+        <span class="section__label">How It Works</span>
+        <h2>The Orchestration Loop</h2>
+        <p>Every discussion follows four phases. Click a phase to see which agents are active.</p>
+      </div>
+      <div id="loop-viz" class="mt-2"></div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="section">
+    <div class="container">
+      <div class="text-center reveal-on-scroll">
+        <span class="section__label">Why LLMPersonality</span>
+        <h2>Built for Real Discussions</h2>
+      </div>
+      <div class="features-grid mt-2">
+        <div class="feature-card reveal-on-scroll">
+          <div class="feature-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <h3>Multi-Agent Orchestration</h3>
+          <p>Six distinct personalities, each with a defined role. No redundancy, no echo chambers — structured disagreement that produces better outcomes.</p>
+        </div>
+        <div class="feature-card reveal-on-scroll">
+          <div class="feature-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+          </div>
+          <h3>Phase-Driven Process</h3>
+          <p>Clarify, Explore, Narrow, Execute. Each phase activates the right agents and produces specific deliverables. Progress is measurable.</p>
+        </div>
+        <div class="feature-card reveal-on-scroll">
+          <div class="feature-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <h3>Open & Portable</h3>
+          <p>No vendor lock-in, no hidden APIs. The framework runs on structured prompts and clear roles. Fork it, extend it, ship it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section reveal-on-scroll">
+    <div class="container">
+      <h2>Ready to meet the agents?</h2>
+      <p>Each one has a distinct personality, a defined role, and something to say about how discussions should work.</p>
+      <a href="agents.html" class="hero__cta">Explore Agent Profiles →</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>LLMPersonality · Open-Source Multi-Agent Discussion Framework · Built with vanilla HTML, CSS &amp; JS</p>
+    </div>
+  </footer>
+
+  <script src="js/agents.js"></script>
+  <script src="js/loop-viz.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

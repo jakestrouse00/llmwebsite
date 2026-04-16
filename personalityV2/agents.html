@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agents — LLMPersonality</title>
+  <meta name="description" content="Explore the six core agents of LLMPersonality: Moderator, Pragmatist, Creative, Cynical, Librarian, and Provocateur.">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <span class="nav-brand-icon">🧠</span>
+        <span>LLMPersonality</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">Overview</a></li>
+        <li><a href="agents.html" class="active">Agents</a></li>
+        <li><a href="capabilities.html">Capabilities</a></li>
+      </ul>
+      <div class="nav-controls">
+        <button class="theme-toggle" aria-label="Toggle theme">
+          <span class="theme-toggle-icon">🌙</span>
+          <span class="theme-toggle-label">Dark</span>
+        </button>
+        <button class="mobile-menu-btn" aria-label="Menu">☰</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  <section class="hero container">
+    <div class="section-label animate-on-scroll">Agent Explorer</div>
+    <h1 class="hero-title animate-on-scroll delay-1">
+      Six Agents,<br><span class="accent">One Mission</span>
+    </h1>
+    <p class="hero-description animate-on-scroll delay-2">
+      Each agent has a distinct role, personality, and set of enforced rules. Click any agent to deep‑dive into their system rules, tools, and behavior.
+    </p>
+  </section>
+
+  <!-- Filters & Search -->
+  <section class="container" style="padding-bottom: 80px;">
+    <div class="agent-search animate-on-scroll">
+      <span class="agent-search-icon">🔍</span>
+      <input type="text" id="agent-search-input" placeholder="Search agents by name, role, or keyword...">
+    </div>
+    <div class="agent-filters" id="agent-filters"></div>
+
+    <!-- Agent Grid (populated by agents.js) -->
+    <div class="agent-grid" id="agent-grid"></div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>LLMPersonality — Open-source multi-agent discussion framework. Built with <a href="https://ollama.com">Ollama</a> &amp; PySide6.</p>
+    </div>
+  </footer>
+
+  <!-- Modal (shared) -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="modal-content"></div>
+  </div>
+
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/agents.js"></script>
+</body>
+</html>
