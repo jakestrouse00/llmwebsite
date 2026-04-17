@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ink Lab — Aquarelle</title>
+  <meta name="description" content="Paint with digital watercolor and ink on an interactive canvas in the Aquarelle Ink Lab.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body id="top">
+
+  <!-- Page Transition Overlay -->
+  <div class="page-transition" aria-hidden="true"></div>
+
+  <!-- Sticky Header -->
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="site-logo">Aquarelle</a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <ul>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="canvas.html">Ink Lab</a></li>
+          <li><a href="archive.html">Archive</a></li>
+        </ul>
+      </nav>
+      <button class="search-toggle" aria-label="Toggle search" type="button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <div class="search-inline" role="search">
+        <input type="search" placeholder="Search stories…" aria-label="Search stories">
+      </div>
+      <button class="mobile-menu-toggle" aria-label="Open menu" type="button">
+        <div class="hamburger-icon"><span></span><span></span><span></span></div>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Nav Overlay -->
+  <div class="mobile-nav-overlay" role="dialog" aria-label="Mobile navigation">
+    <button class="close-menu" aria-label="Close menu" type="button">&times;</button>
+    <a href="index.html">Home</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="canvas.html">Ink Lab</a>
+    <a href="archive.html">Archive</a>
+  </div>
+
+  <!-- Main Content -->
+  <main class="page-content canvas-page">
+    <div class="container" style="max-width: 100%; padding: 0;">
+
+      <!-- Breadcrumbs -->
+      <nav class="breadcrumbs" aria-label="Breadcrumb" style="padding-left: var(--space-md); padding-right: var(--space-md);">
+        <a href="index.html">Home</a>
+        <span class="separator" aria-hidden="true">›</span>
+        <span class="current">Ink Lab</span>
+      </nav>
+
+      <div class="canvas-layout">
+        <!-- Sidebar: Persistent Quick Start + Tools -->
+        <aside class="canvas-sidebar wash-reveal">
+          <h2>Ink Lab</h2>
+          <p class="text-muted" style="font-size: 0.875rem; margin-bottom: var(--space-md);">Paint with digital watercolor and ink. Your creations are ephemeral — they fade as the canvas fills.</p>
+
+          <h3 style="font-size: 0.875rem; font-family: var(--font-body); font-weight: 600; margin-bottom: var(--space-sm);">Quick Start</h3>
+          <ul class="quick-start">
+            <li>Click and drag to paint ink trails</li>
+            <li>Switch to Splash tool for watercolor bursts</li>
+            <li>Choose a color and brush size below</li>
+            <li>Older strokes fade as the canvas fills</li>
+          </ul>
+
+          <h3 style="font-size: 0.875rem; font-family: var(--font-body); font-weight: 600; margin-bottom: var(--space-sm); margin-top: var(--space-md);">Tool</h3>
+          <div class="canvas-tools">
+            <button class="tool-btn active" data-tool="brush" type="button">🖌 Brush</button>
+            <button class="tool-btn" data-tool="splash" type="button">💧 Splash</button>
+          </div>
+
+          <h3 style="font-size: 0.875rem; font-family: var(--font-body); font-weight: 600; margin-bottom: var(--space-sm); margin-top: var(--space-md);">Color</h3>
+          <div class="canvas-tools">
+            <button class="tool-btn active" data-color="ink" type="button" style="border-left: 4px solid #2c2c2c;">Ink</button>
+            <button class="tool-btn" data-color="blue" type="button" style="border-left: 4px solid #a2c2d4;">Azure</button>
+            <button class="tool-btn" data-color="sienna" type="button" style="border-left: 4px solid #d4b4a2;">Sienna</button>
+            <button class="tool-btn" data-color="sage" type="button" style="border-left: 4px solid #b2c4b4;">Sage</button>
+          </div>
+
+          <h3 style="font-size: 0.875rem; font-family: var(--font-body); font-weight: 600; margin-bottom: var(--space-sm); margin-top: var(--space-md);">Brush Size</h3>
+          <div class="canvas-tools">
+            <button class="tool-btn" data-size="4" type="button">Fine</button>
+            <button class="tool-btn active" data-size="8" type="button">Medium</button>
+            <button class="tool-btn" data-size="16" type="button">Broad</button>
+          </div>
+        </aside>
+
+        <!-- Canvas Area -->
+        <div class="canvas-area">
+          <canvas id="ink-canvas" class="ink-canvas" aria-label="Interactive ink canvas. Click and drag to paint watercolor splashes and ink trails." role="img"></canvas>
+          <div class="sr-only">Use your mouse or finger to draw ink splashes on the canvas. Switch tools and colors using the sidebar.</div>
+          <button id="canvas-clear" class="btn btn-secondary canvas-clear-btn" type="button">Clear Canvas</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <span class="footer-brand">Aquarelle</span>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <a href="gallery.html">Gallery</a>
+        <a href="canvas.html">Ink Lab</a>
+        <a href="archive.html">Archive</a>
+      </nav>
+      <a href="#top" class="back-to-top">↑ Back to Top</a>
+      <p class="footer-copy">&copy; 2025 Aquarelle. A digital watercolor experience.</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/animations.js"></script>
+  <script src="assets/js/canvas.js"></script>
+</body>
+</html>

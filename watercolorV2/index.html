@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aquarelle — A Digital Watercolor Experience</title>
+  <meta name="description" content="Aquarelle is a digital storytelling platform and interactive gallery dedicated to a poetic watercolor-ink aesthetic.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body id="top">
+
+  <!-- Page Transition Overlay -->
+  <div class="page-transition" aria-hidden="true"></div>
+
+  <!-- Sticky Header -->
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="site-logo">Aquarelle</a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <ul>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="canvas.html">Ink Lab</a></li>
+          <li><a href="archive.html">Archive</a></li>
+        </ul>
+      </nav>
+      <button class="search-toggle" aria-label="Toggle search" type="button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <div class="search-inline" role="search">
+        <input type="search" placeholder="Search stories…" aria-label="Search stories">
+      </div>
+      <button class="mobile-menu-toggle" aria-label="Open menu" type="button">
+        <div class="hamburger-icon"><span></span><span></span><span></span></div>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Nav Overlay -->
+  <div class="mobile-nav-overlay" role="dialog" aria-label="Mobile navigation">
+    <button class="close-menu" aria-label="Close menu" type="button">&times;</button>
+    <a href="index.html">Home</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="canvas.html">Ink Lab</a>
+    <a href="archive.html">Archive</a>
+  </div>
+
+  <!-- Main Content -->
+  <main class="page-content">
+    <div class="container">
+
+      <!-- Hero Section -->
+      <section class="hero wash-reveal">
+        <!-- Decorative wash blobs -->
+        <div class="wash-blob wash-blob-blue" style="width:300px;height:300px;top:-80px;right:-60px;position:absolute;" data-parallax-speed="0.03"></div>
+        <div class="wash-blob wash-blob-sienna" style="width:250px;height:250px;bottom:-40px;left:-40px;position:absolute;" data-parallax-speed="0.05"></div>
+
+        <h1>Where Ink Meets Water</h1>
+        <p>Explore visual narratives painted in digital watercolor. Browse the gallery, read the stories behind the art, or pick up a brush in the Ink Lab.</p>
+        <div class="hero-ctas">
+          <a href="gallery.html" class="btn btn-primary">Explore the Gallery</a>
+          <a href="canvas.html" class="btn btn-secondary">Enter the Ink Lab</a>
+        </div>
+      </section>
+
+      <!-- Feature Cards -->
+      <section class="home-features wash-stagger">
+        <a href="gallery.html" class="feature-card fine-outline-hover">
+          <span class="card-icon" aria-hidden="true">🖼</span>
+          <h3>Living Gallery</h3>
+          <p>Browse watercolor vignettes in an immersive grid. Each piece tells a story — click to dive deeper.</p>
+        </a>
+        <a href="canvas.html" class="feature-card fine-outline-hover">
+          <span class="card-icon" aria-hidden="true">🖌</span>
+          <h3>Ink Lab</h3>
+          <p>Pick up a digital brush and paint with watercolor splashes and ink trails on an interactive canvas.</p>
+        </a>
+        <a href="archive.html" class="feature-card fine-outline-hover">
+          <span class="card-icon" aria-hidden="true">📜</span>
+          <h3>Poetic Archive</h3>
+          <p>Read the stories, process notes, and lore behind each piece. Search, filter, and explore at your own pace.</p>
+        </a>
+      </section>
+
+      <!-- Intro Section -->
+      <section class="ink-bleed-reveal" style="padding: var(--space-xl) 0;">
+        <h2>The Art of Bleeding Ink</h2>
+        <p>Aquarelle celebrates the unpredictable beauty of watercolor — the way pigment bleeds across wet paper, the fine lines that anchor a wash, the moments where control meets chance. Every page of this site is designed to feel like turning the page of a sketchbook.</p>
+        <p>Scroll through the gallery to see curated visual narratives. Open the Ink Lab to create your own ephemeral watercolor compositions. Or visit the archive to read the poetry and process behind each piece.</p>
+        <a href="gallery.html" class="btn btn-wash-blue mt-md">Start Exploring</a>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <span class="footer-brand">Aquarelle</span>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <a href="gallery.html">Gallery</a>
+        <a href="canvas.html">Ink Lab</a>
+        <a href="archive.html">Archive</a>
+      </nav>
+      <a href="#top" class="back-to-top">↑ Back to Top</a>
+      <p class="footer-copy">&copy; 2025 Aquarelle. A digital watercolor experience.</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/animations.js"></script>
+</body>
+</html>

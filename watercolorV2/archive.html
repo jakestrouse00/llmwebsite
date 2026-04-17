@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Archive — Aquarelle</title>
+  <meta name="description" content="Explore the Poetic Archive — stories, process notes, and lore behind the watercolor art of Aquarelle.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body id="top">
+
+  <!-- Page Transition Overlay -->
+  <div class="page-transition" aria-hidden="true"></div>
+
+  <!-- Sticky Header -->
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="site-logo">Aquarelle</a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <ul>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="canvas.html">Ink Lab</a></li>
+          <li><a href="archive.html">Archive</a></li>
+        </ul>
+      </nav>
+      <button class="search-toggle" aria-label="Toggle search" type="button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <div class="search-inline" role="search">
+        <input type="search" placeholder="Search stories…" aria-label="Search stories">
+      </div>
+      <button class="mobile-menu-toggle" aria-label="Open menu" type="button">
+        <div class="hamburger-icon"><span></span><span></span><span></span></div>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Nav Overlay -->
+  <div class="mobile-nav-overlay" role="dialog" aria-label="Mobile navigation">
+    <button class="close-menu" aria-label="Close menu" type="button">&times;</button>
+    <a href="index.html">Home</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="canvas.html">Ink Lab</a>
+    <a href="archive.html">Archive</a>
+  </div>
+
+  <!-- Main Content -->
+  <main class="page-content">
+    <div class="container">
+
+      <!-- Breadcrumbs -->
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="index.html">Home</a>
+        <span class="separator" aria-hidden="true">›</span>
+        <span class="current">Archive</span>
+      </nav>
+
+      <!-- Page Header -->
+      <section class="archive-header wash-reveal">
+        <h1>Poetic Archive</h1>
+        <p class="text-muted">The stories, process notes, and lore behind each piece. Search, filter, and explore at your own pace.</p>
+      </section>
+
+      <!-- Search Bar -->
+      <div class="archive-search wash-reveal">
+        <input type="search" placeholder="Search the archive…" aria-label="Search the archive" id="archive-search-input">
+      </div>
+
+      <!-- Filter Tags -->
+      <div class="archive-filters wash-reveal">
+        <button class="filter-tag active" onclick="Aquarelle.filterArchive('all', this)">All</button>
+        <button class="filter-tag" onclick="Aquarelle.filterArchive('nature', this)">Nature</button>
+        <button class="filter-tag" onclick="Aquarelle.filterArchive('urban', this)">Urban</button>
+        <button class="filter-tag" onclick="Aquarelle.filterArchive('abstract', this)">Abstract</button>
+        <button class="filter-tag" onclick="Aquarelle.filterArchive('portrait', this)">Portrait</button>
+        <button class="filter-tag" onclick="Aquarelle.filterArchive('process', this)">Process</button>
+      </div>
+
+      <!-- Archive List -->
+      <div class="archive-list wash-stagger">
+
+        <article class="archive-entry" data-category="nature">
+          <h3><a href="gallery.html">Morning Mist</a></h3>
+          <div class="entry-meta">
+            <span>Category: Nature</span>
+            <span>Technique: Wet-on-wet</span>
+          </div>
+          <p>This piece began as a single wash of cerulean blue laid onto soaking-wet paper. The pigment was encouraged to pool and run, creating the soft gradients that suggest a landscape dissolving into fog. Fine ink lines were added last — a horizon, a treeline, a lone figure — anchoring the wash before it could escape entirely.</p>
+          <div class="entry-tags">
+            <span class="entry-tag">wet-on-wet</span>
+            <span class="entry-tag">cerulean</span>
+            <span class="entry-tag">landscape</span>
+          </div>
+        </article>
+
+        <article class="archive-entry" data-category="urban">
+          <h3><a href="gallery.html">City Veins</a></h3>
+          <div class="entry-meta">
+            <span>Category: Urban</span>
+            <span>Technique: Dry-brush + wash</span>
+          </div>
+          <p>Drawn from the vantage point of a pre-dawn bridge, City Veins maps the circulatory system of a sleeping metropolis. The ink lines — thin, deliberate, almost surgical — trace roads, rails, and rivers. The washes suggest the first light bleeding into the eastern sky.</p>
+          <div class="entry-tags">
+            <span class="entry-tag">technical pen</span>
+            <span class="entry-tag">indigo</span>
+            <span class="entry-tag">cityscape</span>
+          </div>
+        </article>
+
+        <article class="archive-entry" data-category="abstract">
+          <h3><a href="gallery.html">Bleed</a></h3>
+          <div class="entry-meta">
+            <span>Category: Abstract</span>
+            <span>Technique: Three-color pour</span>
+          </div>
+          <p>An experiment in letting go. Three primary washes — sienna, azure, sage — were applied to saturated paper with no plan and no sketch. The colors found each other, blending at their edges into unexpected tertiary hues. The title is both literal and philosophical.</p>
+          <div class="entry-tags">
+            <span class="entry-tag">pour technique</span>
+            <span class="entry-tag">abstract</span>
+            <span class="entry-tag">experimental</span>
+          </div>
+        </article>
+
+        <article class="archive-entry" data-category="portrait">
+          <h3><a href="gallery.html">Silent Sitter</a></h3>
+          <div class="entry-meta">
+            <span>Category: Portrait</span>
+            <span>Technique: Negative space</span>
+          </div>
+          <p>A portrait in negative space. The subject is defined not by what is painted, but by what is left untouched — the white of the paper becoming skin, becoming light, becoming presence. The technique requires confidence: every mark is permanent.</p>
+          <div class="entry-tags">
+            <span class="entry-tag">masking fluid</span>
+            <span class="entry-tag">negative space</span>
+            <span class="entry-tag">portrait</span>
+          </div>
+        </article>
+
+        <article class="archive-entry" data-category="nature">
+          <h3><a href="gallery.html">Tide Pools</a></h3>
+          <div class="entry-meta">
+            <span>Category: Nature</span>
+            <span>Technique: Layered glazes</span>
+          </div>
+          <p>Each tide pool is a world in miniature — salt, stone, anemone, light. This piece layers translucent washes to create the illusion of depth in shallow water, with fine ink lines suggesting the contours of rock and the delicate architecture of marine life.</p>
+          <div class="entry-tags">
+            <span class="entry-tag">glazing</span>
+            <span class="entry-tag">marine</span>
+            <span class="entry-tag">cerulean</span>
+          </div>
+        </article>
+
+        <article class="archive-entry" data-category="urban">
+          <h3><a href="gallery.html">Rust &amp; Bloom</a></h3>
+          <div class="entry-meta">
+            <span>Category: Urban</span>
+            <span>Technique: Dry-brush + spatter</span>
+          </div>
+          <p>Abandoned infrastructure reclaimed by wildflowers. The rust tones are laid first — sienna and umber in heavy, textured washes — then the blooms: delicate, almost accidental dots of sage and cerulean that suggest life returning to dead metal.</p>
+          <div class="entry-tags">
+            <span class="entry-tag">dry-brush</span>
+            <span class="entry-tag">spatter</span>
+            <span class="entry-tag">industrial</span>
+          </div>
+        </article>
+
+        <article class="archive-entry" data-category="process">
+          <h3><a href="canvas.html">On the Ephemeral Canvas</a></h3>
+          <div class="entry-meta">
+            <span>Category: Process</span>
+            <span>Technique: Digital</span>
+          </div>
+          <p>The Ink Lab was born from a question: what if a watercolor painting could exist only as long as you are painting it? In the physical world, paper absorbs pigment permanently. In the digital world, we can choose to let the oldest strokes fade, making room for new ones — a metaphor for the creative process itself.</p>
+          <div class="entry-tags">
+            <span class="entry-tag">digital</span>
+            <span class="entry-tag">canvas</span>
+            <span class="entry-tag">process</span>
+          </div>
+        </article>
+
+        <article class="archive-entry" data-category="process">
+          <h3><a href="index.html">The Philosophy of the Wash</a></h3>
+          <div class="entry-meta">
+            <span>Category: Process</span>
+            <span>Technique: Essay</span>
+          </div>
+          <p>Watercolor is the most honest medium. You cannot erase. You cannot fully control. Every stroke is a negotiation between your intention and the water's will. This essay explores why that vulnerability is precisely what makes watercolor the perfect medium for storytelling — and why Aquarelle embraces the same philosophy in its design.</p>
+          <div class="entry-tags">
+            <span class="entry-tag">essay</span>
+            <span class="entry-tag">philosophy</span>
+            <span class="entry-tag">watercolor</span>
+          </div>
+        </article>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <span class="footer-brand">Aquarelle</span>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <a href="gallery.html">Gallery</a>
+        <a href="canvas.html">Ink Lab</a>
+        <a href="archive.html">Archive</a>
+      </nav>
+      <a href="#top" class="back-to-top">↑ Back to Top</a>
+      <p class="footer-copy">&copy; 2025 Aquarelle. A digital watercolor experience.</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/animations.js"></script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery — Aquarelle</title>
+  <meta name="description" content="Browse the Living Gallery — watercolor vignettes and visual narratives on Aquarelle.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body id="top">
+
+  <!-- Page Transition Overlay -->
+  <div class="page-transition" aria-hidden="true"></div>
+
+  <!-- Sticky Header -->
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="site-logo">Aquarelle</a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <ul>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="canvas.html">Ink Lab</a></li>
+          <li><a href="archive.html">Archive</a></li>
+        </ul>
+      </nav>
+      <button class="search-toggle" aria-label="Toggle search" type="button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <div class="search-inline" role="search">
+        <input type="search" placeholder="Search stories…" aria-label="Search stories">
+      </div>
+      <button class="mobile-menu-toggle" aria-label="Open menu" type="button">
+        <div class="hamburger-icon"><span></span><span></span><span></span></div>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Nav Overlay -->
+  <div class="mobile-nav-overlay" role="dialog" aria-label="Mobile navigation">
+    <button class="close-menu" aria-label="Close menu" type="button">&times;</button>
+    <a href="index.html">Home</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="canvas.html">Ink Lab</a>
+    <a href="archive.html">Archive</a>
+  </div>
+
+  <!-- Main Content -->
+  <main class="page-content">
+    <div class="container">
+
+      <!-- Breadcrumbs -->
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="index.html">Home</a>
+        <span class="separator" aria-hidden="true">›</span>
+        <span class="current">Gallery</span>
+      </nav>
+
+      <!-- Page Header -->
+      <section class="archive-header wash-reveal">
+        <h1>Living Gallery</h1>
+        <p class="text-muted">Visual narratives painted in watercolor and ink. Click any piece to read its story.</p>
+      </section>
+
+      <!-- Filter Bar -->
+      <div class="gallery-filters wash-reveal">
+        <button class="filter-tag active" onclick="Aquarelle.filterGallery('all', this)">All</button>
+        <button class="filter-tag" onclick="Aquarelle.filterGallery('nature', this)">Nature</button>
+        <button class="filter-tag" onclick="Aquarelle.filterGallery('urban', this)">Urban</button>
+        <button class="filter-tag" onclick="Aquarelle.filterGallery('abstract', this)">Abstract</button>
+        <button class="filter-tag" onclick="Aquarelle.filterGallery('portrait', this)">Portrait</button>
+      </div>
+
+      <!-- Gallery Grid (Strict Grid + Decorative Bleed) -->
+      <div class="gallery-grid wash-stagger">
+
+        <div class="gallery-item fine-outline-hover" data-category="nature" data-modal-open="modal-morning-mist" tabindex="0" role="button" aria-label="View Morning Mist story">
+          <div class="item-image" style="background: linear-gradient(135deg, #a2c2d4 0%, #b2c4b4 50%, #d4b4a2 100%);"></div>
+          <div class="item-caption">
+            <h3>Morning Mist</h3>
+            <p>A landscape dissolving into fog — where the horizon line becomes a suggestion.</p>
+          </div>
+        </div>
+
+        <div class="gallery-item fine-outline-hover" data-category="urban" data-modal-open="modal-city-veins" tabindex="0" role="button" aria-label="View City Veins story">
+          <div class="item-image" style="background: linear-gradient(135deg, #2c2c2c 0%, #a2c2d4 60%, #f9f7f2 100%);"></div>
+          <div class="item-caption">
+            <h3>City Veins</h3>
+            <p>Ink lines tracing the circulatory system of a city at dawn.</p>
+          </div>
+        </div>
+
+        <div class="gallery-item fine-outline-hover" data-category="abstract" data-modal-open="modal-bleed" tabindex="0" role="button" aria-label="View Bleed story">
+          <div class="item-image" style="background: linear-gradient(180deg, #d4b4a2 0%, #a2c2d4 40%, #b2c4b4 80%);"></div>
+          <div class="item-caption">
+            <h3>Bleed</h3>
+            <p>Pigment escaping its boundaries — an experiment in controlled chaos.</p>
+          </div>
+        </div>
+
+        <div class="gallery-item fine-outline-hover" data-category="portrait" data-modal-open="modal-silent-sitter" tabindex="0" role="button" aria-label="View Silent Sitter story">
+          <div class="item-image" style="background: linear-gradient(160deg, #f9f7f2 0%, #d4b4a2 40%, #2c2c2c 100%);"></div>
+          <div class="item-caption">
+            <h3>Silent Sitter</h3>
+            <p>A portrait in negative space — the subject defined by what is left unpainted.</p>
+          </div>
+        </div>
+
+        <div class="gallery-item fine-outline-hover" data-category="nature" data-modal-open="modal-tide-pools" tabindex="0" role="button" aria-label="View Tide Pools story">
+          <div class="item-image" style="background: linear-gradient(135deg, #a2c2d4 0%, #a2c2d4 40%, #b2c4b4 100%);"></div>
+          <div class="item-caption">
+            <h3>Tide Pools</h3>
+            <p>Microcosms of salt and light — each pool a tiny ocean.</p>
+          </div>
+        </div>
+
+        <div class="gallery-item fine-outline-hover" data-category="urban" data-modal-open="modal-rust-bloom" tabindex="0" role="button" aria-label="View Rust &amp; Bloom story">
+          <div class="item-image" style="background: linear-gradient(180deg, #d4b4a2 0%, #2c2c2c 50%, #b2c4b4 100%);"></div>
+          <div class="item-caption">
+            <h3>Rust &amp; Bloom</h3>
+            <p>Where industrial decay meets wildflower reclaim — a study in contrasts.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Story Modals -->
+  <div class="modal-overlay" id="modal-morning-mist" role="dialog" aria-labelledby="modal-morning-mist-title" aria-modal="true">
+    <div class="modal-content">
+      <button class="modal-close" data-modal-close="modal-morning-mist" aria-label="Close">&times;</button>
+      <a href="gallery.html" class="modal-back-link" data-modal-close="modal-morning-mist">← Back to Gallery</a>
+      <h2 id="modal-morning-mist-title">Morning Mist</h2>
+      <p><strong>Category:</strong> Nature</p>
+      <p>This piece began as a single wash of cerulean blue laid onto soaking-wet paper. The pigment was encouraged to pool and run, creating the soft gradients that suggest a landscape dissolving into fog. Fine ink lines were added last — a horizon, a treeline, a lone figure — anchoring the wash before it could escape entirely.</p>
+      <p>The story of Morning Mist is the story of every watercolorist's first lesson: the paper is in charge. You guide, but the water decides. The result is a collaboration between intention and physics, between the hand that holds the brush and the surface that receives it.</p>
+      <p class="text-muted">Created with wet-on-wet technique, cerulean blue and burnt sienna washes, fine ink outlines on 300gsm cold-press paper.</p>
+    </div>
+  </div>
+
+  <!-- Additional modals omitted for brevity (city veins, bleed, silent sitter, tide pools, rust & bloom) -->
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <span class="footer-brand">Aquarelle</span>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <a href="gallery.html">Gallery</a>
+        <a href="canvas.html">Ink Lab</a>
+        <a href="archive.html">Archive</a>
+      </nav>
+      <a href="#top" class="back-to-top">↑ Back to Top</a>
+      <p class="footer-copy">&copy; 2025 Aquarelle. A digital watercolor experience.</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/animations.js"></script>
+</body>
+</html>
