@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="An interactive exploration of why the world is not a matriarchy, examining historical evidence, contemporary societies, and diverse perspectives.">
+    <title>Why the World is Not a Matriarchy | An Interactive Overview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --bg-card: #222222;
+            --text-primary: #f5f0e8;
+            --text-secondary: #a8a4a0;
+            --accent: #e5b800;
+            --accent-hover: #ffd700;
+            --border: #333333;
+            --shadow: rgba(0, 0, 0, 0.4);
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-display: 'Playfair Display', Georgia, serif;
+            --space-xs: 0.5rem;
+            --space-sm: 1rem;
+            --space-md: 1.5rem;
+            --space-lg: 2.5rem;
+            --space-xl: 4rem;
+            --radius: 8px;
+            --transition: 0.3s ease;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            font-size: 16px;
+            overflow-x: hidden;
+        }
+
+        .skip-link {
+            position: absolute;
+            top: -100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: var(--bg-primary);
+            padding: var(--space-sm) var(--space-md);
+            z-index: 9999;
+            border-radius: var(--radius);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .skip-link:focus {
+            top: var(--space-sm);
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 15, 15, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            padding: var(--space-sm) var(--space-lg);
+        }
+
+        nav ul {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-md);
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius);
+            transition: var(--transition);
+        }
+
+        nav a:hover,
+        nav a:focus {
+            color: var(--accent);
+            background: var(--bg-secondary);
+        }
+
+        nav a:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--space-md);
+        }
+
+        section {
+            padding: var(--space-xl) 0;
+            min-height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        h1, h2, h3 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            margin-bottom: var(--space-md);
+        }
+
+        h2 {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: var(--space-lg);
+            color: var(--accent);
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            margin-bottom: var(--space-sm);
+        }
+
+        p {
+            margin-bottom: var(--space-md);
+            color: var(--text-secondary);
+        }
+
+        #hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center, var(--bg-secondary) 0%, var(--bg-primary) 70%);
+            z-index: -1;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1s ease forwards;
+            animation-delay: 0.2s;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-lg);
+            font-weight: 400;
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: var(--space-lg);
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--text-secondary);
+            animation: bounce 2s infinite;
+        }
+
+        .scroll-indicator button {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: var(--space-sm);
+            font-size: 1.5rem;
+        }
+
+        .scroll-indicator button:hover {
+            color: var(--accent);
+        }
+
+        .scroll-indicator button:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+            border-radius: var(--radius);
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-md);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px var(--shadow);
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-md);
+        }
+
+        .definition-item {
+            background: var(--bg-secondary);
+            border-left: 3px solid var(--accent);
+            padding: var(--space-md);
+            margin-bottom: var(--space-md);
+        }
+
+        .definition-item dt {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--space-xs);
+        }
+
+        .definition-item dd {
+            color: var(--text-secondary);
+            padding-left: var(--space-md);
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: var(--space-lg);
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--accent);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: var(--space-lg);
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.6s ease;
+        }
+
+        .timeline-item.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: calc(-1 * var(--space-lg) - 5px);
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        .timeline-date {
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: var(--space-xs);
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--space-xs);
+        }
+
+        .timeline-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .tab-container {
+            margin-bottom: var(--space-lg);
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-md);
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 500;
+            transition: var(--transition);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .tab-btn:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-primary);
+            text-shadow: none;
+        }
+
+        .tab-btn:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-md);
+            margin: var(--space-lg) 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: var(--space-lg);
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .stat-number {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1;
+            margin-bottom: var(--space-xs);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .region-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-md);
+        }
+
+        .region-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: var(--space-md);
+            transition: var(--transition);
+        }
+
+        .region-card:hover {
+            border-color: var(--accent);
+            transform: scale(1.02);
+        }
+
+        .region-name {
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: var(--space-xs);
+        }
+
+        .region-type {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-sm);
+        }
+
+        #quiz {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: var(--space-xl);
+            margin: var(--space-lg) 0;
+        }
+
+        .quiz-progress {
+            display: flex;
+            gap: var(--space-xs);
+            margin-bottom: var(--space-lg);
+        }
+
+        .quiz-progress-step {
+            flex: 1;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            transition: var(--transition);
+        }
+
+        .quiz-progress-step.completed {
+            background: var(--accent);
+        }
+
+        .quiz-progress-step.current {
+            background: var(--accent);
+            opacity: 0.5;
+        }
+
+        .quiz-question {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: var(--space-lg);
+            color: var(--text-primary);
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .quiz-option {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: var(--space-md);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: left;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .quiz-option:hover {
+            border-color: var(--accent);
+            background: var(--bg-secondary);
+        }
+
+        .quiz-option:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .quiz-option.selected {
+            border-color: var(--accent);
+            background: rgba(229, 184, 0, 0.1);
+        }
+
+        .quiz-result {
+            text-align: center;
+            padding: var(--space-lg);
+        }
+
+        .quiz-result h3 {
+            font-size: 1.8rem;
+            margin-bottom: var(--space-md);
+            color: var(--accent);
+        }
+
+        .quiz-nav {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: var(--space-lg);
+        }
+
+        .quiz-next {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            padding: var(--space-sm) var(--space-lg);
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .quiz-next:hover {
+            background: var(--accent-hover);
+        }
+
+        .quiz-next:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #conclusion {
+            text-align: center;
+            padding: var(--space-xl) var(--space-md);
+        }
+
+        .conclusion-content {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .takeaway {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: var(--space-lg);
+        }
+
+        footer {
+            text-align: center;
+            padding: var(--space-xl) var(--space-md);
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .no-js .timeline-item,
+        .no-js .fade-in {
+            opacity: 1;
+            transform: none;
+        }
+
+        .no-js .quiz-nav,
+        .no-js .quiz-progress {
+            display: none;
+        }
+
+        .no-js .quiz-option {
+            display: block;
+            margin-bottom: var(--space-sm);
+        }
+
+        @media print {
+            nav, #quiz, .scroll-indicator { display: none; }
+            section { min-height: auto; page-break-inside: avoid; }
+            .card { break-inside: avoid; }
+        }
+
+        @media (max-width: 768px) {
+            nav ul { gap: var(--space-xs); }
+            nav a { font-size: 0.8rem; padding: var(--space-xs); }
+            section { padding: var(--space-lg) 0; }
+            #quiz { padding: var(--space-lg); }
+            .tab-buttons { flex-direction: column; }
+        }
+
+        @media (prefers-contrast: high) {
+            :root {
+                --text-primary: #ffffff;
+                --text-secondary: #cccccc;
+                --accent: #ffd700;
+                --border: #666666;
+            }
+        }
+    </style>
+</head>
+<body class="no-js">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <nav role="navigation" aria-label="Main navigation">
+        <ul>
+            <li><a href="#hero">Home</a></li>
+            <li><a href="#definition">Definition</a></li>
+            <li><a href="#history">History</a></li>
+            <li><a href="#for-case">For Matriarchy</a></li>
+            <li><a href="#against-case">Against Matriarchy</a></li>
+            <li><a href="#contemporary">Contemporary</a></li>
+            <li><a href="#quiz">Quiz</a></li>
+        </ul>
+    </nav>
+
+    <main id="main-content">
+        <!-- Hero Section -->
+        <section id="hero" aria-labelledby="hero-title">
+            <div class="hero-content">
+                <h1 id="hero-title">Why the World is Not a Matriarchy</h1>
+                <p class="hero-subtitle">An interactive exploration of historical evidence, contemporary societies, and the complex factors that have shaped gender power dynamics across civilizations.</p>
+            </div>
+            <div class="scroll-indicator" aria-hidden="true">
+                <button aria-label="Scroll down to content" tabindex="-1">↓</button>
+            </div>
+        </section>
+
+        <!-- What is Matriarchy? -->
+        <section id="definition" aria-labelledby="definition-title">
+            <h2 id="definition-title">Understanding the Terms</h2>
+
+            <dl class="fade-in">
+                <div class="definition-item">
+                    <dt>Matriarchy</dt>
+                    <dd>A social system in which women, particularly mothers, hold primary power and authority in roles of leadership, moral authority, and property ownership. This differs from patriarchy in that women occupy the central decision‑making positions rather than men.</dd>
+                </div>
+
+                <div class="definition-item">
+                    <dt>Patriarchy</dt>
+                    <dd>A social system in which men hold primary power and dominate in roles of political leadership, moral authority, social privilege, and control of property. The term derives from Greek <em>patriarkhēs</em> (rule of the father).</dd>
+                </div>
+
+                <div class="definition-item">
+                    <dt>Matrilineality</dt>
+                    <dd>Tracing descent through the mother's line rather than the father's. This is a kinship system, not necessarily a power structure. Many matrilineal societies exist within patriarchal political systems.</dd>
+                </div>
+
+                <div class="definition-item">
+                    <dt>Matrilocal Residence</dt>
+                    <dd>A custom where a married couple resides with or near the wife's family. This residential pattern often accompanies matrilineal inheritance but doesn't guarantee female political power.</dd>
+                </div>
+            </dl>
+
+            <p class="fade-in" style="margin-top: var(--space-lg);">
+                <strong style="color: var(--text-primary);">Important distinction:</strong> The presence of matrilineal kinship or matrilocal residence does not automatically create a matriarchal society. True matriarchy requires women to hold primary authority in public and private spheres.
+            </p>
+        </section>
+
+        <!-- Historical Evidence -->
+        <section id="history" aria-labelledby="history-title">
+            <h2 id="history-title">Historical Matriarchal Societies</h2>
+            <p class="fade-in">While rare, several societies have been documented with significant female authority or matrilineal structures. Here are notable examples:</p>
+
+            <div class="timeline fade-in" role="list">
+                <article class="timeline-item" role="listitem">
+                    <div class="timeline-date">Present Day — Indonesia</div>
+                    <div class="timeline-title">Minangkabau People</div>
+                    <div class="timeline-desc">The world's largest matrilineal Muslim society, with approximately 4 million people. Property, land, and lineage pass through the female line. However, political and religious leadership remains male‑dominated, illustrating the gap between kinship and actual power.</div>
+                </article>
+
+                <article class="timeline-item" role="listitem">
+                    <div class="timeline-date">Present Day — China</div>
+                    <div class="timeline-title">Mosuo (Naxi)</div>
+                    <div class="timeline-desc">Known for their "walking marriages" (Axia) and matrilineal extended family households. Women manage household finances and property. Yet, external political representation and formal governance remain under male authority.</div>
+                </article>
+
+                <article class="timeline-item" role="listitem">
+                    <div class="timeline-date">c. 1150–1450 CE — North America</div>
+                    <div class="timeline-title">Iroquois Confederacy</div>
+                    <div class="timeline-desc">Women held significant authority including the right to nominate and remove chiefs, control resource distribution, and determine war/peace decisions. However, this was a gendered power balance within a larger patriarchal colonial context that ultimately prevailed.</div>
+                </article>
+
+                <article class="timeline-item" role="listitem">
+                    <div class="timeline-date">c. 500 BCE – 500 CE — Mediterranean</div>
+                    <div class="timeline-title">Minoan Civilization</div>
+                    <div class="timeline-desc">Art and archaeology suggest possible female religious and possibly political prominence. However, theLinear A script remains undeciphered, making definitive claims about power structures speculative.</div>
+                </article>
+
+                <article class="timeline-item" role="listitem">
+                    <div class="timeline-date">Present Day — India</div>
+                    <div class="timeline-title">Khasi (Northeast India)</div>
+                    <div class="timeline-desc">Matrilineal society where inheritance passes through the youngest daughter. She manages family property, and maternal uncles often serve as guardians. Still, formal political office remains male‑dominated.</div>
+                </article>
+
+                <article class="timeline-item" role="listitem">
+                    <div class="timeline-date">Present Day — Nigeria</div>
+                    <div class="timeline-title">Yoruba (selected lineages)</div>
+                    <div class="timeline-desc">While Yoruba society is largely patriarchal, certain royal lineages and priestly positions follow matrilineal succession, demonstrating how matrilineal elements can coexist within broader patriarchal structures.</div>
+                </article>
+            </div>
+        </section>
+
+        <!-- The Case FOR Matriarchy -->
+        <section id="for-case" aria-labelledby="for-title">
+            <h2 id="for-title">The Case FOR Matriarchal Possibility</h2>
+
+            <div class="tab-container fade-in">
+                <div class="tab-buttons" role="tablist" aria-label="Argument categories">
+                    <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="for-evidence" id="tab-evidence" data-tab="for-evidence">Historical Evidence</button>
+                    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="for-arguments" id="tab-arguments" data-tab="for-arguments">Key Arguments</button>
+                    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="for-myths" id="tab-myths" data-tab="for-myths">Challenging Myths</button>
+                </div>
+
+                <div class="tab-content active" id="for-evidence" role="tabpanel" aria-labelledby="tab-evidence">
+                    <div class="card-grid">
+                        <div class="card">
+                            <h3>Goddess Worship Evidence</h3>
+                            <p>Archaeological findings from Çatalhöyük (7500–5700 BCE), Malta, and other Neolithic sites reveal extensive evidence of goddess‑centered religions, suggesting societies where divine female authority may have correlated with social structures.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Amazonian Narratives</h3>
+                            <p>Greek, Roman, and numerous indigenous mythologies describe societies of warrior women. While mythologized, these narratives may encode memories of actual societies or reflect cultural negotiations around gender.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Anthropological Documentation</h3>
+                            <p>Modern anthropologists have documented over 150 societies with significant matrilineal or matrifocal elements, proving that alternative kinship systems are not only possible but have persisted for millennia.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Bonobo Studies</h3>
+                            <p>Our closest primate relatives, bonobos, exhibit female‑dominated social structures with conflict resolution through bonding rather than aggression. Some scholars argue this suggests matriarchal potential is part of primate heritage.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="for-arguments" role="tabpanel" aria-labelledby="tab-arguments">
+                    <div class="card-grid">
+                        <div class="card">
+                            <h3>Women as Original Religious Authority</h3>
+                            <p>Before priestly specialization, religious roles may have been integrated with birth, healing, and midwifery—roles traditionally female. This suggests early spiritual authority was female‑centered.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Harvesting vs. Hunting Economics</h3>
+                            <p>Gathering (historically female) provided more reliable calories than hunting (male). If "economic base determines superstructure," female economic contributions should have yielded greater power.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Biometric Security Hypothesis</h3>
+                            <p>Some scholars propose that paternity uncertainty created male investment in controlling female sexuality—patriarchy as a response to reproductive biology, implying matriarchy is the "natural" default.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Historical Amnesia</h3>
+                            <p>Written history was created primarily by literate male elites. Oral traditions, women's histories, and non‑literate cultures may preserve alternative narratives systematically excluded from the written record.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="for-myths" role="tabpanel" aria-labelledby="tab-myths">
+                    <div class="card-grid">
+                        <div class="card">
+                            <h3>"Matriarchy Never Existed"</h3>
+                            <p>This claim relies on narrow definitions. When we examine societies with female religious authority, kinship power, economic control, or domestic dominance, examples emerge. The debate is about scale, not existence.</p>
+                        </div>
+                        <div class="card">
+                            <h3>"Men Are Naturally Dominant"</h3>
+                            <p>Biology provides potentials, not destinies. Human behavior is remarkably malleable across cultures. If behavior were fixed, the existence of any alternative societies would disprove the claim.</p>
+                        </div>
+                        <div class="card">
+                            <h3>"Female Power Always Means Matriarchy"</h3>
+                            <p>Counter‑examples exist where women held significant influence (queens, mothers of kings, priestesses) without systemic female authority. Distinguishing individual power from structural matriarchy is essential.</p>
+                        </div>
+                        <div class="card">
+                            <h3>"Matriarchy = Inverted Patriarchy"</h3>
+                            <p>Documented matriarchies (Minangkabau, Mosuo) show female authority coexisting with negotiated gender relations rather than female domination of men. Matriarchy need not replicate patriarchy's hierarchies.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Why NOT a Matriarchy -->
+        <section id="against-case" aria-labelledby="against-title">
+            <h2 id="against-title">Why the World is NOT a Matriarchy</h2>
+            <p class="fade-in">Despite the examples above, overwhelming global evidence shows that current and historical human societies are predominantly patriarchal. Here are the key factors:</p>
+
+            <div class="stats-grid fade-in" aria-label="Global statistics on gender power distribution">
+                <div class="stat-item">
+                    <div class="stat-number" data-target="100">0</div>
+                    <div class="stat-label">% of current nations with male heads of state</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" data-target="76">0</div>
+                    <div class="stat-label">% of world parliaments male‑dominated</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" data-target="150">0</div>
+                    <div class="stat-label">Documented patriarchal societies vs. ~20 with female authority</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" data-target="10000">0</div>
+                    <div class="stat-label">Years of recorded patriarchal dominance</div>
+                </div>
+            </div>
+
+            <div class="card-grid fade-in" style="margin-top: var(--space-lg);">
+                <div class="card">
+                    <h3>Physical Power Dynamics</h3>
+                    <p>Until recent technological decoupling physical strength from economic productivity, greater male average physical capacity translated into military, agricultural, and structural advantages. This biological reality intersected with social organization to produce male‑dominated hierarchies across most documented societies.</p>
+                </div>
+                <div class="card">
+                    <h3>Reproductive Asymmetry</h3>
+                    <p>Women bear children; this creates temporary vulnerability, breastfeeding requirements, and time allocation constraints. In societies without technological substitutes for breastfeeding or childcare support, this created economic dependencies that male‑controlled systems exploited and institutionalized.</p>
+                </div>
+                <div class="card">
+                    <h3>Paternity Certainty Imperative</h3>
+                    <p>Male uncertainty about biological parentage created incentives to control female sexuality and restrict female mobility. Property inheritance through males (controlling their "reproductive investments") became a rationale for both religious and legal systems restricting female autonomy.</p>
+                </div>
+                <div class="card">
+                    <h3>Military‑Technological Feedback Loops</h3>
+                    <p>War‑making capacity concentrated power in those who could fight. Larger male bodies, combined with martial training, created self‑reinforcing hierarchies. Military success accumulated resources that funded further military expansion, institutionalizing male power structures.</p>
+                </div>
+                <div class="card">
+                    <h3>Writing and Record‑Keeping</h3>
+                    <p>The earliest writing systems developed for administrative purposes: tax records, legal codes, royal decrees. These domains were male‑dominated. The resulting records systematically documented male perspectives and decisions, creating self‑justifying historical narratives.</p>
+                </div>
+                <div class="card">
+                    <h3>Patriarchy's Self‑Preservation</h3>
+                    <p>Once established, patriarchal systems developed internal logic that perpetuates them: inheritance laws favoring males, education restrictions, marriage customs, religious sanctions, and socialization patterns that train both men and women to accept male authority as "natural."</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contemporary Snapshot -->
+        <section id="contemporary" aria-labelledby="contemporary-title">
+            <h2 id="contemporary-title">Contemporary Societies: A Spectrum</h2>
+            <p class="fade-in">Today, no large‑scale society operates as a true matriarchy. However, several societies maintain notable female authority structures:</p>
+
+            <div class="region-grid fade-in">
+                <article class="region-card">
+                    <div class="region-name">Minangkabau (Indonesia)</div>
+                    <div class="region-type">Matrilineal with Male Religious Leadership</div>
+                    <p>Property and lineage through women; adat (customary) law gives women significant domestic authority. However, Islamic religious leadership (imams) and formal political offices remain male‑dominated. This exemplifies how matrilineal kinship can coexist with patriarchal governance.</p>
+                </article>
+
+                <article class="region-card">
+                    <div class="region-name">Mosuo (China)</div>
+                    <div class="region-type">Matrilineal with Patrilocal Resistance</div>
+                    <p>Women head households; "walking marriages" give women sexual autonomy. Yet, external political representation falls to men, and increasing contact with Han Chinese culture has introduced patrilocal pressures. A society navigating between traditions.</p>
+                </article>
+
+                <article class="region-card">
+                    <div class="region-name">Akan (Ghana)</div>
+                    <div class="region-type">Matrilineal Royal Succession</div>
+                    <p>The queen mother holds significant political power in royal succession. However, everyday governance and formal state positions remain male‑dominated. Power operates on parallel tracks with gendered domains.</p>
+                </article>
+
+                <article class="region-card">
+                    <div class="region-name">Iroquois Descendants (USA/Canada)</div>
+                    <div class="region-type">Historical Female Authority, Ongoing Adaptation</div>
+                    <p>While historical Iroquois confederacy featured significant female authority in clan governance, colonial disruption, forced relocation, and cultural assimilation have weakened traditional structures. Contemporary communities negotiate traditional and modern forms.</p>
+                </article>
+
+                <article class="region-card">
+                    <div class="region-name">Scandinavian Countries</div>
+                    <div class="region-type">Highest Gender Equality (Not Matriarchy)</div>
+                    <p>Norway, Sweden, Finland, and Iceland rank highest on gender equality indices. Women hold substantial parliamentary representation (40‑50%), but men still dominate top corporate and political positions. These are egalitarian, not matriarchal, societies.</p>
+                </article>
+
+                <article class="region-card">
+                    <div class="region-name">Rwanda</div>
+                    <div class="region-type">Highest Female Parliamentary Representation</div>
+                    <p>61% female parliament after genocide recovery policies prioritizing women's inclusion. Still, executive power and private sector leadership remain male‑dominated. Gender‑egalitarian, not matriarchal.</p>
+                </article>
+            </div>
+
+            <p class="fade-in" style="margin-top: var(--space-lg);">
+                <strong style="color: var(--text-primary);">Key insight:</strong> Even the most gender‑egalitarian contemporary societies do not constitute matriarchies. They represent reductions in patriarchal dominance, not its inversion. True matriarchy—a systematic reversal where women hold primary authority over men—exists nowhere at scale today.
+            </p>
+        </section>
+
+        <!-- Interactive Quiz -->
+        <section id="quiz" aria-labelledby="quiz-title">
+            <h2 id="quiz-title" style="text-align: center; margin-bottom: var(--space-lg);">Interactive Reflection</h2>
+
+            <div id="quiz-app"></div>
+        </section>
+
+        <!-- Conclusion -->
+        <section id="conclusion" aria-labelledby="conclusion-title">
+            <h2 id="conclusion-title">Synthesis and Reflection</h2>
+
+            <div class="conclusion-content fade-in">
+                <p class="takeaway">
+                    The question "Why is the world not a matriarchy?" has no single answer—it's a complex intersection of biology, economics, technology, religion, and historical contingency. Matriarchal societies have existed and persist in limited contexts, but they have never displaced patriarchal systems at scale.
+                </p>
+
+                <p class="takeaway">
+                    Understanding why requires moving beyond simple explanations: neither "men naturally dominate" nor "patriarchy is purely socially constructed" captures the reality. Physical asymmetries created initial conditions; social systems amplified and institutionalized them; self‑perpetuating institutions made reversal increasingly difficult.
+                </p>
+
+                <p class="takeaway">
+                    The societies examined here—Minangkabau, Mosuo, Iroquois, Akan—reveal that alternative kinship arrangements are possible, but that female authority within kinship often coexisted with male political power, not replaced it. Even the most gender‑egalitarian modern nations remain far from matriarchal, instead aspiring to genuine equality.
+                </p>
+
+                <p class="takeaway" style="color: var(--accent);">
+                    Perhaps the question itself needs reframing. Rather than asking "why isn't the world a matriarchy?"—implying a missing reversal—we might ask: "What conditions allow any group to dominate another, and how do we build systems where neither does?"
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>This interactive overview synthesizes anthropological, historical, and sociological evidence. For deeper exploration, consult academic sources on gender studies, kinship systems, and comparative political systems.</p>
+        <p style="margin-top: var(--space-sm);">
+            <a href="#definition">Back to top</a>
+        </p>
+    </footer>
+
+    <script>
+        // Progressive Enhancement: Content works without JS, enhanced with JS
+        document.body.classList.remove('no-js');
+
+        // IntersectionObserver with fallback for legacy browsers
+        let observerFired = false;
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+        const animationObserver = new IntersectionObserver((entries) => {
+            observerFired = true;
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+        document.querySelectorAll('.fade-in, .timeline-item').forEach(el => {
+            animationObserver.observe(el);
+        });
+        setTimeout(() => {
+            if (!observerFired) {
+                document.querySelectorAll('.fade-in, .timeline-item').forEach(el => {
+                    el.classList.add('visible');
+                });
+            }
+        }, 500);
+        // Animated counters
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !entry.target.dataset.animated) {
+                    entry.target.dataset.animated = 'true';
+                    animateCounter(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+        function animateCounter(element) {
+            const target = parseInt(element.dataset.target);
+            const duration = 2000;
+            const start = performance.now();
+            function update(currentTime) {
+                const elapsed = currentTime - start;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const current = Math.floor(eased * target);
+                element.textContent = current.toLocaleString();
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+            requestAnimationFrame(update);
+        }
+        document.querySelectorAll('.stat-number[data-target]').forEach(el => {
+            counterObserver.observe(el);
+        });
+        // Tab functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.dataset.tab;
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('active');
+                    b.setAttribute('aria-selected', 'false');
+                });
+                btn.classList.add('active');
+                btn.setAttribute('aria-selected', 'true');
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        // Quiz functionality (vanilla JS)
+        (function() {
+            const quizData = {
+                questions: [
+                    {
+                        question: "Based on this exploration, which statement most accurately reflects historical reality?",
+                        options: [
+                            "Matriarchy was universal before patriarchy emerged",
+                            "Patriarchal structures have dominated most recorded human history",
+                            "All societies have been exclusively patriarchal",
+                            "Matriarchy and patriarchy have always existed in equal measure"
+                        ],
+                        correct: 1
+                    },
+                    {
+                        question: "What distinguishes matrilineal kinship from matriarchy as a power structure?",
+                        options: [
+                            "They are the same concept",
+                            "Matrilineal systems trace ancestry through women but don't necessarily give women political power",
+                            "Matriarchy focuses on descent; matrilineality focuses on authority",
+                            "Matriarchy only exists in small societies"
+                        ],
+                        correct: 1
+                    },
+                    {
+                        question: "Why have patriarchal systems been so widespread historically?",
+                        options: [
+                            "Men are biologically superior",
+                            "Multiple factors including physical power differentials, reproductive asymmetries, and self-perpetuating institutions",
+                            "Women chose not to participate in governance",
+                            "Patriarchy is the only natural human social organization"
+                        ],
+                        correct: 1
+                    },
+                    {
+                        question: "What does the existence of societies like the Minangkabau and Mosuo demonstrate?",
+                        options: [
+                            "That matriarchy can exist at scale",
+                            "That alternative kinship arrangements are possible, even if female authority has limits",
+                            "That matriarchy is superior to patriarchy",
+                            "That these societies have no male leadership whatsoever"
+                        ],
+                        correct: 1
+                    },
+                    {
+                        question: "What might be a more productive question than 'Why isn't the world a matriarchy?'",
+                        options: [
+                            "How can we achieve a matriarchy?",
+                            "What conditions allow any group to dominate another, and how do we build systems where neither does?",
+                            "Which gender system is superior?",
+                            "Will patriarchy ever return?"
+                        ],
+                        correct: 1
+                    }
+                ],
+                currentStep: 0,
+                selectedOption: null,
+                completed: false,
+                score: 0
+            };
+            const quizApp = document.getElementById('quiz-app');
+            function renderQuiz() {
+                if (quizData.completed) {
+                    const resultIndex = Math.min(Math.floor(quizData.score / quizData.questions.length * 3), 2);
+                    const titles = ['Nuanced Thinker', 'Informed Observer', 'Critical Analyst'];
+                    const descriptions = [
+                        'You recognize that historical gender systems are complex and resist simple explanations. Understanding this complexity is the first step toward meaningful engagement with these questions.',
+                        'You have a solid grasp of the evidence and can distinguish between different types of female authority in non‑patriarchal societies. Continue exploring the nuanced interactions between kinship and power.',
+                        'You engage critically with the evidence, understanding that neither biological determinism nor pure social constructivism fully explains historical gender dynamics. Your analytical approach serves well in navigating these questions.'
+                    ];
+                    quizApp.innerHTML = `
+                        <div class="quiz-result">
+                            <h3>${titles[resultIndex]}</h3>
+                            <p>${descriptions[resultIndex]}</p>
+                            <p style="margin-top: var(--space-md); color: var(--text-secondary);">You answered ${quizData.score} out of ${quizData.questions.length} questions with the most nuanced response.</p>
+                            <button class="quiz-next" onclick="resetQuiz()">Retake Quiz</button>
+                        </div>
+                    `;
+                    return;
+                }
+                const q = quizData.questions[quizData.currentStep];
+                const progressHTML = quizData.questions.map((_, i) =>
+                    `<div class="quiz-progress-step ${i < quizData.currentStep ? 'completed' : ''} ${i === quizData.currentStep ? 'current' : ''}"></div>`
+                ).join('');
+                const optionsHTML = q.options.map((opt, i) =>
+                    `<button class="quiz-option ${quizData.selectedOption === i ? 'selected' : ''}"
+                            onclick="selectOption(${i})"
+                            aria-pressed="${quizData.selectedOption === i}">${opt}</button>`
+                ).join('');
+                quizApp.innerHTML = `
+                    <div class="quiz-progress" role="progressbar" aria-valuenow="${quizData.currentStep + 1}" aria-valuemin="1" aria-valuemax="${quizData.questions.length}">
+                        ${progressHTML}
+                    </div>
+                    <p class="quiz-question">${q.question}</p>
+                    <div class="quiz-options">
+                        ${optionsHTML}
+                    </div>
+                    <div class="quiz-nav">
+                        <button class="quiz-next"
+                                onclick="nextQuestion()"
+                                ${quizData.selectedOption === null ? 'disabled' : ''}>
+                            ${quizData.currentStep === quizData.questions.length - 1 ? 'See Results' : 'Next Question'}
+                        </button>
+                    </div>
+                `;
+            }
+            window.selectOption = function(index) {
+                quizData.selectedOption = index;
+                renderQuiz();
+            };
+            window.nextQuestion = function() {
+                if (quizData.selectedOption !== null) {
+                    if (quizData.selectedOption === quizData.questions[quizData.currentStep].correct) {
+                        quizData.score++;
+                    }
+                    if (quizData.currentStep < quizData.questions.length - 1) {
+                        quizData.currentStep++;
+                        quizData.selectedOption = null;
+                    } else {
+                        quizData.completed = true;
+                    }
+                    renderQuiz();
+                }
+            };
+            window.resetQuiz = function() {
+                quizData.currentStep = 0;
+                quizData.selectedOption = null;
+                quizData.completed = false;
+                quizData.score = 0;
+                renderQuiz();
+            };
+            renderQuiz();
+        })();
+        // Smooth scroll for navigation
+        document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                    target.setAttribute('tabindex', '-1');
+                    target.focus({ preventScroll: true });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
