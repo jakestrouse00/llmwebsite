@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>TILT TOWER — Competitive Climbing</title>
+<style>
+  :root{
+    --bg:#0b0f17; --bg2:#141b2b; --ink:#e8eef7; --dim:#8a97ad;
+    --accent:#ffd23f; --accent2:#3fb1ff; --danger:#ff5b5b; --ok:#5bd87a;
+    --panel:rgba(20,27,43,.92); --line:rgba(255,255,255,.08);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    overflow:hidden;overscroll-behavior:none;touch-action:none;user-select:none;}
+  #game{position:fixed;inset:0;display:block;width:100%;height:100%;}
+  .overlay{position:fixed;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:24px;
+    background:radial-gradient(120% 90% at 50% 30%, rgba(20,27,43,.55), rgba(11,15,23,.86));
+    z-index:5;}
+  .hidden{display:none!important;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;
+    padding:26px 22px;max-width:440px;width:100%;backdrop-filter:blur(6px);
+    box-shadow:0 18px 60px rgba(0,0,0,.5);}
+  h1{font-size:clamp(30px,8vw,52px);letter-spacing:.14em;margin:0 0 4px;
+    font-weight:800;color:var(--accent);text-shadow:0 2px 0 rgba(0,0,0,.4);}
+  .sub{color:var(--dim);font-size:13px;letter-spacing:.18em;text-transform:uppercase;margin:0 0 18px;}
+  p{color:#c4cedd;font-size:14px;line-height:1.5;margin:8px 0;}
+  .btn{display:block;width:100%;margin:10px 0;padding:15px 18px;border:0;border-radius:13px;
+    font-size:16px;font-weight:700;letter-spacing:.04em;cursor:pointer;color:#0b0f17;
+    background:linear-gradient(180deg,#ffe066,#ffd23f);transition:transform .08s,filter .15s;}
+  .btn:active{transform:scale(.97);}
+  .btn.secondary{background:transparent;color:var(--ink);border:1px solid var(--line);}
+  .btn.secondary:active{filter:brightness(1.2);}
+  .stat{display:flex;justify-content:space-between;color:var(--dim);font-size:13px;
+    margin:6px 0;padding:8px 12px;background:rgba(255,255,255,.04);border-radius:10px;}
+  .stat b{color:var(--ink);}
+  .tiltmeter{height:10px;border-radius:6px;background:rgba(255,255,255,.08);position:relative;
+    margin:14px 0 6px;overflow:hidden;}
+  .tiltmeter i{position:absolute;top:0;bottom:0;left:50%;width:2px;background:var(--dim);}
+  .tiltmeter b{position:absolute;top:0;bottom:0;left:50%;background:var(--accent2);border-radius:6px;}
+  .hint{color:var(--dim);font-size:12px;margin-top:8px;}
+  .lbtab{display:flex;gap:8px;margin:6px 0 14px;}
+  .lbtab button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);
+    background:transparent;color:var(--dim);font-weight:700;cursor:pointer;font-size:14px;}
+  .lbtab button.active{background:rgba(63,177,255,.16);color:var(--accent2);border-color:var(--accent2);}
+  .lblist{max-height:46vh;overflow:auto;text-align:left;margin:4px 0 14px;}
+  .lbrow{display:flex;justify-content:space-between;padding:9px 12px;margin:4px 0;
+    background:rgba(255,255,255,.04);border-radius:9px;font-size:14px;}
+  .lbrow .r{color:var(--dim);width:34px;}
+  .lbrow .s{font-weight:800;color:var(--accent);}
+  .lbrow .d{color:var(--dim);font-size:11px;}
+  .empty{color:var(--dim);font-size:13px;padding:18px;text-align:center;}
+  .bigscore{font-size:64px;font-weight:900;color:var(--accent);line-height:1;margin:6px 0;}
+  .small{font-size:12px;color:var(--dim);}
+  .pill{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;
+    background:rgba(255,255,255,.07);color:var(--dim);margin:2px;}
+  #fail{color:var(--danger);}
+  .note{font-size:11px;color:var(--dim);margin-top:10px;line-height:1.5;}
+  .warn{font-size:12px;color:var(--danger);margin-top:8px;font-weight:700;}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<!-- START SCREEN -->
+<div id="screen-start" class="overlay">
+  <div class="card">
+    <h1>TILT TOWER</h1>
+    <div class="sub">Competitive Climbing</div>
+    <p>Tilt your device to keep the wobbling stack balanced. Blocks place themselves — you only steer. Hold the center of mass over the base or the tower topples.</p>
+    <div class="stat"><span>Local Best</span><b id="start-best">0</b></div>
+    <div class="stat"><span>Today's Top</span><b id="start-daily-top">—</b></div>
+    <button class="btn" id="btn-start">START &amp; ENABLE TILT</button>
+    <button class="btn secondary" id="btn-start-keys">DESKTOP / KEYBOARD MODE</button>
+    <div class="note">Mobile: uses Device Orientation (iOS asks permission on tap). Desktop: Left/Right or A/D to steer.</div>
+  </div>
+</div>
+
+<!-- CALIBRATE SCREEN -->
+<div id="screen-cal" class="overlay hidden">
+  <div class="card">
+    <h1 style="font-size:30px">CALIBRATE</h1>
+    <div class="sub">Hold device level</div>
+    <p>Hold your phone flat &amp; upright, then tap BEGIN. Your resting tilt becomes zero.</p>
+    <div class="tiltmeter"><i></i><b id="cal-bar"></b></div>
+    <div class="small" id="cal-read">gamma: —</div>
+    <div id="cal-warn" class="warn hidden"></div>
+    <button class="btn" id="btn-begin">BEGIN (calibrate &amp; play)</button>
+    <button class="btn secondary" id="btn-begin-keys">Skip — use keyboard</button>
+    <div class="note">No tilt sensor? Use keyboard mode: steer with Left/Right or A/D.</div>
+  </div>
+</div>
+
+<!-- GAME OVER SCREEN -->
+<div id="screen-over" class="overlay hidden">
+  <div class="card">
+    <div class="sub" id="over-title">COLLAPSED</div>
+    <div class="bigscore" id="over-score">0</div>
+    <div class="small">blocks placed</div>
+    <div class="stat"><span>Local Best</span><b id="over-best">0</b></div>
+    <div class="stat"><span>Today's Top</span><b id="over-daily-top">—</b></div>
+    <div id="over-newbest" class="hidden" style="color:var(--ok);font-weight:800;margin:6px 0">NEW LOCAL BEST!</div>
+    <button class="btn" id="btn-again">PLAY AGAIN</button>
+    <button class="btn secondary" id="btn-view-lb">LEADERBOARDS</button>
+  </div>
+</div>
+
+<!-- LEADERBOARD SCREEN -->
+<div id="screen-lb" class="overlay hidden">
+  <div class="card">
+    <h1 style="font-size:26px">LEADERBOARDS</h1>
+    <div class="sub">This device only · localStorage</div>
+    <div class="lbtab">
+      <button id="tab-daily" class="active">DAILY</button>
+      <button id="tab-alltime">ALL-TIME</button>
+    </div>
+    <div class="lblist" id="lb-list"></div>
+    <div class="small" id="lb-note"></div>
+    <button class="btn secondary" id="btn-lb-back">BACK</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"
+        onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js';document.head.appendChild(s);"></script>
+<script>
+"use strict";
+(function(){
+  if(typeof Matter === "undefined"){
+    document.body.innerHTML = '<div class="overlay"><div class="card"><h1 style="font-size:24px">LOAD FAILED</h1><p>Matter.js could not load. Check your connection and reload.</p></div></div>';
+    return;
+  }
+  const {Engine, World, Bodies, Body, Composite, Vector} = Matter;
+
+  // ---------- Config ----------
+  const BLOCK_W = 70, BLOCK_H = 35;
+  const MAX_BLOCKS = 100;
+  const STEP = 1000/60;
+  const MAXGX = 0.55;        // max lateral gravity (vertical gravity.y = 1)
+  const TILT_DEG = 28;       // degrees of tilt for full lateral gravity
+  const PLACE_MIN = 650;     // ms min between placements
+  const PLACE_MAX = 2300;    // ms max before forced placement
+  const SETTLE_SPEED = 0.55; // top-block speed (px/step) considered settled
+  const COLLAPSE_TIME = 1300;// ms collapse animation
+  const DAILY_CAP = 10, ALLTIME_CAP = 20;
+  const SMOOTH_LOW = 0.18;    // input smoothing at base (gentle, low lag risk)
+  const SMOOTH_HIGH = 0.52;   // input smoothing at max height (snappy, low phase lag)
+  const DAILY_PREFIX = "tilttower.daily.";
+  const LS = {
+    best:"tilttower.best", day:"tilttower.currentDay",
+    daily:(d)=>DAILY_PREFIX+d, alltime:"tilttower.alltime"
+  };
+
+  const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---------- DOM ----------
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const $ = (id)=>document.getElementById(id);
+  const screens = {
+    start:$("screen-start"), cal:$("screen-cal"),
+    over:$("screen-over"), lb:$("screen-lb")
+  };
+  function show(name){ for(const k in screens) screens[k].classList.toggle("hidden", k!==name); }
+
+  // ---------- Canvas sizing ----------
+  let W=0,H=0,DPR=1,floorY=0,baseX=0;
+  function resize(){
+    DPR = Math.min(window.devicePixelRatio||1, 2.5);
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = Math.floor(W*DPR); canvas.height = Math.floor(H*DPR);
+    canvas.style.width = W+"px"; canvas.style.height = H+"px";
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    floorY = H - 46; baseX = W/2;
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  // ---------- Physics ----------
+  let engine, world, blocks=[], placedCount=0, lastPlaceTime=0;
+  let state="START"; // START CALIBRATE PLAY COLLAPSE OVER LB
+  let collapseStart=0, collapseTimer=0, shake=0;
+  const blockOpts = {friction:0.95, frictionStatic:1.0, restitution:0.0, density:0.0012, slop:0.01, frictionAir:0.02};
+
+  function newEngine(){
+    engine = Engine.create();
+    engine.gravity.x = 0; engine.gravity.y = 1; engine.gravity.scale = 0.001;
+    engine.positionIterations = 8; engine.velocityIterations = 6; engine.constraintIterations = 4;
+    world = engine.world;
+  }
+  function buildField(){
+    Composite.clear(world, false);
+    blocks = []; placedCount = 0; collapseTimer = 0; shake = 0;
+    const floor = Bodies.rectangle(baseX, floorY+200, W*4, 400, {isStatic:true, friction:0.95, frictionStatic:1.0});
+    const wallL = Bodies.rectangle(-400, floorY/2, 800, floorY*4, {isStatic:true});
+    const wallR = Bodies.rectangle(W+400, floorY/2, 800, floorY*4, {isStatic:true});
+    Composite.add(world, [floor, wallL, wallR]);
+    const b = Bodies.rectangle(baseX, floorY - BLOCK_H/2, BLOCK_W, BLOCK_H, blockOpts);
+    Composite.add(world, b); blocks.push(b); placedCount = 1; lastPlaceTime = performance.now();
+  }
+
+  // ---------- Input ----------
+  let useKeys = false, calOffset = 0, rawGamma = 0, hasOrient = false, tiltDenied = false;
+  let tiltTarget = 0, tiltSmoothed = 0;
+  const keys = {left:false, right:false};
+
+  function onOrient(e){
+    if(e.gamma == null) return;
+    hasOrient = true; rawGamma = e.gamma;
+  }
+  function enableOrientation(){
+    const D = window.DeviceOrientationEvent;
+    const add = ()=>window.addEventListener("deviceorientation", onOrient);
+    if(D && typeof D.requestPermission === "function"){
+      D.requestPermission().then(s=>{
+        if(s==="granted"){ add(); }
+        else { useKeys=true; tiltDenied=true; }
+      }).catch(()=>{ useKeys=true; tiltDenied=true; });
+    } else if(D){
+      add();
+    } else { useKeys = true; }
+  }
+  window.addEventListener("keydown", (e)=>{
+    const k = e.key.toLowerCase();
+    if(k==="arrowleft"||k==="a"){ keys.left=true; e.preventDefault(); }
+    else if(k==="arrowright"||k==="d"){ keys.right=true; e.preventDefault(); }
+    else if(k===" "||k==="enter"){
+      if(state==="START") startFlow(false);
+      else if(state==="OVER") playAgain();
+    }
+  });
+  window.addEventListener("keyup", (e)=>{
+    const k = e.key.toLowerCase();
+    if(k==="arrowleft"||k==="a") keys.left=false;
+    else if(k==="arrowright"||k==="d") keys.right=false;
+  });
+
+  function updateTiltTarget(){
+    if(useKeys || !hasOrient){
+      tiltTarget = (keys.right?1:0) - (keys.left?1:0);
+    } else {
+      let g = (rawGamma - calOffset)/TILT_DEG;
+      if(g>1)g=1; if(g<-1)g=-1;
+      tiltTarget = g;
+    }
+  }
+
+  // ---------- Placement ----------
+  function topBlock(){ return blocks[blocks.length-1]; }
+  function tryPlace(now){
+    if(placedCount >= MAX_BLOCKS) return;
+    const top = topBlock(); if(!top) return;
+    const sp = Math.hypot(top.velocity.x, top.velocity.y);
+    const settled = sp < SETTLE_SPEED;
+    const since = now - lastPlaceTime;
+    if((settled && since > PLACE_MIN) || since > PLACE_MAX){
+      const x = top.position.x;
+      const y = top.position.y - BLOCK_H - 2;
+      const b = Bodies.rectangle(x, y, BLOCK_W, BLOCK_H, blockOpts);
+      Composite.add(world, b); blocks.push(b); placedCount++;
+      lastPlaceTime = now;
+    }
+  }
+
+  // ---------- Collapse detection ----------
+  function stackCOM(){
+    let sx=0, sy=0, m=0;
+    for(const b of blocks){ const bm = b.mass; sx += b.position.x*bm; sy += b.position.y*bm; m += bm; }
+    return m>0 ? {x:sx/m, y:sy/m} : {x:baseX, y:floorY};
+  }
+  function checkCollapse(now){
+    if(blocks.length < 2) return false;
+    const bottom = blocks[0];
+    const baseCenter = bottom.position.x;
+    const half = BLOCK_W/2;
+    for(const b of blocks){
+      if(b === bottom) continue;
+      if(b.position.y > floorY - BLOCK_H/2 + 6 && Math.abs(b.position.x - baseCenter) > BLOCK_W*1.1){
+        return true;
+      }
+    }
+    const com = stackCOM();
+    const off = Math.abs(com.x - baseCenter);
+    if(off > half*1.08){
+      collapseTimer += STEP;
+      if(collapseTimer > 110) return true;
+    } else {
+      collapseTimer = 0;
+    }
+    return false;
+  }
+
+  // ---------- Leaderboards / persistence ----------
+  function safeGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function safeSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function safeRemove(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  function todayUTC(){ return new Date().toISOString().slice(0,10); }
+  function readArr(k){ try{ const v = safeGet(k); return v? JSON.parse(v): []; }catch(e){ return []; } }
+  function writeArr(k,a){ safeSet(k, JSON.stringify(a)); }
+  function getBest(){ const v = safeGet(LS.best); return v? parseInt(v,10)||0:0; }
+  function setBest(v){ safeSet(LS.best, String(v)); }
+
+  function checkRollover(){
+    const today = todayUTC();
+    const stored = safeGet(LS.day);
+    if(!stored){ safeSet(LS.day, today); return; }
+    if(stored === today) return;
+
+    const all = readArr(LS.alltime);
+    const staleKeys = [];
+    try{
+      for(let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if(k && k.indexOf(DAILY_PREFIX)===0){
+          const d = k.slice(DAILY_PREFIX.length);
+          if(d < today) staleKeys.push(k);
+        }
+      }
+    }catch(e){}
+
+    let mergedAny = false;
+    for(const k of staleKeys){
+      const arr = readArr(k);
+      if(arr.length){ for(const e of arr) all.push(e); mergedAny = true; }
+      safeRemove(k);
+    }
+    if(mergedAny){
+      all.sort((a,b)=>b.s-a.s);
+      writeArr(LS.alltime, all.slice(0, ALLTIME_CAP));
+    }
+    safeSet(LS.day, today);
+  }
+  function insertDaily(score){
+    const key = LS.daily(todayUTC());
+    const arr = readArr(key);
+    arr.push({s:score, t:Date.now()});
+    arr.sort((a,b)=>b.s-a.s);
+    writeArr(key, arr.slice(0, DAILY_CAP));
+  }
+  function dailyTop(){
+    const arr = readArr(LS.daily(todayUTC()));
+    return arr.length? arr[0].s : 0;
+  }
+  function fmtDate(ts){ try{ return new Date(ts).toLocaleDateString(undefined,{month:"short",day:"numeric"}); }catch(e){ return ""; } }
+
+  // ---------- Flow ----------
+  function startFlow(keysMode){
+    useKeys = keysMode;
+    tiltDenied = false;
+    if(!keysMode) enableOrientation();
+    show("cal");
+    calOffset = 0; rawGamma = 0;
+  }
+  function beginPlay(){
+    if(!useKeys && hasOrient) calOffset = rawGamma;
+    newEngine(); buildField();
+    state = "PLAY"; tiltSmoothed = 0; tiltTarget = 0;
+    show(null);
+  }
+  function playAgain(){ startFlow(useKeys); }
+  function endRun(){
+    const score = placedCount;
+    const best = getBest();
+    let newBest = false;
+    if(score > best){ setBest(score); newBest = true; }
+    insertDaily(score);
+    $("over-score").textContent = score;
+    $("over-best").textContent = getBest();
+    $("over-daily-top").textContent = dailyTop() || "—";
+    $("over-newbest").classList.toggle("hidden", !newBest);
+    state = "OVER"; show("over");
+  }
+  function triggerCollapse(){
+    state = "COLLAPSE"; collapseStart = performance.now();
+    engine.gravity.x = (Math.sign(tiltSmoothed)|| (Math.random()<0.5?-1:1)) * 0.9;
+  }
+
+  // ---------- Buttons ----------
+  $("btn-start").addEventListener("click", ()=>startFlow(false));
+  $("btn-start-keys").addEventListener("click", ()=>startFlow(true));
+  $("btn-begin").addEventListener("click", beginPlay);
+  $("btn-begin-keys").addEventListener("click", ()=>{ useKeys=true; beginPlay(); });
+  $("btn-again").addEventListener("click", playAgain);
+  $("btn-view-lb").addEventListener("click", ()=>{ renderLB("daily"); show("lb"); });
+  $("btn-lb-back").addEventListener("click", ()=>{ show(state==="OVER"?"over":null); if(state!=="OVER") show("start"); });
+  $("tab-daily").addEventListener("click", ()=>renderLB("daily"));
+  $("tab-alltime").addEventListener("click", ()=>renderLB("alltime"));
+
+  // ---------- Leaderboard render ----------
+  let lbMode = "daily";
+  function renderLB(mode){
+    lbMode = mode;
+    $("tab-daily").classList.toggle("active", mode==="daily");
+    $("tab-alltime").classList.toggle("active", mode==="alltime");
+    const list = $("lb-list");
+    let arr, note;
+    if(mode==="daily"){
+      arr = readArr(LS.daily(todayUTC()));
+      note = "Daily board resets every 24h (UTC). New scores are added here on collapse.";
+    } else {
+      arr = readArr(LS.alltime);
+      note = "All-time board is view-only here. It updates only when the day rolls over and the previous day's scores are merged in.";
+    }
+    $("lb-note").textContent = note;
+    if(!arr.length){ list.innerHTML = '<div class="empty">No scores yet. Climb something!</div>'; return; }
+    list.innerHTML = arr.map((e,i)=>{
+      const d = mode==="daily" ? new Date(e.t).toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"}) : fmtDate(e.t);
+      return '<div class="lbrow"><span class="r">#'+(i+1)+'</span><span class="s">'+e.s+'</span><span class="d">'+d+'</span></div>';
+    }).join("");
+  }
+
+  // ---------- Init ----------
+  checkRollover();
+  $("start-best").textContent = getBest();
+  $("start-daily-top").textContent = dailyTop() || "—";
+  show("start");
+
+  // ---------- Main loop ----------
+  let last = performance.now(), acc = 0;
+  function frame(now){
+    requestAnimationFrame(frame);
+    let dt = now - last; last = now;
+    if(dt > 120) dt = 120;
+    acc += dt;
+    let steps = 0;
+    while(acc >= STEP && steps < 5){
+      stepPhysics(now, STEP);
+      acc -= STEP; steps++;
+    }
+    render(now);
+  }
+  function stepPhysics(now, delta){
+    if(state === "PLAY"){
+      updateTiltTarget();
+      const hRatio = Math.min(1, placedCount / MAX_BLOCKS);
+      const smoothCoef = SMOOTH_LOW + (SMOOTH_HIGH - SMOOTH_LOW) * hRatio;
+      tiltSmoothed += (tiltTarget - tiltSmoothed) * smoothCoef;
+      engine.gravity.x = Math.max(-MAXGX, Math.min(MAXGX, tiltSmoothed * MAXGX));
+      Engine.update(engine, delta);
+      tryPlace(now);
+      if(checkCollapse(now)) triggerCollapse();
+    } else if(state === "COLLAPSE"){
+      Engine.update(engine, delta);
+      if(now - collapseStart > COLLAPSE_TIME) endRun();
+    }
+  }
+
+  // ---------- Render ----------
+  function blockColor(i, n){
+    const t = n>1 ? i/(n-1) : 0;
+    const r = Math.round(60 + 195*t);
+    const g = Math.round(150 + 60*(1-t));
+    const b = Math.round(220 - 120*t);
+    return "rgb("+r+","+g+","+b+")";
+  }
+  function drawBody(b, fill, stroke){
+    const v = b.vertices;
+    ctx.beginPath();
+    ctx.moveTo(v[0].x, v[0].y);
+    for(let i=1;i<v.length;i++) ctx.lineTo(v[i].x, v[i].y);
+    ctx.closePath();
+    ctx.fillStyle = fill; ctx.fill();
+    if(stroke){ ctx.lineWidth = 1.5; ctx.strokeStyle = stroke; ctx.stroke(); }
+  }
+  function render(now){
+    ctx.save();
+    if(state==="COLLAPSE" && !reducedMotion){
+      shake = Math.max(0, 1 - (now-collapseStart)/COLLAPSE_TIME) * 7;
+      ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake);
+    }
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,"#0b0f17"); g.addColorStop(1,"#141b2b");
+    ctx.fillStyle = g; ctx.fillRect(-20,-20,W+40,H+40);
+    ctx.fillStyle = "#1a2236"; ctx.fillRect(0, floorY, W, H-floorY);
+    ctx.fillStyle = "rgba(255,255,255,.06)"; ctx.fillRect(0, floorY, W, 2);
+    if(state==="PLAY" || state==="COLLAPSE"){
+      const bottom = blocks[0];
+      if(bottom){
+        const bx = bottom.position.x;
+        ctx.fillStyle = "rgba(255,210,63,.10)";
+        ctx.fillRect(bx-BLOCK_W/2, floorY-3, BLOCK_W, 3);
+      }
+    }
+    const n = blocks.length;
+    for(let i=0;i<n;i++){
+      drawBody(blocks[i], blockColor(i, n), "rgba(0,0,0,.35)");
+    }
+    if(state==="PLAY" && n>0){
+      const com = stackCOM();
+      const bottom = blocks[0]; const baseCenter = bottom.position.x; const half = BLOCK_W/2;
+      const off = Math.abs(com.x - baseCenter);
+      const danger = off > half*0.8;
+      ctx.strokeStyle = danger ? "rgba(255,91,91,.9)" : "rgba(91,216,122,.55)";
+      ctx.setLineDash([5,5]); ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(com.x, com.y); ctx.lineTo(com.x, floorY); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.arc(com.x, floorY-2, 5, 0, Math.PI*2);
+      ctx.fillStyle = danger ? "rgba(255,91,91,.95)" : "rgba(91,216,122,.9)"; ctx.fill();
+    }
+    ctx.restore();
+    if(state==="PLAY" || state==="COLLAPSE"){
+      ctx.fillStyle = "rgba(232,238,247,.95)";
+      ctx.font = "800 44px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(String(placedCount), W/2, 64);
+      ctx.font = "700 12px system-ui, sans-serif"; ctx.fillStyle = "rgba(138,151,173,.9)";
+      ctx.fillText("HEIGHT", W/2, 80);
+      ctx.textAlign = "left"; ctx.font = "700 13px system-ui, sans-serif";
+      ctx.fillStyle = "rgba(138,151,173,.9)";
+      ctx.fillText("BEST "+getBest(), 14, 26);
+      if(placedCount >= MAX_BLOCKS){
+        ctx.textAlign = "center"; ctx.font = "800 18px system-ui, sans-serif";
+        ctx.fillStyle = "rgba(255,210,63,.95)";
+        ctx.fillText("MAX HEIGHT — keep balancing!", W/2, 104);
+      }
+      const mw = 160, mx = W/2 - mw/2, my = H - 22;
+      ctx.fillStyle = "rgba(255,255,255,.08)";
+      ctx.fillRect(mx, my, mw, 8);
+      ctx.fillStyle = "rgba(138,151,173,.6)"; ctx.fillRect(W/2-1, my-2, 2, 12);
+      const tw = (tiltSmoothed) * (mw/2);
+      ctx.fillStyle = "rgba(63,177,255,.9)";
+      if(tw>=0) ctx.fillRect(W/2, my, tw, 8);
+      else ctx.fillRect(W/2+tw, my, -tw, 8);
+      ctx.font = "700 10px system-ui, sans-serif"; ctx.fillStyle = "rgba(138,151,173,.8)";
+      ctx.textAlign = "center"; ctx.fillText("TILT", W/2, my-4);
+    }
+    if(state==="CALIBRATE"){
+      const bar = $("cal-bar"); const read = $("cal-read"); const warn = $("cal-warn");
+      if(hasOrient && !useKeys){
+        const norm = Math.max(-1, Math.min(1, rawGamma/TILT_DEG));
+        const w = Math.abs(norm)*50;
+        bar.style.width = w+"%";
+        bar.style.left = norm>=0 ? "50%" : (50-w)+"%";
+        read.textContent = "gamma: "+rawGamma.toFixed(1)+"°";
+        warn.classList.add("hidden");
+      } else {
+        bar.style.width = "0%"; bar.style.left="50%";
+        read.textContent = useKeys ? "keyboard mode (arrows / A-D)" : "waiting for sensor…";
+        if(tiltDenied){
+          warn.textContent = "Tilt permission denied — using keyboard. Tap Skip to play.";
+          warn.classList.remove("hidden");
+        } else {
+          warn.classList.add("hidden");
+        }
+      }
+    }
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

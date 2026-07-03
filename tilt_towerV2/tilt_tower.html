@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>TILT TOWER</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #0a0e1a; color: #e8eef7;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    touch-action: none; user-select: none; -webkit-user-select: none;
+  }
+  #wrap {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at 50% 30%, #16203a 0%, #0a0e1a 70%);
+  }
+  #stage {
+    position: relative;
+    width: 480px; height: 800px;
+    max-width: 100vw; max-height: 100vh;
+    box-shadow: 0 0 60px rgba(0,0,0,0.6);
+    overflow: hidden;
+    background: linear-gradient(180deg, #1a2540 0%, #0d1426 60%, #070a14 100%);
+  }
+  canvas { display: block; width: 100%; height: 100%; image-rendering: auto; }
+
+  .overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 24px;
+    background: rgba(7, 10, 20, 0.82);
+    backdrop-filter: blur(2px);
+    z-index: 5;
+  }
+  .overlay.hidden { display: none; }
+
+  h1 { font-size: 44px; letter-spacing: 6px; font-weight: 800; margin-bottom: 4px;
+       background: linear-gradient(90deg, #6ee7ff, #a78bfa); -webkit-background-clip: text;
+       background-clip: text; color: transparent; }
+  .tag { font-size: 13px; letter-spacing: 3px; color: #7d8aa8; margin-bottom: 22px; text-transform: uppercase; }
+
+  .btn {
+    display: block; width: 260px; max-width: 80%;
+    padding: 16px 20px; margin: 8px auto;
+    font-size: 18px; font-weight: 700; letter-spacing: 1px;
+    color: #06121f; background: linear-gradient(90deg, #6ee7ff, #8be9fd);
+    border: none; border-radius: 14px; cursor: pointer;
+    box-shadow: 0 6px 0 #2b8aa3, 0 10px 24px rgba(110,231,255,0.25);
+    transition: transform 0.08s;
+  }
+  .btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #2b8aa3; }
+  .btn.secondary { background: linear-gradient(90deg, #a78bfa, #c4b5fd); box-shadow: 0 6px 0 #5b3fb0, 0 10px 24px rgba(167,139,250,0.25); }
+  .btn.secondary:active { box-shadow: 0 3px 0 #5b3fb0; }
+  .btn.ghost { background: rgba(255,255,255,0.06); color: #c9d4e6; box-shadow: none; border: 1px solid rgba(255,255,255,0.12); }
+
+  .hint { font-size: 12px; color: #6b7896; margin-top: 14px; line-height: 1.5; max-width: 320px; }
+
+  .boards { display: flex; gap: 14px; margin: 14px 0 6px; width: 100%; max-width: 380px; }
+  .board { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 10px 8px; }
+  .board h3 { font-size: 12px; letter-spacing: 2px; color: #8be9fd; margin-bottom: 8px; text-transform: uppercase; }
+  .board.alltime h3 { color: #c4b5fd; }
+  .board ol { list-style: none; text-align: left; }
+  .board li { font-size: 13px; padding: 3px 4px; color: #c9d4e6; display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .board li:last-child { border-bottom: none; }
+  .board li .r { color: #6b7896; }
+  .board li .s { font-weight: 700; color: #e8eef7; }
+  .empty { font-size: 12px; color: #4a5468; font-style: italic; padding: 4px; }
+
+  .scoreline { font-size: 15px; color: #9fb0cc; margin: 6px 0 2px; }
+  .bignum { font-size: 64px; font-weight: 800; color: #fff; line-height: 1; margin: 4px 0; }
+  .bignum small { font-size: 20px; color: #7d8aa8; font-weight: 600; }
+  .bestline { font-size: 14px; color: #6ee7ff; margin-top: 6px; }
+
+  #hud { position: absolute; top: 0; left: 0; right: 0; padding: 14px 16px; z-index: 3;
+         display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
+  #heightBox { background: rgba(7,10,20,0.55); border-radius: 10px; padding: 6px 12px; }
+  #heightBox .lbl { font-size: 10px; letter-spacing: 2px; color: #7d8aa8; }
+  #heightBox .val { font-size: 26px; font-weight: 800; color: #fff; line-height: 1; }
+  #tiltBox { background: rgba(7,10,20,0.55); border-radius: 10px; padding: 6px 10px; min-width: 90px; }
+  #tiltBox .lbl { font-size: 10px; letter-spacing: 2px; color: #7d8aa8; text-align: right; }
+  #tiltBar { position: relative; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 6px; overflow: hidden; }
+  #tiltFill { position: absolute; top: 0; bottom: 0; left: 50%; width: 0; background: #6ee7ff; border-radius: 4px; }
+  #tiltCenter { position: absolute; top: -2px; bottom: -2px; left: 50%; width: 2px; background: rgba(255,255,255,0.5); transform: translateX(-50%); }
+
+  #err { color: #ff8a8a; font-size: 13px; margin-top: 10px; max-width: 320px; }
+  .smallbtn { font-size: 13px; color: #8be9fd; background: none; border: none; cursor: pointer; margin-top: 10px; text-decoration: underline; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="stage">
+    <canvas id="game" width="480" height="800"></canvas>
+
+    <!-- In-game HUD -->
+    <div id="hud" class="hidden">
+      <div id="heightBox"><div class="lbl">HEIGHT</div><div class="val" id="hVal">0</div></div>
+      <div id="tiltBox"><div class="lbl">TILT</div>
+        <div id="tiltBar"><div id="tiltCenter"></div><div id="tiltFill"></div></div>
+      </div>
+    </div>
+
+    <!-- Start screen -->
+    <div id="startScreen" class="overlay">
+      <h1>TILT TOWER</h1>
+      <div class="tag">Balance the stack</div>
+      <button class="btn" id="enableBtn">ENABLE TILT</button>
+      <button class="btn secondary hidden" id="playBtn">TAP TO PLAY</button>
+      <div class="hint" id="startHint">Tilt your device left/right to keep the tower balanced. Blocks drop automatically — your only job is balance. On desktop, use ← → or A / D.</div>
+      <div id="err"></div>
+      <div class="boards" id="startBoards"></div>
+    </div>
+
+    <!-- Game over screen -->
+    <div id="overScreen" class="overlay hidden">
+      <div class="tag">TOWER COLLAPSED</div>
+      <div class="bignum" id="finalScore">0<small> blocks</small></div>
+      <div class="bestline" id="overBest">Best: 0</div>
+      <button class="btn secondary" id="replayBtn">PLAY AGAIN</button>
+      <button class="btn ghost" id="overHomeBtn">MAIN MENU</button>
+      <div class="boards" id="overBoards"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   TILT TOWER — single-file game
+   Loads Matter.js from CDN (cdnjs, jsDelivr fallback).
+   ============================================================ */
+
+// ---- Matter.js loader (CDN with fallback) ----
+var MATTER_CDN = "https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js";
+var MATTER_FALLBACK = "https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js";
+
+function loadScript(url, ok, fail) {
+  var s = document.createElement('script');
+  s.src = url;
+  s.onload = ok;
+  s.onerror = fail;
+  document.head.appendChild(s);
+}
+
+function bootMatter(onReady) {
+  loadScript(MATTER_CDN, function () { if (window.Matter) onReady(); },
+  function () {
+    loadScript(MATTER_FALLBACK, function () { if (window.Matter) onReady(); },
+    function () {
+      document.getElementById('err').textContent =
+        'Could not load the physics engine (Matter.js). Check your connection and reload.';
+    });
+  });
+}
+
+// ---- Constants ----
+var CW = 480, CH = 800;
+var FLOOR_Y = 760;            // top surface of the floor
+var BLOCK_W = 70, BLOCK_H = 36;
+var MAX_BLOCKS = 100;         // physics body cap
+var PLACE_MIN_GAP = 650;      // ms minimum between placements
+var PLACE_MAX_WAIT = 1500;    // ms hard cap to force placement if not settled
+var SETTLE_V = 0.55;           // velocity threshold for "settled"
+var SETTLE_W = 0.05;           // angular velocity threshold
+var JITTER = 5;                // px constant placement jitter (not size variation)
+var TILT_SCALE = 0.62;         // max gravity.x magnitude relative to gravity.y
+var TILT_SENS = 30;            // degrees of gamma for full tilt
+var SMOOTH = 0.12;             // tilt smoothing factor per frame
+var COLLAPSE_DROP = BLOCK_H * 1.6; // top-drop threshold
+var COLLAPSE_TIME = 1500;      // ms collapse animation
+
+// ---- DOM ----
+var canvas = document.getElementById('game');
+var ctx = canvas.getContext('2d');
+var hud = document.getElementById('hud');
+var hVal = document.getElementById('hVal');
+var tiltFill = document.getElementById('tiltFill');
+var startScreen = document.getElementById('startScreen');
+var overScreen = document.getElementById('overScreen');
+var enableBtn = document.getElementById('enableBtn');
+var playBtn = document.getElementById('playBtn');
+var replayBtn = document.getElementById('replayBtn');
+var overHomeBtn = document.getElementById('overHomeBtn');
+var startHint = document.getElementById('startHint');
+var errEl = document.getElementById('err');
+
+// ---- State ----
+var Matter = null;
+var engine = null, world = null;
+var blocks = [];           // Matter bodies in stack order
+var placedCount = 0;       // score counter
+var state = 'start';       // 'start' | 'playing' | 'collapsing' | 'gameover'
+var lastPlace = 0;
+var peakTopY = FLOOR_Y;    // smallest y reached (highest point)
+var collapseStart = 0;
+var cameraY = 0, cameraTarget = 0;
+var shake = 0;
+var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---- Input ----
+var hasOrientation = false;
+var orientationEnabled = false;
+var latestGamma = 0;
+var calibrationOffset = 0;
+var tiltTarget = 0;       // desired tilt in [-1,1]
+var tiltValue = 0;         // smoothed applied tilt
+var keyLeft = false, keyRight = false;
+
+// ---- localStorage (with in-memory fallback) ----
+var memStore = {};
+var lsOK = (function () {
+  try { localStorage.setItem('__tt', '1'); localStorage.removeItem('__tt'); return true; }
+  catch (e) { return false; }
+})();
+function storeGet(k) {
+  if (lsOK) { try { return localStorage.getItem(k); } catch (e) {} }
+  return memStore[k] != null ? memStore[k] : null;
+}
+function storeSet(k, v) {
+  if (lsOK) { try { localStorage.setItem(k, v); } catch (e) { memStore[k] = v; } }
+  else { memStore[k] = v; }
+}
+function storeDel(k) {
+  if (lsOK) { try { localStorage.removeItem(k); } catch (e) {} }
+  delete memStore[k];
+}
+function getJSON(k, def) {
+  var v = storeGet(k);
+  if (v == null) return def;
+  try { return JSON.parse(v); } catch (e) { return def; }
+}
+function setJSON(k, v) { storeSet(k, JSON.stringify(v)); }
+
+// ---- Date helpers (UTC) ----
+function utcDateStr(d) {
+  d = d || new Date();
+  var y = d.getUTCFullYear(), m = String(d.getUTCMonth() + 1).padStart(2, '0'),
+      day = String(d.getUTCDate()).padStart(2, '0');
+  return y + '-' + m + '-' + day;
+}
+function dailyKey() { return 'tilttower_daily_' + utcDateStr(); }
+function todayStr() { return utcDateStr(); }
+
+// ---- Leaderboards ----
+function checkRollover() {
+  var today = todayStr();
+  var last = storeGet('tilttower_lastdate');
+  if (last && last !== today) {
+    // A new UTC day: merge previous day's best into all-time, then clear it.
+    var oldBoard = getJSON('tilttower_daily_' + last, []);
+    if (oldBoard && oldBoard.length) {
+      var dayMax = 0;
+      for (var i = 0; i < oldBoard.length; i++) if (oldBoard[i].score > dayMax) dayMax = oldBoard[i].score;
+      if (dayMax > 0) insertAlltime(dayMax, last);
+    }
+    storeDel('tilttower_daily_' + last);
+  }
+  if (last !== today) storeSet('tilttower_lastdate', today);
+  // ensure today's board exists
+  if (storeGet(dailyKey()) == null) setJSON(dailyKey(), []);
+}
+
+function insertDaily(score) {
+  checkRollover();
+  var b = getJSON(dailyKey(), []);
+  b.push({ score: score, time: Date.now() });
+  b.sort(function (a, c) { return c.score - a.score; });
+  if (b.length > 10) b = b.slice(0, 10);
+  setJSON(dailyKey(), b);
+  updateBest(score);
+}
+
+// All-time is ONLY written via the daily rollover merge — never from the daily view.
+function insertAlltime(score, dateStr) {
+  var b = getJSON('tilttower_alltime', []);
+  b.push({ score: score, time: Date.now(), date: dateStr });
+  b.sort(function (a, c) { return c.score - a.score; });
+  if (b.length > 20) b = b.slice(0, 20);
+  setJSON('tilttower_alltime', b);
+}
+
+function updateBest(score) {
+  var best = parseInt(storeGet('tilttower_best') || '0', 10);
+  if (score > best) storeSet('tilttower_best', String(score));
+}
+function getBest() { return parseInt(storeGet('tilttower_best') || '0', 10); }
+
+function renderBoards(el) {
+  var daily = getJSON(dailyKey(), []);
+  var alltime = getJSON('tilttower_alltime', []);
+  function rows(arr) {
+    if (!arr || !arr.length) return '<div class="empty">No scores yet</div>';
+    var out = '<ol>';
+    for (var i = 0; i < Math.min(arr.length, 5); i++) {
+      out += '<li><span class="r">#' + (i + 1) + '</span><span class="s">' + arr[i].score + '</span></li>';
+    }
+    return out + '</ol>';
+  }
+  el.innerHTML =
+    '<div class="board"><h3>Today</h3>' + rows(daily) + '</div>' +
+    '<div class="board alltime"><h3>All-Time</h3>' + rows(alltime) + '</div>';
+}
+
+// ---- Physics setup ----
+function initEngine() {
+  engine = Matter.Engine.create();
+  world = engine.world;
+  engine.gravity.y = 1;
+  engine.gravity.x = 0;
+  engine.gravity.scale = 0.001;
+  engine.enableSleeping = false; // keep tilt responsive on all bodies
+
+  // Floor (static)
+  var floor = Matter.Bodies.rectangle(CW / 2, FLOOR_Y + 40, CW, 80, {
+    isStatic: true, friction: 0.95, frictionStatic: 1, restitution: 0,
+    label: 'floor'
+  });
+  Matter.Composite.add(world, floor);
+}
+
+function makeBlock(x, y) {
+  var b = Matter.Bodies.rectangle(x, y, BLOCK_W, BLOCK_H, {
+    friction: 0.92,
+    frictionStatic: 1,
+    restitution: 0.04,
+    density: 0.0022,
+    chamfer: { radius: 3 },
+    label: 'block'
+  });
+  Matter.Composite.add(world, b);
+  return b;
+}
+
+function resetWorld() {
+  // remove all block bodies (keep floor)
+  for (var i = 0; i < blocks.length; i++) Matter.Composite.remove(world, blocks[i]);
+  blocks = [];
+  placedCount = 0;
+  lastPlace = 0;
+  peakTopY = FLOOR_Y;
+  cameraY = 0; cameraTarget = 0;
+  shake = 0;
+  tiltValue = 0; tiltTarget = 0;
+  engine.gravity.x = 0;
+}
+
+function placeBlock() {
+  if (placedCount >= MAX_BLOCKS) return;
+  // find highest block (smallest y)
+  var top = null, topY = FLOOR_Y;
+  for (var i = 0; i < blocks.length; i++) {
+    if (blocks[i].position.y < topY) { topY = blocks[i].position.y; top = blocks[i]; }
+  }
+  var baseX = top ? top.position.x : CW / 2;
+  var baseY = top ? top.position.y : FLOOR_Y - BLOCK_H / 2;
+  var jx = (Math.random() * 2 - 1) * JITTER;
+  var x = baseX + jx;
+  var y = baseY - BLOCK_H - 6; // drop slightly above so it settles
+  var b = makeBlock(x, y);
+  blocks.push(b);
+  placedCount++;
+  lastPlace = performance.now();
+  if (y < peakTopY) peakTopY = y;
+  hVal.textContent = placedCount;
+}
+
+// ---- Collapse ----
+function checkCollapse() {
+  if (state !== 'playing') return;
+  var topY = FLOOR_Y;
+  for (var i = 0; i < blocks.length; i++) {
+    var p = blocks[i].position;
+    if (p.x < -BLOCK_W || p.x > CW + BLOCK_W) { triggerCollapse(); return; }
+    if (p.y > FLOOR_Y + 80) { triggerCollapse(); return; } // fell through
+    if (p.y < topY) topY = p.y;
+  }
+  if (blocks.length > 1 && (topY - peakTopY) > COLLAPSE_DROP) { triggerCollapse(); return; }
+}
+
+function triggerCollapse() {
+  state = 'collapsing';
+  collapseStart = performance.now();
+  engine.gravity.x = 0; // let it fall naturally
+  if (!reducedMotion) shake = 14;
+}
+
+function endRun() {
+  state = 'gameover';
+  insertDaily(placedCount);
+  document.getElementById('finalScore').innerHTML = placedCount + '<small> blocks</small>';
+  document.getElementById('overBest').textContent = 'Best: ' + getBest();
+  renderBoards(document.getElementById('overBoards'));
+  hud.classList.add('hidden');
+  overScreen.classList.remove('hidden');
+}
+
+// ---- Input handlers ----
+function onOrientation(e) {
+  if (e.gamma == null) return;
+  latestGamma = e.gamma;
+  hasOrientation = true;
+}
+
+function enableTilt() {
+  // iOS 13+ requires a user-gesture permission request.
+  if (typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission().then(function (res) {
+      if (res === 'granted') {
+        window.addEventListener('deviceorientation', onOrientation);
+        orientationEnabled = true;
+        afterEnable();
+      } else {
+        errEl.textContent = 'Tilt permission denied. You can still play with arrow keys.';
+        afterEnable();
+      }
+    }).catch(function () {
+      errEl.textContent = 'Tilt unavailable. Use arrow keys.';
+      afterEnable();
+    });
+  } else if (typeof DeviceOrientationEvent !== 'undefined') {
+    window.addEventListener('deviceorientation', onOrientation);
+    orientationEnabled = true;
+    afterEnable();
+  } else {
+    afterEnable(); // desktop fallback
+  }
+}
+
+function afterEnable() {
+  enableBtn.classList.add('hidden');
+  playBtn.classList.remove('hidden');
+  startHint.textContent = hasOrientation
+    ? 'Hold your device level, then tap PLAY to calibrate and start. Tilt left/right to balance.'
+    : 'Use ← → or A / D to balance the tower. Tap PLAY to start.';
+}
+
+function startGame() {
+  // calibrate: zero the resting angle using the latest gamma (if available)
+  calibrationOffset = hasOrientation ? latestGamma : 0;
+  checkRollover();
+  resetWorld();
+  state = 'playing';
+  startScreen.classList.add('hidden');
+  overScreen.classList.add('hidden');
+  hud.classList.remove('hidden');
+  hVal.textContent = '0';
+  // seed first block
+  placeBlock();
+  lastPlace = performance.now();
+}
+
+// ---- Main loop (fixed timestep physics, decoupled render) ----
+var lastTime = 0, acc = 0;
+var STEP = 1000 / 60;
+
+function stepPhysics() {
+  // compute tilt target
+  if (hasOrientation && orientationEnabled) {
+    var g = (latestGamma - calibrationOffset);
+    tiltTarget = Math.max(-1, Math.min(1, g / TILT_SENS));
+  } else {
+    var k = 0;
+    if (keyLeft) k -= 1;
+    if (keyRight) k += 1;
+    tiltTarget = k;
+  }
+  // smooth
+  tiltValue += (tiltTarget - tiltValue) * SMOOTH;
+  if (Math.abs(tiltValue) < 0.001) tiltValue = 0;
+
+  if (state === 'playing') {
+    engine.gravity.x = tiltValue * TILT_SCALE;
+    Matter.Engine.update(engine, STEP);
+    // placement
+    var now = performance.now();
+    if (placedCount < MAX_BLOCKS) {
+      var top = null, topY = FLOOR_Y;
+      for (var i = 0; i < blocks.length; i++) {
+        if (blocks[i].position.y < topY) { topY = blocks[i].position.y; top = blocks[i]; }
+      }
+      var settled = true;
+      if (top) {
+        var v = Matter.Body.getVelocity(top);
+        var sp = Math.hypot(v.x, v.y);
+        settled = (sp < SETTLE_V) && (Math.abs(top.angularVelocity) < SETTLE_W);
+      }
+      if ((now - lastPlace) >= PLACE_MIN_GAP && (settled || (now - lastPlace) >= PLACE_MAX_WAIT)) {
+        placeBlock();
+      }
+    }
+    checkCollapse();
+  } else if (state === 'collapsing') {
+    engine.gravity.x = 0;
+    Matter.Engine.update(engine, STEP);
+    if (performance.now() - collapseStart >= COLLAPSE_TIME) endRun();
+  }
+}
+
+function render() {
+  ctx.clearRect(0, 0, CW, CH);
+
+  // camera follows top of stack
+  var topY = FLOOR_Y;
+  for (var i = 0; i < blocks.length; i++) if (blocks[i].position.y < topY) topY = blocks[i].position.y;
+  if (state === 'playing' || state === 'collapsing') {
+    cameraTarget = Math.min(0, (CH * 0.38) - topY);
+    cameraY += (cameraTarget - cameraY) * 0.08;
+  }
+
+  ctx.save();
+  var sx = 0, sy = 0;
+  if (shake > 0.1 && !reducedMotion) {
+    sx = (Math.random() * 2 - 1) * shake;
+    sy = (Math.random() * 2 - 1) * shake;
+    shake *= 0.9;
+  }
+  ctx.translate(sx, cameraY + sy);
+
+  // floor
+  ctx.fillStyle = '#2a3550';
+  ctx.fillRect(0, FLOOR_Y, CW, 80);
+  ctx.fillStyle = '#3a4a6e';
+  ctx.fillRect(0, FLOOR_Y, CW, 6);
+  // ground line markers
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  for (var gx = 0; gx <= CW; gx += 40) {
+    ctx.beginPath(); ctx.moveTo(gx, FLOOR_Y); ctx.lineTo(gx, FLOOR_Y + 80); ctx.stroke();
+  }
+
+  // blocks
+  for (var j = 0; j < blocks.length; j++) {
+    var b = blocks[j];
+    ctx.save();
+    ctx.translate(b.position.x, b.position.y);
+    ctx.rotate(b.angle);
+    // color gradient by height
+    var t = j / Math.max(1, MAX_BLOCKS);
+    var r = Math.round(110 + 80 * t), gC = Math.round(231 - 60 * t), bl = Math.round(255 - 40 * t);
+    ctx.fillStyle = 'rgb(' + r + ',' + gC + ',' + bl + ')';
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+    ctx.lineWidth = 2;
+    roundRect(ctx, -BLOCK_W / 2, -BLOCK_H / 2, BLOCK_W, BLOCK_H, 4);
+    ctx.fill();
+    ctx.stroke();
+    // highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.fillRect(-BLOCK_W / 2 + 4, -BLOCK_H / 2 + 4, BLOCK_W - 8, 4);
+    ctx.restore();
+  }
+
+  // next-block ghost marker (where the next will drop) during play
+  if (state === 'playing' && placedCount < MAX_BLOCKS) {
+    var ghostTop = null, gY = FLOOR_Y;
+    for (var k = 0; k < blocks.length; k++) if (blocks[k].position.y < gY) { gY = blocks[k].position.y; ghostTop = blocks[k]; }
+    var gx = ghostTop ? ghostTop.position.x : CW / 2;
+    var gy = ghostTop ? ghostTop.position.y - BLOCK_H - 6 : FLOOR_Y - BLOCK_H - 6;
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+    ctx.strokeStyle = '#6ee7ff';
+    ctx.setLineDash([6, 6]);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(gx - BLOCK_W / 2, gy - BLOCK_H / 2, BLOCK_W, BLOCK_H);
+    ctx.restore();
+  }
+
+  ctx.restore();
+
+  // tilt indicator (screen space)
+  var pct = Math.max(-1, Math.min(1, tiltValue));
+  var half = 50;
+  if (pct >= 0) {
+    tiltFill.style.left = '50%';
+    tiltFill.style.width = (half * pct) + '%';
+  } else {
+    tiltFill.style.left = (50 + half * pct) + '%';
+    tiltFill.style.width = (half * -pct) + '%';
+  }
+}
+
+function roundRect(c, x, y, w, h, r) {
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
+
+function frame(now) {
+  if (!lastTime) lastTime = now;
+  var dt = now - lastTime;
+  lastTime = now;
+  if (dt > 120) dt = 120; // clamp to avoid spiral of death
+  acc += dt;
+  var steps = 0;
+  while (acc >= STEP && steps < 5) { stepPhysics(); acc -= STEP; steps++; }
+  render();
+  requestAnimationFrame(frame);
+}
+
+// ---- Wire up UI ----
+enableBtn.addEventListener('click', enableTilt);
+playBtn.addEventListener('click', startGame);
+replayBtn.addEventListener('click', startGame);
+overHomeBtn.addEventListener('click', function () {
+  state = 'start';
+  resetWorld();
+  overScreen.classList.add('hidden');
+  startScreen.classList.remove('hidden');
+  renderBoards(document.getElementById('startBoards'));
+});
+
+// Keyboard fallback (first-class input)
+window.addEventListener('keydown', function (e) {
+  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { keyLeft = true; e.preventDefault(); }
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { keyRight = true; e.preventDefault(); }
+  if ((e.key === 'Enter' || e.key === ' ') && state === 'start') {
+    if (playBtn.classList.contains('hidden')) enableTilt(); else startGame();
+  }
+});
+window.addEventListener('keyup', function (e) {
+  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keyLeft = false;
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keyRight = false;
+});
+
+// Prevent mobile scroll/zoom gestures interfering
+document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+
+// ---- Boot ----
+bootMatter(function () {
+  Matter = window.Matter;
+  initEngine();
+  checkRollover();
+  renderBoards(document.getElementById('startBoards'));
+  requestAnimationFrame(frame);
+});
+</script>
+</body>
+</html>
