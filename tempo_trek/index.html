@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>TEMPO TREK — Tap-Cadence Endless Runner</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="stage">
+  <div id="wrap">
+    <canvas id="cv"></canvas>
+
+    <!-- HUD -->
+    <div id="hud">
+      <div class="topbar">
+        <div class="stat"><div class="lab">Score</div><div class="val" id="scoreVal">0</div></div>
+        <div class="right">
+          <div class="stat"><div class="lab">Multiplier</div><div class="val" id="multVal">x1</div></div>
+          <div class="stat"><div class="lab">Best</div><div class="val" id="hsVal">0</div></div>
+        </div>
+      </div>
+
+      <div id="meter">
+        <div class="lab"><span>Tempo</span><b id="speedTxt">1.0x</b></div>
+        <div id="bar"><div id="barFill"></div><div id="beat"></div></div>
+        <div id="multPips">
+          <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+        </div>
+      </div>
+
+      <div id="seedChip">
+        <div class="lab" id="seedLab">Daily Seed</div>
+        <div class="val" id="seedVal">—</div>
+      </div>
+
+      <div class="btns">
+        <button class="btn" id="pauseBtn">Pause</button>
+        <button class="btn danger" id="restartBtn">Restart</button>
+      </div>
+    </div>
+
+    <!-- Start overlay -->
+    <div class="overlay" id="startOverlay">
+      <h1 class="title">TEMPO TREK</h1>
+      <p class="sub">A single-tap endless runner where <b>your tap rhythm sets the world's speed</b>.
+        Tap faster to push the tempo for bigger score multipliers — tap slower to survive.
+        Hold a steady cadence to stack the <b>rhythm mastery</b> multiplier up to <b>x4</b>.</p>
+      <div class="modes">
+        <div class="mode active" id="modeDaily"><div class="t">DAILY</div><div class="d">Same course for everyone today</div></div>
+        <div class="mode" id="modeFree"><div class="t">FREE PLAY</div><div class="d">Any seed, your own course</div></div>
+      </div>
+      <div id="freeRow" class="hidden">
+        <input id="seedInput" maxlength="12" placeholder="enter seed" />
+        <button class="btn" id="randSeed">Random</button>
+      </div>
+      <button class="btn primary" id="startBtn">TAP TO START</button>
+      <div class="go">Tap / click anywhere to jump &nbsp;•&nbsp; <b>your rhythm is the only control</b></div>
+    </div>
+
+    <!-- Pause overlay -->
+    <div class="overlay hidden" id="pauseOverlay">
+      <h1 class="title" style="font-size:clamp(28px,6vw,48px)">PAUSED</h1>
+      <button class="btn primary" id="resumeBtn">Resume</button>
+      <button class="btn danger" id="quitBtn">Quit to Menu</button>
+    </div>
+
+    <!-- Game over overlay -->
+    <div class="overlay hidden" id="overOverlay">
+      <div class="small">Run complete</div>
+      <div class="bigscore" id="finalScore">0</div>
+      <div id="newHs" class="newhs hidden">NEW BEST!</div>
+      <div class="small">Best for this seed: <b id="overHs" style="color:var(--magenta)">0</b></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <button class="btn primary" id="againBtn">Run Again</button>
+        <button class="btn" id="menuBtn">Menu</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>REFLEXREEF — Ecosystem Balance Reflex</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="reef"></canvas>
+
+  <!-- Top HUD -->
+  <header class="hud-top">
+    <div class="brand">
+      <span class="brand-mark">◈</span>
+      <span class="brand-name">REFLEX<span style="color:var(--accent)">REEF</span></span>
+    </div>
+    <div class="timer-wrap">
+      <div class="timer-label">SURVIVAL</div>
+      <div class="timer-bar"><div id="timerFill" class="timer-fill"></div></div>
+      <div id="timerText" class="timer-text">0.0s</div>
+    </div>
+    <div class="speed-wrap">
+      <div class="speed-label">SPEED</div>
+      <div id="speedText" class="speed-text">1.0×</div>
+    </div>
+  </header>
+
+  <!-- Right species panel -->
+  <aside class="panel">
+    <div class="panel-title">FOOD WEB STATUS</div>
+    <div id="speciesList" class="species-list"></div>
+    <div class="mode-block">
+      <div class="mode-label">TAP MODE</div>
+      <button id="modeBtn" class="mode-btn boost" type="button">
+        <span class="mode-dot"></span><span id="modeText">BOOST</span>
+      </button>
+      <div class="mode-hint">Tap a species to boost (+) or cull (−).<br/>Press <b>C</b> / <b>Shift</b> to cull · Right-click culls.</div>
+    </div>
+  </aside>
+
+  <!-- Start overlay -->
+  <div id="startScreen" class="overlay">
+    <div class="overlay-card">
+      <h1 class="title">REFLEX<span style="color:var(--accent)">REEF</span></h1>
+      <p class="subtitle">Ecosystem Balance Reflex</p>
+      <p class="blurb">Keep five interdependent reef species alive as long as possible. The food web drifts toward collapse — tap to <b class="b-boost">boost</b> struggling populations or <b class="b-cull">cull</b> ones spiraling out of control. Every ripple cascades through the chain. The reef speeds up. Hold the balance.</p>
+      <div class="howto">
+        <div style="display:flex;align-items:center;gap:10px;justify-content:center;"><span class="k">TAP</span> a species node — boost it</div>
+        <div style="display:flex;align-items:center;gap:10px;justify-content:center;"><span class="k">C / SHIFT</span> hold to cull instead</div>
+        <div style="display:flex;align-items:center;gap:10px;justify-content:center;"><span class="k">RIGHT-CLICK</span> cull instantly</div>
+      </div>
+      <div class="chain-preview">
+        <span class="chip algae">🌿 Algae</span><span class="arr">›</span>
+        <span class="chip zoo">🦐 Zooplankton</span><span class="arr">›</span>
+        <span class="chip damsel">🐟 Damselfish</span><span class="arr">›</span>
+        <span class="chip grouper">🐠 Grouper</span><span class="arr">›</span>
+        <span class="chip shark">🦈 Shark</span>
+      </div>
+      <button id="startBtn" class="start-btn" type="button">DIVE IN</button>
+      <div class="best-line">Best survival: <span id="bestStart">—</span></div>
+    </div>
+  </div>
+
+  <!-- Game over overlay -->
+  <div id="overScreen" class="overlay hidden">
+    <div class="overlay-card">
+      <h1 id="overTitle" class="title">ECOSYSTEM COLLAPSED</h1>
+      <p id="overReason" class="subtitle"></p>
+      <div class="result-grid">
+        <div class="result-cell"><div class="rc-label">SURVIVED</div><div id="overTime" class="rc-value">0.0s</div></div>
+        <div class="result-cell"><div class="rc-label">BEST</div><div id="overBest" class="rc-value">0.0s</div></div>
+      </div>
+      <button id="restartBtn" class="start-btn" type="button">DIVE AGAIN</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
