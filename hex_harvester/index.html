@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#1b3a2b" />
+<title>HEX HARVEST — A Seasonal Crop-Merge Almanac</title>
+<style>
+  :root{
+    --bg1:#1b3a2b; --bg2:#243d2a; --accent:#8bd17a; --accent-soft:rgba(139,209,122,.35);
+    --panel:rgba(255,255,255,.06); --panel-stroke:rgba(255,255,255,.14);
+    --text:#eaf5ea; --muted:rgba(234,245,234,.55);
+    --hex-fill:rgba(255,255,255,.045); --hex-stroke:rgba(255,255,255,.13);
+    --tile-bg:rgba(255,255,255,.10);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--text);
+    background:linear-gradient(160deg,var(--bg1),var(--bg2));
+    background-size:220% 220%;
+    animation:drift 26s ease-in-out infinite;
+    overflow-x:hidden; min-height:100dvh;
+    display:flex; flex-direction:column;
+  }
+  @keyframes drift{0%{background-position:0% 0%}50%{background-position:100% 100%}100%{background-position:0% 0%}}
+  @media (prefers-reduced-motion: reduce){ body{animation:none} }
+
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+  header{
+    position:sticky; top:0; z-index:5;
+    display:flex; align-items:center; gap:12px;
+    padding:10px 14px calc(10px + env(safe-area-inset-top)) 14px;
+    padding-top:max(10px,env(safe-area-inset-top));
+    background:linear-gradient(180deg,rgba(0,0,0,.28),rgba(0,0,0,0));
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  }
+  .brand{font-weight:800; letter-spacing:.18em; font-size:13px; opacity:.92}
+  .brand small{display:block;font-weight:500;letter-spacing:.06em;font-size:10px;opacity:.6;margin-top:2px}
+  .season-name{flex:1; text-align:center; font-size:13px; font-weight:600; letter-spacing:.04em; opacity:.85; line-height:1.1}
+  .season-name small{display:block;font-size:9px;opacity:.5;letter-spacing:.12em;margin-top:2px}
+
+  .ring-wrap{position:relative;width:46px;height:46px;flex:0 0 auto;cursor:pointer}
+  .ring-wrap svg{transform:rotate(-90deg);width:46px;height:46px}
+  .ring-bg{fill:none;stroke:rgba(255,255,255,.14);stroke-width:4}
+  .ring-fg{fill:none;stroke:var(--accent);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .5s ease}
+  .ring-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+
+  main{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:6px; min-height:0}
+  #board{display:block; touch-action:none; border-radius:14px}
+
+  .toolbar{
+    display:flex; gap:8px; align-items:center; justify-content:center;
+    padding:8px 12px calc(10px + env(safe-area-inset-bottom)) 12px;
+    padding-bottom:max(10px,env(safe-area-inset-bottom));
+    flex-wrap:wrap; font-size:12px;
+  }
+  .seed-chip{
+    display:flex; align-items:center; gap:6px;
+    background:var(--panel); border:1px solid var(--panel-stroke);
+    border-radius:999px; padding:5px 10px;
+  }
+  .seed-chip input{
+    width:96px; background:transparent; border:none; color:var(--text);
+    font-size:12px; font-family:inherit; outline:none;
+  }
+  .btn{
+    background:var(--panel); border:1px solid var(--panel-stroke); color:var(--text);
+    border-radius:999px; padding:6px 12px; font-size:12px; cursor:pointer; font-family:inherit;
+    transition:background .2s, transform .1s, border-color .2s;
+  }
+  .btn:hover{background:rgba(255,255,255,.12)}
+  .btn:active{transform:scale(.95)}
+  .btn.accent{border-color:var(--accent-soft); color:var(--accent)}
+  .btn.active{background:var(--accent-soft); border-color:var(--accent); color:var(--text)}
+
+  /* Almanac overlay */
+  .overlay{
+    position:fixed; inset:0; z-index:20; display:flex; flex-direction:column;
+    background:rgba(8,14,10,.82); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    animation:fade .25s ease;
+  }
+  .overlay.hidden{display:none}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .overlay header{position:static;background:none;backdrop-filter:none;padding:14px}
+  .almanac-scroll{flex:1; overflow-y:auto; padding:0 14px 24px}
+  .almanac-title{font-size:18px;font-weight:800;letter-spacing:.04em;margin:2px 0 2px}
+  .almanac-sub{font-size:12px;opacity:.6;margin-bottom:14px}
+  .family{margin-bottom:18px}
+  .family h3{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.7;margin:0 0 8px;font-weight:700}
+  .entries{display:grid; grid-template-columns:repeat(5,1fr); gap:8px}
+  .entry{
+    aspect-ratio:1/1; border-radius:12px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:2px;
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+    position:relative; overflow:hidden;
+  }
+  .entry .emo{font-size:clamp(20px,7vw,30px); line-height:1; filter:grayscale(1) opacity(.32)}
+  .entry .nm{font-size:9px;opacity:.5;text-align:center;padding:0 2px;line-height:1.1}
+  .entry.unlocked{background:rgba(255,255,255,.07); border-color:var(--accent-soft)}
+  .entry.unlocked .emo{filter:none; text-shadow:0 0 10px var(--accent-soft)}
+  .entry.unlocked .nm{opacity:.85}
+  .entry.featured{box-shadow:inset 0 0 0 2px var(--accent)}
+  .entry .star{position:absolute;top:3px;right:4px;font-size:9px;color:var(--accent);opacity:.9}
+  .close-x{position:absolute;top:12px;right:14px}
+
+  .toast{
+    position:fixed; left:50%; bottom:96px; transform:translateX(-50%) translateY(20px);
+    background:rgba(10,18,12,.92); border:1px solid var(--accent-soft); color:var(--text);
+    padding:10px 16px; border-radius:999px; font-size:13px; z-index:30; opacity:0;
+    transition:opacity .3s, transform .3s; pointer-events:none; max-width:88vw; text-align:center;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  .hint{font-size:11px;opacity:.5;text-align:center;padding:0 16px 4px}
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">HEX<small>HARVEST</small></div>
+    <div class="season-name" id="seasonName">—<small id="weekLabel"></small></div>
+    <div class="ring-wrap" id="ringWrap" role="button" tabindex="0" aria-label="Almanac completion percentage">
+      <svg viewBox="0 0 46 46" aria-hidden="true">
+        <circle class="ring-bg" cx="23" cy="23" r="19"></circle>
+        <circle class="ring-fg" id="ringFg" cx="23" cy="23" r="19"
+          stroke-dasharray="119.38" stroke-dashoffset="119.38"></circle>
+      </svg>
+      <span class="ring-pct" id="ringPct">0%</span>
+    </div>
+    <button class="btn accent" id="almanacBtn" aria-haspopup="dialog">Almanac</button>
+  </header>
+
+  <main>
+    <canvas id="board" aria-label="Hex harvest game board. Swipe in any of six hex directions to slide and merge crops." role="application"></canvas>
+  </main>
+
+  <div class="toolbar">
+    <div class="seed-chip" title="Game seed — drives spawn order and layout">
+      <span aria-hidden="true">🌱</span>
+      <input id="seedInput" aria-label="Game seed" placeholder="seed" />
+    </div>
+    <button class="btn" id="dailyBtn">Daily</button>
+    <button class="btn" id="randomBtn">Random</button>
+    <button class="btn" id="setSeedBtn">Set</button>
+    <button class="btn" id="resetBtn">Replant</button>
+  </div>
+  <div class="hint">Swipe (or drag) in any of six hex directions to slide &amp; merge. Fill the almanac one rare crop at a time.</div>
+
+  <div id="almanacOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Seasonal almanac">
+    <header>
+      <div class="almanac-title" id="almTitle">Almanac</div>
+      <div class="almanac-sub" id="almSub"></div>
+      <button class="btn close-x" id="almClose" aria-label="Close almanac">✕</button>
+    </header>
+    <div class="almanac-scroll" id="almScroll"></div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+  <div class="sr-only" id="ariaLive" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+"use strict";
+/* ============================================================================
+   HEX HARVEST — single-file client-side merge game.
+   No modules (works from file://). No build step. No external deps.
+   Sections: 1.Hex core  2.RNG/seed  3.Season config  4.Game state+merge
+             5.Persistence  6.Render+animation  7.Input  8.UI  9.Boot
+============================================================================ */
+
+/* ── 1. HEX CORE (parity-aware odd-q offset, verified) ─────────────── */
+const GRID = 7;
+const DIR_EVEN = { N:[0,-1], S:[0,1], NE:[1,-1], SE:[1,0], NW:[-1,-1], SW:[-1,0] };
+const DIR_ODD  = { N:[0,-1], S:[0,1], NE:[1,0],  SE:[1,1], NW:[-1,0],  SW:[-1,1] };
+const DIRECTIONS = ['N','S','NE','SE','SW','NW'];
+const DIRECTION_ANGLES = { N:-90, NE:-30, SE:30, S:90, SW:150, NW:-150 };
+
+function dirVec(q,d){ return (q&1)?DIR_ODD[d]:DIR_EVEN[d]; }
+function inBounds(q,r){ return q>=0&&q<GRID&&r>=0&&r<GRID; }
+function key(q,r){ return q+','+r; }
+function neighbor(q,r,d){ const v=dirVec(q,d); const nq=q+v[0], nr=r+v[1]; return inBounds(nq,nr)?[nq,nr]:null; }
+function allCells(){ const a=[]; for(let r=0;r<GRID;r++) for(let q=0;q<GRID;q++) a.push([q,r]); return a; }
+function hexToPixel(q,r,size){ return { x:size*1.5*q, y:size*Math.sqrt(3)*(r+0.5*(q&1)) }; }
+function boardSize(size){ return { w:2*size+(GRID-1)*1.5*size, h:Math.sqrt(3)*size*(GRID+0.5) }; }
+function fitSize(maxW,maxH){ return Math.min(maxW/11, maxH/(Math.sqrt(3)*(GRID+0.5))); }
+function slideRank(q,r,d){ let k=0,cq=q,cr=r; for(;;){ const n=neighbor(cq,cr,d); if(!n) return k; cq=n[0];cr=n[1];k++; } }
+function slideOrder(d){ return allCells().slice().sort((a,b)=>slideRank(a[0],a[1],d)-slideRank(b[0],b[1],d)); }
+function angleToDirection(deg){
+  let best=null,bd=Infinity;
+  for(const d of DIRECTIONS){ let x=Math.abs(deg-DIRECTION_ANGLES[d]); if(x>180)x=360-x; if(x<bd){bd=x;best=d;} }
+  return best;
+}
+
+/* ── 2. RNG / SEED (mulberry32, deterministic) ─────────────────────── */
+function hashSeed(str){
+  let h=1779033703 ^ str.length;
+  for(let i=0;i<str.length;i++){ h=Math.imul(h ^ str.charCodeAt(i),3432918353); h=(h<<13)|(h>>>19); }
+  return h>>>0;
+}
+function makeRng(seedStr){
+  let a = hashSeed(seedStr) >>> 0;
+  return {
+    next(){ a=(a+0x6D2B79F5)|0; let t=Math.imul(a^(a>>>15),1|a); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; },
+    state(){ return a; },
+    setState(v){ a=v>>>0; }
+  };
+}
+function dailySeed(){ const d=new Date(); return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0'); }
+function getISOWeek(date){
+  const d=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()));
+  const dayNum=d.getUTCDay()||7;
+  d.setUTCDate(d.getUTCDate()+4-dayNum);
+  const yearStart=new Date(Date.UTC(d.getUTCFullYear(),0,1));
+  const weekNum=Math.ceil((((d-yearStart)/86400000)+1)/7);
+  return d.getUTCFullYear()+'-W'+String(weekNum).padStart(2,'0');
+}
+
+/* ── 3. SEASON CONFIG (bundled default + remote override + graceful degrade) ─ */
+const CONFIG_ENDPOINT = ''; // set to jsonbin.io bin URL to enable weekly server rotation; empty = bundled default
+
+const BUNDLED_FAMILIES = [
+  { familyId:'grain',   familyName:'Grain',   tiers:[{tier:0,name:'Seedling',emoji:'🌱'},{tier:1,name:'Sprout',emoji:'🌿'},{tier:2,name:'Stalk',emoji:'🌾'},{tier:3,name:'Ear',emoji:'🌽'},{tier:4,name:'Harvest',emoji:'🍞'}] },
+  { familyId:'root',    familyName:'Root',     tiers:[{tier:0,name:'Seed',emoji:'🥜'},{tier:1,name:'Bean',emoji:'🫘'},{tier:2,name:'Tuber',emoji:'🥔'},{tier:3,name:'Root',emoji:'🥕'},{tier:4,name:'Bulb',emoji:'🧄'}] },
+  { familyId:'berry',   familyName:'Berry',   tiers:[{tier:0,name:'Bud',emoji:'🫐'},{tier:1,name:'Cluster',emoji:'🍇'},{tier:2,name:'Berry',emoji:'🍓'},{tier:3,name:'Cherry',emoji:'🍒'},{tier:4,name:'Melon',emoji:'🍉'}] },
+  { familyId:'blossom', familyName:'Blossom', tiers:[{tier:0,name:'Rosebud',emoji:'🌹'},{tier:1,name:'Bloom',emoji:'🌸'},{tier:2,name:'Sunflower',emoji:'🌻'},{tier:3,name:'Hibiscus',emoji:'🌺'},{tier:4,name:'Rosette',emoji:'🏵️'}] },
+  { familyId:'gourd',   familyName:'Gourd',   tiers:[{tier:0,name:'Leaf',emoji:'🥬'},{tier:1,name:'Cucumber',emoji:'🥒'},{tier:2,name:'Pepper',emoji:'🫑'},{tier:3,name:'Pumpkin',emoji:'🎃'},{tier:4,name:'Gourd',emoji:'🍈'}] }
+];
+const BUNDLED_SPAWNPOOL = [
+  {familyId:'grain',tier:0,weight:1},{familyId:'root',tier:0,weight:1},
+  {familyId:'berry',tier:0,weight:1},{familyId:'blossom',tier:0,weight:1},
+  {familyId:'gourd',tier:0,weight:1}
+];
+// Four atmospheric themes rotate weekly (week%4) so the page demonstrates
+// seasonal rotation out-of-the-box; a jsonbin config fully overrides per-week.
+const ATMOSPHERES = [
+  { key:'spring', name:'Spring Awakening', featured:{familyId:'blossom',tier:4},
+    palette:{bg1:'#1b3a2b',bg2:'#243d2a',accent:'#8bd17a',text:'#eaf5ea'} },
+  { key:'summer', name:'High Summer', featured:{familyId:'berry',tier:4},
+    palette:{bg1:'#2b2a1b',bg2:'#3a3320',accent:'#f0c25a',text:'#fdf3d6'} },
+  { key:'autumn', name:'Autumn Harvest', featured:{familyId:'gourd',tier:4},
+    palette:{bg1:'#2e1f14',bg2:'#3d2818',accent:'#e8923b',text:'#f6e3cf'} },
+  { key:'winter', name:'Winter Frost', featured:{familyId:'root',tier:4},
+    palette:{bg1:'#16242b',bg2:'#1d2f3a',accent:'#7fd1d6',text:'#e4f1f3'} }
+];
+const DEFAULT_PALETTE = ATMOSPHERES[0].palette;
+
+function normalizeSeason(s, isoWeek, fallbackPalette){
+  const pal = s.palette || fallbackPalette || DEFAULT_PALETTE;
+  return {
+    seasonId: s.seasonId || ('season-'+(s.isoWeek||isoWeek||'default')),
+    displayName: s.displayName || 'Evergreen Harvest',
+    isoWeek: s.isoWeek || isoWeek || 'default',
+    cropFamilies: s.cropFamilies || BUNDLED_FAMILIES,
+    featuredCrop: s.featuredCrop || (s.cropFamilies?{familyId:s.cropFamilies[0].familyId,tier:0}:ATMOSPHERES[0].featured),
+    spawnPool: s.spawnPool || BUNDLED_SPAWNPOOL,
+    initialSeedCount: s.initialSeedCount || 5,
+    palette: pal
+  };
+}
+function buildSeason(isoWeek, remoteConfig){
+  if(remoteConfig && remoteConfig.seasons){
+    if(remoteConfig.seasons[isoWeek]) return normalizeSeason(remoteConfig.seasons[isoWeek], isoWeek);
+    const past=Object.keys(remoteConfig.seasons).filter(k=>k!=='default'&&k<=isoWeek).sort();
+    if(past.length) return normalizeSeason(remoteConfig.seasons[past[past.length-1]], isoWeek);
+  }
+  const wn=parseInt(isoWeek.split('-W')[1]||'1',10);
+  const atm=ATMOSPHERES[((wn-1)%4+4)%4];
+  return {
+    seasonId:'evergreen-'+atm.key, displayName:atm.name, isoWeek,
+    cropFamilies:BUNDLED_FAMILIES, featuredCrop:atm.featured,
+    spawnPool:BUNDLED_SPAWNPOOL, initialSeedCount:5, palette:atm.palette
+  };
+}
+async function fetchRemoteConfig(){
+  if(!CONFIG_ENDPOINT) return null;
+  try{
+    const res=await fetch(CONFIG_ENDPOINT,{cache:'no-store'});
+    if(res.ok){ const data=await res.json(); if(data&&data.schemaVersion===1&&data.seasons) return data; }
+  }catch(e){ console.warn('[HexHarvest] remote config unavailable, using bundled default.',e); }
+  return null;
+}
+
+/* season helpers */
+function getTierObj(season,famId,tier){ const f=season.cropFamilies.find(x=>x.familyId===famId); return f?f.tiers.find(t=>t.tier===tier)||null:null; }
+function getNextTierObj(season,famId,tier){ const f=season.cropFamilies.find(x=>x.familyId===famId); return f?f.tiers.find(t=>t.tier===tier+1)||null:null; }
+function topTierOf(season,famId){ const f=season.cropFamilies.find(x=>x.familyId===famId); return f?f.tiers.length-1:0; }
+function getTotalEntries(season){ return season.cropFamilies.reduce((s,f)=>s+f.tiers.length,0); }
+function entryKey(famId,tier){ return famId+':'+tier; }
+function pickFromSpawnPool(season,rng){
+  const tot=season.spawnPool.reduce((s,e)=>s+(e.weight||1),0);
+  let r=rng()*tot;
+  for(const e of season.spawnPool){ r-=(e.weight||1); if(r<=0) return e; }
+  return season.spawnPool[0];
+}
+
+/* ── 4. GAME STATE + MERGE/SPAWN/FALLOW ────────────────────────────── */
+const State = {
+  board: new Map(),      // "q,r" -> {familyId,tier,id}
+  season: null,
+  almanac: {},           // { seasonId: { entryKey: true } }
+  seed: dailySeed(),
+  rng: makeRng(dailySeed()),
+  resetCount: 0,
+  tileId: 1,
+  anim: null,            // active animation object or null
+  pulses: [],            // [{q,r,start,dur}]
+  spawnPops: [],         // [{q,r,start}]
+  preview: null,         // ghost arrow {origin,angle} or null
+  reducedMotion: false
+};
+function nextId(){ return State.tileId++; }
+
+function emptyCells(){ return allCells().filter(c=>!State.board.has(key(c[0],c[1]))); }
+function spawnTile(){
+  const empties=emptyCells();
+  if(!empties.length) return null;
+  const idx=Math.floor(State.rng.next()*empties.length);
+  const [q,r]=empties[idx];
+  const pick=pickFromSpawnPool(State.season,State.rng.next);
+  const tile={familyId:pick.familyId,tier:pick.tier,id:nextId()};
+  State.board.set(key(q,r),tile);
+  State.spawnPops.push({q,r,start:performance.now()});
+  return [q,r];
+}
+function seedInitialBoard(){
+  State.board=new Map();
+  const n=State.season.initialSeedCount;
+  for(let i=0;i<n;i++) spawnTile();
+}
+
+/* two-phase swipe: shift (move into empty) then merge (leading-edge), verified */
+function applySwipe(dir){
+  const order=slideOrder(dir);
+  const work=new Map();           // cellKey -> tile copy (with _from/_to)
+  const sources=[];
+  for(const c of allCells()){
+    const t=State.board.get(key(c[0],c[1]));
+    if(t){ const cp={familyId:t.familyId,tier:t.tier,id:t.id,_from:c,_to:c}; work.set(key(c[0],c[1]),cp); sources.push(cp); }
+  }
+  const mergedIds=new Set();
+  const births=[];
+  // shift phase: move one cell into empty neighbor
+  for(const c of order){
+    const ck=key(c[0],c[1]); const tile=work.get(ck); if(!tile) continue;
+    const T=neighbor(c[0],c[1],dir); if(!T) continue;
+    const tk=key(T[0],T[1]);
+    if(!work.has(tk)){ work.delete(ck); work.set(tk,tile); tile._to=T; }
+    else tile._to=c;
+  }
+  // merge phase: trailing tile merges into leading neighbor
+  for(const c of order){
+    const ck=key(c[0],c[1]); const tile=work.get(ck); if(!tile) continue;
+    const T=neighbor(c[0],c[1],dir); if(!T) continue;
+    const tk=key(T[0],T[1]); const lead=work.get(tk); if(!lead) continue;
+    if(lead.familyId===tile.familyId && lead.tier===tile.tier
+       && !mergedIds.has(lead.id) && !mergedIds.has(tile.id)){
+      if(getNextTierObj(State.season,tile.familyId,tile.tier)===null) continue; // top tier
+      const newTier=tile.tier+1;
+      const res={familyId:tile.familyId,tier:newTier,id:nextId(),_from:T,_to:T};
+      lead._to=T; tile._to=T;
+      work.delete(ck); work.set(tk,res);
+      mergedIds.add(res.id); mergedIds.add(lead.id); mergedIds.add(tile.id);
+      births.push({q:T[0],r:T[1],familyId:tile.familyId,tier:newTier});
+    }
+  }
+  const changed = sources.some(s=>s._to[0]!==s._from[0]||s._to[1]!==s._from[1]) || births.length>0;
+  return { changed, work, sources, births };
+}
+
+function commitSwipe(dir){
+  if(State.anim) return; // ignore during animation
+  const {changed,work,sources,births}=applySwipe(dir);
+  if(!changed){ return; }
+  // build animation
+  const transports=sources.map(s=>({id:s.id,from:s._from,to:s._to,familyId:s.familyId,tier:s.tier}));
+  const dur=State.reducedMotion?90:180;
+  State.anim={ start:performance.now(), dur, transports, births, finalBoard:work };
+}
+
+function finalizeAnim(){
+  const a=State.anim; if(!a) return;
+  // apply final board
+  State.board=new Map();
+  for(const [ck,t] of a.finalBoard){ State.board.set(ck,{familyId:t.familyId,tier:t.tier,id:t.id}); }
+  State.anim=null;
+  // unlock almanac entries for every tile now present
+  const newly=unlockEntries();
+  // spawn one new low-tier tile (only if board changed — it did)
+  spawnTile();
+  // pulses for merges
+  const now=performance.now();
+  for(const b of a.births){
+    State.pulses.push({q:b.q,r:b.r,start:now,dur:State.reducedMotion?0:420,tier:b.tier});
+  }
+  // fallow check
+  if(isFallow()){ onFallow(); }
+  persist();
+  if(newly.length){ announceUnlock(newly); }
+  updatePct();
+}
+
+function unlockEntries(){
+  const sid=State.season.seasonId;
+  if(!State.almanac[sid]) State.almanac[sid]={};
+  const unlocked=State.almanac[sid];
+  const newly=[];
+  for(const t of State.board.values()){
+    const ek=entryKey(t.familyId,t.tier);
+    if(!unlocked[ek]){ unlocked[ek]=true; const o=getTierObj(State.season,t.familyId,t.tier); if(o) newly.push(o); }
+  }
+  return newly;
+}
+
+function isFallow(){
+  if(emptyCells().length>0) return false; // not full
+  // any adjacent identical non-top pair => a swipe can merge
+  for(const c of allCells()){
+    const t=State.board.get(key(c[0],c[1])); if(!t) continue;
+    if(getNextTierObj(State.season,t.familyId,t.tier)===null) continue; // top tier can't merge
+    for(const d of DIRECTIONS){
+      const n=neighbor(c[0],c[1],d); if(!n) continue;
+      const nt=State.board.get(key(n[0],n[1]));
+      if(nt && nt.familyId===t.familyId && nt.tier===t.tier) return false;
+    }
+  }
+  return true;
+}
+function onFallow(){
+  showToast('🌾 Fallow board — replanted. Almanac kept.');
+  State.resetCount++;
+  State.rng=makeRng(State.seed+':fallow'+State.resetCount);
+  seedInitialBoard();
+  unlockEntries();
+}
+
+/* ── 5. PERSISTENCE ────────────────────────────────────────────────── */
+const STORE_KEY='hexharvest.v1.state';
+const CONFIG_CACHE_KEY='hexharvest.v1.config';
+let persistenceOk=true;
+function persist(){
+  if(!persistenceOk) return;
+  try{
+    const boardArr=[];
+    for(const [ck,t] of State.board) boardArr.push({c:ck.split(',').map(Number),t:[t.familyId,t.tier,t.id]});
+    const data={
+      seasonId:State.season.seasonId, board:boardArr, almanac:State.almanac,
+      seed:State.seed, rngState:State.rng.state(), resetCount:State.resetCount,
+      tileId:State.tileId
+    };
+    localStorage.setItem(STORE_KEY,JSON.stringify(data));
+  }catch(e){ console.warn('[HexHarvest] persist failed',e); }
+}
+function loadPersisted(){
+  try{
+    const raw=localStorage.getItem(STORE_KEY);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+function cacheConfig(cfg){ try{ if(cfg) localStorage.setItem(CONFIG_CACHE_KEY,JSON.stringify(cfg)); }catch(e){} }
+function loadCachedConfig(){ try{ const r=localStorage.getItem(CONFIG_CACHE_KEY); return r?JSON.parse(r):null; }catch(e){ return null; } }
+
+/* ── 6. RENDER + ANIMATION LOOP ────────────────────────────────────── */
+const canvas=document.getElementById('board');
+const ctx=canvas.getContext('2d');
+let cssW=0,cssH=0,size=0,offX=0,offY=0,dpr=1;
+
+function resize(){
+  const main=document.querySelector('main');
+  const availW=Math.min(main.clientWidth-12, 520);
+  const availH=main.clientHeight-12;
+  // board aspect w/h = 11 / (sqrt3*7.5) ≈ 0.847
+  const ratio=11/(Math.sqrt(3)*(GRID+0.5));
+  let w=availW, h=w/ratio;
+  if(h>availH){ h=availH; w=h*ratio; }
+  cssW=Math.floor(w); cssH=Math.floor(h);
+  dpr=Math.min(window.devicePixelRatio||1, 2.5);
+  canvas.style.width=cssW+'px'; canvas.style.height=cssH+'px';
+  canvas.width=Math.floor(cssW*dpr); canvas.height=Math.floor(cssH*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  size=fitSize(cssW,cssH);
+  const bs=boardSize(size);
+  offX=(cssW-bs.w)/2 + size; offY=(cssH-bs.h)/2 + size*Math.sqrt(3)/2;
+}
+function cellCenter(q,r){ const p=hexToPixel(q,r,size); return {x:offX+p.x, y:offY+p.y}; }
+
+function hexPath(cx,cy,s){
+  ctx.beginPath();
+  for(let i=0;i<6;i++){
+    const a=Math.PI/180*(60*i);
+    const x=cx+s*Math.cos(a), y=cy+s*Math.sin(a);
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+}
+function drawHexCell(cx,cy){
+  hexPath(cx,cy,size*0.96);
+  ctx.fillStyle='rgba(255,255,255,0.045)'; ctx.fill();
+  ctx.lineWidth=1; ctx.strokeStyle='rgba(255,255,255,0.13)'; ctx.stroke();
+}
+function drawTile(cx,cy,familyId,tier,scale){
+  const o=getTierObj(State.season,familyId,tier); if(!o) return;
+  const s=size*0.96*scale;
+  hexPath(cx,cy,s);
+  // tier-based fill: brighter + accent-tinted at higher tiers
+  const accent=State.season.palette.accent;
+  const alpha=0.10+0.06*tier;
+  ctx.fillStyle=`rgba(255,255,255,${Math.min(0.28,alpha)})`; ctx.fill();
+  if(tier>0){
+    ctx.save(); ctx.globalAlpha=Math.min(0.5,0.12+0.1*tier);
+    ctx.strokeStyle=accent; ctx.lineWidth=1.5+0.4*tier; ctx.stroke(); ctx.restore();
+  }else{
+    ctx.strokeStyle='rgba(255,255,255,0.16)'; ctx.lineWidth=1; ctx.stroke();
+  }
+  // emoji
+  ctx.font=`${Math.floor(size*1.05)}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  if(tier>=3){ ctx.save(); ctx.shadowColor=accent; ctx.shadowBlur=8+2*tier; }
+  ctx.fillText(o.emoji,cx,cy+1);
+  if(tier>=3) ctx.restore();
+}
+
+function easeOut(t){ return 1-Math.pow(1-t,3); }
+
+function render(){
+  ctx.clearRect(0,0,cssW,cssH);
+  // empty cells
+  for(const c of allCells()){ const {x,y}=cellCenter(c[0],c[1]); drawHexCell(x,y); }
+  const now=performance.now();
+  if(State.anim){
+    const a=State.anim;
+    const t=Math.min(1,(now-a.start)/a.dur);
+    const e=easeOut(t);
+    // draw moving tiles
+    for(const tr of a.transports){
+      const fp=cellCenter(tr.from[0],tr.from[1]);
+      const tp=cellCenter(tr.to[0],tr.to[1]);
+      const x=fp.x+(tp.x-fp.x)*e, y=fp.y+(tp.y-fp.y)*e;
+      drawTile(x,y,tr.familyId,tr.tier,1);
+    }
+    // births appear in second half
+    if(t>0.55){
+      const bt=(t-0.55)/0.45;
+      const sc=0.6+0.4*easeOut(Math.min(1,bt));
+      for(const b of a.births){ const {x,y}=cellCenter(b.q,b.r); drawTile(x,y,b.familyId,b.tier,sc); }
+    }
+    if(t>=1) finalizeAnim();
+  } else {
+    // static board
+    for(const [ck,t] of State.board){
+      const [q,r]=ck.split(',').map(Number);
+      const {x,y}=cellCenter(q,r);
+      let scale=1;
+      // spawn pop
+      const pop=State.spawnPops.find(p=>p.q===q&&p.r===r);
+      if(pop){ const pt=(now-pop.start)/140; if(pt<1){ scale=0.7+0.3*easeOut(pt); } else { State.spawnPops=State.spawnPops.filter(p2=>p2!==pop); } }
+      drawTile(x,y,t.familyId,t.tier,scale);
+    }
+  }
+  // pulses
+  for(const p of State.pulses){
+    const pt=(now-p.start)/p.dur;
+    if(pt>=1){ State.pulses=State.pulses.filter(x=>x!==p); continue; }
+    const {x,y}=cellCenter(p.q,p.r);
+    const rad=size*0.5 + pt*size*1.6;
+    ctx.save();
+    ctx.globalAlpha=(1-pt)*0.6;
+    ctx.strokeStyle=State.season.palette.accent;
+    ctx.lineWidth=2+ (p.tier||1);
+    ctx.beginPath(); ctx.arc(x,y,rad,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+  // ghost arrow preview
+  if(State.preview){
+    const {origin,angle}=State.preview;
+    const rad=angle*Math.PI/180;
+    const len=size*2.0;
+    const ex=origin.x+Math.cos(rad)*len, ey=origin.y+Math.sin(rad)*len;
+    ctx.save();
+    ctx.globalAlpha=0.55; ctx.strokeStyle=State.season.palette.accent; ctx.lineWidth=3; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(origin.x,origin.y); ctx.lineTo(ex,ey); ctx.stroke();
+    // arrowhead
+    const ah=10;
+    ctx.beginPath();
+    ctx.moveTo(ex,ey);
+    ctx.lineTo(ex-Math.cos(rad-0.4)*ah, ey-Math.sin(rad-0.4)*ah);
+    ctx.lineTo(ex-Math.cos(rad+0.4)*ah, ey-Math.sin(rad+0.4)*ah);
+    ctx.closePath(); ctx.fillStyle=State.season.palette.accent; ctx.fill();
+    ctx.restore();
+  }
+}
+
+function loop(){ render(); requestAnimationFrame(loop); }
+
+/* ── 7. INPUT (swipe + keyboard) ───────────────────────────────────── */
+const DEAD_ZONE=14, SWIPE_THRESHOLD=24;
+let pActive=false,pOrigin=null,pCurrent=null,pSnapped=null;
+function ppos(e){ const r=canvas.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top}; }
+function plen(){ return Math.hypot(pCurrent.x-pOrigin.x,pCurrent.y-pOrigin.y); }
+function pangle(){ return Math.atan2(pCurrent.y-pOrigin.y,pCurrent.x-pOrigin.x)*180/Math.PI; }
+function setPreview(dir){
+  if(dir){ State.preview={origin:pOrigin,angle:DIRECTION_ANGLES[dir]}; }
+  else State.preview=null;
+}
+canvas.addEventListener('pointerdown',e=>{ pActive=true; pOrigin=ppos(e); pCurrent=pOrigin; pSnapped=null; setPreview(null); try{canvas.setPointerCapture(e.pointerId);}catch(_){} });
+canvas.addEventListener('pointermove',e=>{
+  if(!pActive) return; pCurrent=ppos(e);
+  const len=plen();
+  if(len<DEAD_ZONE){ if(pSnapped){ pSnapped=null; setPreview(null); } return; }
+  const d=angleToDirection(pangle());
+  if(d!==pSnapped){ pSnapped=d; setPreview(d); }
+});
+function pUp(e){
+  if(!pActive) return; pActive=false; pCurrent=ppos(e);
+  const len=plen(); const d=pSnapped; pSnapped=null; setPreview(null);
+  try{canvas.releasePointerCapture(e.pointerId);}catch(_){}
+  if(d && len>=SWIPE_THRESHOLD) commitSwipe(d);
+}
+canvas.addEventListener('pointerup',pUp);
+canvas.addEventListener('pointercancel',()=>{ pActive=false; pSnapped=null; setPreview(null); });
+canvas.style.touchAction='none';
+
+// keyboard bonus (desktop)
+const KEYMAP={ 'ArrowUp':'N','w':'N','W':'N','ArrowDown':'S','s':'S','S':'S',
+  'e':'NE','E':'NE','ArrowRight':'NE','d':'SE','D':'SE','a':'SW','A':'SW','ArrowLeft':'SW','q':'NW','Q':'NW' };
+window.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT') return;
+  const d=KEYMAP[e.key]; if(d){ e.preventDefault(); commitSwipe(d); }
+});
+
+/* ── 8. UI (header, almanac overlay, toast, ARIA) ─────────────────── */
+const $=id=>document.getElementById(id);
+const ringFg=$('ringFg'), ringPct=$('ringPct'), seasonName=$('seasonName'), weekLabel=$('weekLabel');
+const almOverlay=$('almanacOverlay'), almScroll=$('almScroll'), almTitle=$('almTitle'), almSub=$('almSub');
+const toastEl=$('toast'), ariaLive=$('ariaLive'), seedInput=$('seedInput');
+const RING_C=2*Math.PI*19;
+ringFg.setAttribute('stroke-dasharray',RING_C.toFixed(2));
+
+function applyPalette(p){
+  const r=document.documentElement.style;
+  r.setProperty('--bg1',p.bg1); r.setProperty('--bg2',p.bg2);
+  r.setProperty('--accent',p.accent); r.setProperty('--text',p.text);
+  const m=document.querySelector('meta[name=theme-color]'); if(m) m.setAttribute('content',p.bg1);
+}
+function updatePct(){
+  const sid=State.season.seasonId;
+  const unlocked=Object.keys(State.almanac[sid]||{}).length;
+  const total=getTotalEntries(State.season);
+  const pct=total?Math.round(unlocked/total*100):0;
+  ringPct.textContent=pct+'%';
+  ringFg.setAttribute('stroke-dashoffset',(RING_C*(1-pct/100)).toFixed(2));
+  ringFg.style.stroke=State.season.palette.accent;
+}
+function announceUnlock(list){
+  if(!list.length) return;
+  const names=list.map(o=>o.emoji+' '+o.name).join(', ');
+  showToast('✨ Almanac unlocked: '+names);
+  ariaLive.textContent='Almanac entry unlocked: '+names+'. '+ringPct.textContent+' complete.';
+}
+let toastTimer=null;
+function showToast(msg){
+  toastEl.textContent=msg; toastEl.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>toastEl.classList.remove('show'),2600);
+}
+function renderAlmanac(){
+  const sid=State.season.seasonId;
+  const unlocked=State.almanac[sid]||{};
+  almTitle.textContent=State.season.displayName+' Almanac';
+  const u=Object.keys(unlocked).length, tot=getTotalEntries(State.season);
+  almSub.textContent=`${u} of ${tot} entries · ${Math.round(u/tot*100)}% complete · week ${State.season.isoWeek}`;
+  almScroll.innerHTML='';
+  for(const fam of State.season.cropFamilies){
+    const wrap=document.createElement('div'); wrap.className='family';
+    const h=document.createElement('h3'); h.textContent=fam.familyName; wrap.appendChild(h);
+    const grid=document.createElement('div'); grid.className='entries';
+    for(const t of fam.tiers){
+      const ek=entryKey(fam.familyId,t.tier);
+      const on=!!unlocked[ek];
+      const feat=State.season.featuredCrop && State.season.featuredCrop.familyId===fam.familyId && State.season.featuredCrop.tier===t.tier;
+      const d=document.createElement('div');
+      d.className='entry'+(on?' unlocked':'')+(feat?' featured':'');
+      d.innerHTML=`<span class="emo">${t.emoji}</span><span class="nm">${t.name}</span>${feat?'<span class="star">★</span>':''}`;
+      d.setAttribute('aria-label',`${t.name} — ${on?'discovered':'locked'}`);
+      grid.appendChild(d);
+    }
+    wrap.appendChild(grid); almScroll.appendChild(wrap);
+  }
+}
+function openAlmanac(){ renderAlmanac(); almOverlay.classList.remove('hidden'); almOverlay.querySelector('.close-x').focus(); }
+function closeAlmanac(){ almOverlay.classList.add('hidden'); }
+$('almanacBtn').addEventListener('click',openAlmanac);
+$('almClose').addEventListener('click',closeAlmanac);
+$('ringWrap').addEventListener('click',openAlmanac);
+$('ringWrap').addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();openAlmanac();} });
+almOverlay.addEventListener('click',e=>{ if(e.target===almOverlay) closeAlmanac(); });
+window.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!almOverlay.classList.contains('hidden')) closeAlmanac(); });
+
+/* seed controls */
+function setSeed(s){
+  State.seed=s||dailySeed(); State.resetCount=0;
+  State.rng=makeRng(State.seed); seedInput.value=State.seed;
+  seedInitialBoard(); unlockEntries(); updatePct(); persist();
+  showToast('🌱 New board planted — seed: '+State.seed);
+}
+$('dailyBtn').addEventListener('click',()=>setSeed(dailySeed()));
+$('randomBtn').addEventListener('click',()=>setSeed('rand-'+Math.floor(Math.random()*1e9).toString(36)));
+$('setSeedBtn').addEventListener('click',()=>{ const v=seedInput.value.trim(); if(v) setSeed(v); });
+seedInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){ const v=seedInput.value.trim(); if(v) setSeed(v); } });
+$('resetBtn').addEventListener('click',()=>{ State.resetCount++; State.rng=makeRng(State.seed+':r'+State.resetCount); seedInitialBoard(); unlockEntries(); updatePct(); persist(); showToast('🌾 Board replanted.'); });
+
+/* ── 9. BOOT ───────────────────────────────────────────────────────── */
+async function boot(){
+  State.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // detect persistence
+  try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); }catch(e){ persistenceOk=false; showToast('⚠️ Storage unavailable — game will not persist.'); }
+  const isoWeek=getISOWeek(new Date());
+  // try cached config first for instant offline boot
+  let remote=null;
+  const cached=loadCachedConfig();
+  // resolve a provisional season from cache (or bundled) so we can render immediately
+  let season=buildSeason(isoWeek,cached);
+  // fetch fresh config in background (non-blocking)
+  fetchRemoteConfig().then(cfg=>{
+    if(cfg){ cacheConfig(cfg); }
+    const fresh=buildSeason(isoWeek,cfg||cached);
+    if(fresh.seasonId!==State.season.seasonId){
+      // season rotated: preserve almanac, swap crop set, fresh board
+      State.season=fresh; applyPalette(fresh.palette);
+      seasonName.firstChild.nodeValue=fresh.displayName; weekLabel.textContent='ISO '+fresh.isoWeek;
+      State.rng=makeRng(State.seed+':'+fresh.seasonId); seedInitialBoard(); unlockEntries(); updatePct(); persist();
+      showToast('🍃 New season: '+fresh.displayName);
+    }
+  });
+  State.season=season; applyPalette(season.palette);
+  seasonName.firstChild.nodeValue=season.displayName; weekLabel.textContent='ISO '+season.isoWeek;
+
+  // restore persisted state if same season
+  const saved=loadPersisted();
+  if(saved && saved.seasonId===season.seasonId){
+    State.almanac=saved.almanac||{}; State.seed=saved.seed||dailySeed();
+    State.resetCount=saved.resetCount||0; State.tileId=saved.tileId||1;
+    State.rng=makeRng(State.seed); State.rng.setState(saved.rngState||State.rng.state());
+    State.board=new Map();
+    if(saved.board){ for(const e of saved.board){ State.board.set(key(e.c[0],e.c[1]),{familyId:e.t[0],tier:e.t[1],id:e.t[2]}); } }
+    if(!State.board.size) seedInitialBoard();
+  } else {
+    State.almanac=(saved&&saved.almanac)||{}; // preserve history across season swap
+    State.seed=(saved&&saved.seed)||dailySeed();
+    State.rng=makeRng(State.seed+':'+season.seasonId);
+    seedInitialBoard();
+  }
+  seedInput.value=State.seed;
+  unlockEntries(); updatePct(); persist();
+  resize(); requestAnimationFrame(loop);
+}
+window.addEventListener('resize',()=>{ resize(); });
+boot();
+</script>
+</body>
+</html>
