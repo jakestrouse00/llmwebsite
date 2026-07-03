@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>TILT TOWER</title>
+<style>
+  :root{
+    --bg0:#0b1020; --bg1:#1a2340; --ink:#eaf2ff; --dim:#9fb2d8; --acc:#5ad1ff;
+    --good:#7CFFB2; --bad:#ff6b6b; --panel:rgba(12,18,36,0.86); --line:rgba(120,160,220,0.25);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;background:var(--bg0);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    overflow:hidden;touch-action:none;user-select:none;}
+  #game{position:fixed;inset:0;}
+  canvas{display:block;width:100%;height:100%;}
+
+  /* HUD */
+  #hud{position:fixed;top:0;left:0;right:0;padding:10px 14px 0;
+    display:flex;justify-content:space-between;align-items:flex-start;
+    pointer-events:none;font-variant-numeric:tabular-nums;z-index:5;}
+  .hud-box{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:6px 10px;backdrop-filter:blur(6px);}
+  .hud-label{font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;}
+  .hud-val{font-size:22px;font-weight:800;line-height:1.1;}
+  #tiltBar{position:fixed;left:50%;top:54px;transform:translateX(-50%);
+    width:160px;height:8px;border-radius:6px;background:rgba(255,255,255,0.12);
+    border:1px solid var(--line);overflow:hidden;z-index:5;pointer-events:none;}
+  #tiltFill{position:absolute;top:0;left:50%;height:100%;width:0;background:var(--acc);
+    transition:width 0.05s linear, left 0.05s linear;}
+  #tiltCenter{position:absolute;top:-2px;left:50%;width:2px;height:12px;background:var(--dim);}
+
+  /* Overlays */
+  .overlay{position:fixed;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;
+    background:radial-gradient(120% 90% at 50% 20%, rgba(20,30,60,0.55), rgba(6,10,22,0.92));
+    z-index:10;padding:24px;}
+  .overlay.hidden{display:none;}
+  .title{font-size:clamp(34px,9vw,64px);font-weight:900;letter-spacing:3px;
+    margin:0 0 4px;background:linear-gradient(90deg,#5ad1ff,#7CFFB2);
+    -webkit-background-clip:text;background-clip:text;color:transparent;}
+  .subtitle{color:var(--dim);font-size:13px;letter-spacing:2px;text-transform:uppercase;margin:0 0 22px;}
+  .btn{appearance:none;border:none;cursor:pointer;font-family:inherit;font-weight:800;
+    font-size:17px;letter-spacing:1px;color:#06101f;background:linear-gradient(90deg,#5ad1ff,#7CFFB2);
+    padding:15px 34px;border-radius:14px;box-shadow:0 8px 24px rgba(90,209,255,0.25);
+    transition:transform 0.08s ease;}
+  .btn:active{transform:scale(0.96);}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line);box-shadow:none;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:14px;}
+  .hint{color:var(--dim);font-size:12px;margin-top:18px;max-width:340px;line-height:1.5;}
+  kbd{background:rgba(255,255,255,0.1);border:1px solid var(--line);border-radius:5px;
+    padding:1px 6px;font-size:11px;font-family:inherit;}
+
+  /* Calibration */
+  #calibMeter{width:min(78vw,320px);height:14px;border-radius:8px;background:rgba(255,255,255,0.1);
+    border:1px solid var(--line);position:relative;margin:18px 0 6px;overflow:hidden;}
+  #calibFill{position:absolute;top:0;left:50%;height:100%;width:0;background:var(--acc);}
+  #calibCenter{position:absolute;top:-3px;left:50%;width:2px;height:20px;background:var(--good);}
+  #calibRead{font-size:12px;color:var(--dim);margin-bottom:14px;font-variant-numeric:tabular-nums;}
+
+  /* Leaderboard */
+  .lb{width:min(86vw,420px);margin-top:18px;}
+  .lb-tabs{display:flex;gap:8px;justify-content:center;margin-bottom:10px;}
+  .lb-tab{background:transparent;border:1px solid var(--line);color:var(--dim);padding:7px 16px;
+    border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .lb-tab.active{background:var(--acc);color:#06101f;border-color:var(--acc);}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--line);}
+  th{color:var(--dim);font-size:10px;letter-spacing:1px;text-transform:uppercase;}
+  td.rank{color:var(--acc);font-weight:800;width:34px;}
+  td.score{font-weight:700;text-align:right;font-variant-numeric:tabular-nums;}
+  .lb-empty{color:var(--dim);font-size:12px;padding:14px 0;}
+  .score-big{font-size:clamp(40px,12vw,72px);font-weight:900;margin:6px 0 2px;
+    background:linear-gradient(90deg,#5ad1ff,#7CFFB2);-webkit-background-clip:text;
+    background-clip:text;color:transparent;}
+  .score-label{color:var(--dim);font-size:12px;letter-spacing:2px;text-transform:uppercase;}
+  .newbest{color:var(--good);font-weight:800;font-size:13px;margin-top:6px;letter-spacing:1px;}
+  @media (prefers-reduced-motion: reduce){
+    .btn,.btn:active{transition:none;}
+  }
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="cv"></canvas>
+</div>
+
+<!-- HUD (during play) -->
+<div id="hud" class="hidden">
+  <div class="hud-box"><div class="hud-label">Height</div><div class="hud-val" id="hudHeight">0</div></div>
+  <div class="hud-box"><div class="hud-label">Best</div><div class="hud-val" id="hudBest">0</div></div>
+</div>
+<div id="tiltBar" class="hidden"><div id="tiltFill"></div><div id="tiltCenter"></div></div>
+
+<!-- START -->
+<div id="startScreen" class="overlay">
+  <h1 class="title">TILT TOWER</h1>
+  <p class="subtitle">Competitive Climbing</p>
+  <button class="btn" id="startBtn">TAP TO PLAY</button>
+  <div class="row">
+    <button class="btn ghost" id="lbBtnStart">Leaderboards</button>
+  </div>
+  <p class="hint">Tilt your device left/right to keep the stack balanced. Blocks drop automatically — your only job is balance. Desktop: use <kbd>&larr;</kbd> <kbd>&rarr;</kbd> or <kbd>A</kbd> <kbd>D</kbd>.</p>
+</div>
+
+<!-- CALIBRATE -->
+<div id="calibScreen" class="overlay hidden">
+  <h1 class="title" style="font-size:clamp(26px,7vw,42px)">CALIBRATE</h1>
+  <p class="subtitle">Hold level, then start</p>
+  <div id="calibMeter"><div id="calibFill"></div><div id="calibCenter"></div></div>
+  <div id="calibRead">tilt: 0.0&deg;</div>
+  <button class="btn" id="calibStartBtn">START RUN</button>
+  <p class="hint">Your resting tilt is locked as zero. Counter-steer against the wobble as the tower grows.</p>
+</div>
+
+<!-- GAME OVER -->
+<div id="overScreen" class="overlay hidden">
+  <div class="score-label">Tower Collapsed</div>
+  <div class="score-big" id="finalScore">0</div>
+  <div class="score-label">blocks placed</div>
+  <div class="newbest hidden" id="newBest">NEW LOCAL BEST!</div>
+  <div class="row">
+    <button class="btn" id="againBtn">PLAY AGAIN</button>
+    <button class="btn ghost" id="lbBtnOver">Leaderboards</button>
+    <button class="btn ghost" id="menuBtn">Menu</button>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div id="lbScreen" class="overlay hidden">
+  <h1 class="title" style="font-size:clamp(26px,7vw,42px)">LEADERBOARDS</h1>
+  <p class="subtitle">Local to this device</p>
+  <div class="lb">
+    <div class="lb-tabs">
+      <button class="lb-tab active" data-board="daily">Daily</button>
+      <button class="lb-tab" data-board="alltime">All-Time</button>
+    </div>
+    <div id="lbBody"></div>
+  </div>
+  <div class="row"><button class="btn ghost" id="lbCloseBtn">Back</button></div>
+  <p class="hint">Daily resets every 24h (UTC date). All-Time is view-only and accumulates your best runs. No accounts, no sync — all stored in this browser.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script>
+(function(){
+"use strict";
+const M = window.Matter;
+const { Engine, Composite, Bodies, Body } = M;
+
+/* ---------- Config ---------- */
+const BW = 64, BH = 34;            // uniform block size (px)
+const MAX_BLOCKS = 100;             // physics body cap
+const PLACE_MIN_DT = 1100;          // ms before next placement allowed
+const PLACE_MAX_DT = 2600;          // force placement after this
+const SETTLE_SPEED = 0.8;           // velocity threshold for "settled"
+const SETTLE_ANG = 0.02;
+const DROP_GAP = 70;                // px above stack top to spawn
+const JITTER_X = 4;                  // placement horizontal jitter (px)
+const JITTER_A = 0.04;               // placement angle jitter (rad)
+const MAX_GX = 0.42;                 // max lateral gravity (fraction of down)
+const TILT_K = 0.011;                // gamma(deg) -> gravity.x scale
+const SMOOTH_A = 0.2;                // input low-pass
+const KEY_TILT_DEG = 34;             // keyboard virtual tilt magnitude
+const KEY_EASE = 0.22;
+const COLLAPSE_MS = 1800;
+const COLLAPSE_MS_REDUCED = 900;
+const LB_CAP = 10;
+
+/* Variable Leverage Force (VLF) — hybrid tension amplifier.
+   Shifted gravity already gives free height-based torque leverage; VLF adds a
+   SMALL extra lateral force on the upper blocks so the top "whips" more than the
+   base. It is tied dimensionally to engine.gravity.scale so it can never exceed a
+   fixed fraction of the shifted-gravity lateral acceleration, preventing explosive
+   instability. It is proportional to the player's tilt input, so it is zero at rest
+   (no external "wind" — difficulty stays height-driven). */
+const VLF_RATIO = 0.6;               // top-block VLF accel = 60% of shifted-gravity lateral accel
+const VLF_TOP_K = 30;                // stability cap: only top K blocks receive VLF
+const MAX_TOWER_PX = MAX_BLOCKS * BH; // height normalization reference
+
+const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- DOM ---------- */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const hud = document.getElementById('hud');
+const tiltBar = document.getElementById('tiltBar');
+const tiltFill = document.getElementById('tiltFill');
+const hudHeight = document.getElementById('hudHeight');
+const hudBest = document.getElementById('hudBest');
+const startScreen = document.getElementById('startScreen');
+const calibScreen = document.getElementById('calibScreen');
+const overScreen = document.getElementById('overScreen');
+const lbScreen = document.getElementById('lbScreen');
+const finalScoreEl = document.getElementById('finalScore');
+const newBestEl = document.getElementById('newBest');
+const lbBody = document.getElementById('lbBody');
+const calibFill = document.getElementById('calibFill');
+const calibRead = document.getElementById('calibRead');
+
+/* ---------- Canvas sizing ---------- */
+let width = 0, height = 0, dpr = 1, groundY = 0, baseCenterX = 0;
+function resize(){
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  width = window.innerWidth; height = window.innerHeight;
+  cv.width = Math.floor(width * dpr); cv.height = Math.floor(height * dpr);
+  cv.style.width = width + 'px'; cv.style.height = height + 'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  groundY = height - 46;
+  baseCenterX = width / 2;
+}
+window.addEventListener('resize', resize);
+resize();
+
+/* ---------- Physics ---------- */
+const engine = Engine.create();
+engine.gravity.y = 1;
+engine.gravity.scale = 0.0011;
+engine.gravity.x = 0;
+engine.enableSleeping = false;
+let ground = null;
+let blocks = [];
+let placedCount = 0;
+let lastPlaceTime = 0;
+let minTopY = 0;
+
+function buildGround(){
+  ground = Bodies.rectangle(baseCenterX, groundY + 200, width * 6, 400, {
+    isStatic:true, friction:0.9, frictionStatic:1.2, restitution:0.05
+  });
+  Composite.add(engine.world, ground);
+}
+function resetWorld(){
+  Composite.clear(engine.world, false);
+  buildGround();
+  blocks = [];
+  placedCount = 0;
+  lastPlaceTime = 0;
+  minTopY = groundY;
+  cameraY = 0;
+  smoothTilt = 0;
+  engine.gravity.x = 0;
+  shakeX = 0; shakeY = 0;
+}
+
+function topSurfaceY(){
+  if(!blocks.length) return groundY;
+  let m = Infinity;
+  for(const b of blocks){ if(b.position.y < m) m = b.position.y; }
+  return m - BH/2;
+}
+
+function placeBlock(){
+  if(placedCount >= MAX_BLOCKS) return;
+  const topY = topSurfaceY();
+  const x = baseCenterX + (Math.random()-0.5)*2*JITTER_X;
+  const a = (Math.random()-0.5)*2*JITTER_A;
+  const y = topY - BH/2 - DROP_GAP;
+  const block = Bodies.rectangle(x, y, BW, BH, {
+    friction:0.85, frictionStatic:1.0, restitution:0.04, density:0.0022, angle:a
+  });
+  block.gameIndex = placedCount;
+  Composite.add(engine.world, block);
+  blocks.push(block);
+  placedCount++;
+  lastPlaceTime = performance.now();
+}
+
+function canPlaceNext(){
+  if(placedCount === 0) return true;
+  if(placedCount >= MAX_BLOCKS) return false;
+  const now = performance.now();
+  if(now - lastPlaceTime < PLACE_MIN_DT) return false;
+  const top = blocks[blocks.length-1];
+  const sp = Math.hypot(top.velocity.x, top.velocity.y);
+  const av = Math.abs(top.angularVelocity);
+  if(sp < SETTLE_SPEED && av < SETTLE_ANG) return true;
+  if(now - lastPlaceTime > PLACE_MAX_DT) return true;
+  return false;
+}
+
+/* Variable Leverage Force: applied per physics step, BEFORE Engine.update
+   integrates (Matter.js adds gravity to body.force, integrates, then resets
+   force to zero — so our added force is consumed that same step). */
+function applyVLF(){
+  const n = blocks.length;
+  if(n < 2) return;
+  const start = Math.max(0, n - VLF_TOP_K);
+  // current lateral acceleration produced by shifted gravity (px/ms^2)
+  const gravLat = smoothTilt * engine.gravity.scale;
+  for(let i = start; i < n; i++){
+    const b = blocks[i];
+    const heightAbove = Math.max(0, groundY - b.position.y);
+    const heightNorm = Math.min(1, heightAbove / MAX_TOWER_PX);
+    const accel = gravLat * VLF_RATIO * heightNorm; // extra lateral accel
+    b.force.x += accel * b.mass;                     // F = m * a
+  }
+}
+
+function checkCollapse(){
+  if(blocks.length < 2) return false;
+  let highest = blocks[0];
+  for(const b of blocks){ if(b.position.y < highest.position.y) highest = b; }
+  if(highest.position.y < minTopY) minTopY = highest.position.y;
+  // a block fell off the top
+  if(highest.position.y > minTopY + BH*2.5) return true;
+  // top toppled sideways
+  if(Math.abs(highest.position.x - baseCenterX) > BW*1.8) return true;
+  // any block tipped hard
+  for(const b of blocks){ if(Math.abs(b.angle) > 1.3) return true; }
+  return false;
+}
+
+/* ---------- Input ---------- */
+let useDevice = false;
+let deviceGamma = 0;
+let restGamma = 0;
+let keyDir = 0;
+let keyGamma = 0;
+let smoothTilt = 0;
+
+function onOrient(e){
+  if(e.gamma == null) return;
+  useDevice = true;
+  deviceGamma = e.gamma;
+}
+function requestOrientationPermission(){
+  if(typeof DeviceOrientationEvent !== 'undefined' &&
+     typeof DeviceOrientationEvent.requestPermission === 'function'){
+    return DeviceOrientationEvent.requestPermission().then(function(state){
+      if(state === 'granted') window.addEventListener('deviceorientation', onOrient);
+    }).catch(function(){});
+  } else if(window.DeviceOrientationEvent){
+    window.addEventListener('deviceorientation', onOrient);
+    return Promise.resolve();
+  }
+  return Promise.resolve();
+}
+
+function inputGamma(){
+  if(useDevice) return deviceGamma;
+  const target = keyDir * KEY_TILT_DEG;
+  keyGamma += (target - keyGamma) * KEY_EASE;
+  return keyGamma;
+}
+
+function updateTilt(){
+  const g = inputGamma() - restGamma;
+  const target = Math.max(-MAX_GX, Math.min(MAX_GX, g * TILT_K));
+  smoothTilt += (target - smoothTilt) * SMOOTH_A;
+  engine.gravity.x = smoothTilt;
+  // visual bar
+  const frac = Math.max(-1, Math.min(1, smoothTilt / MAX_GX));
+  if(tiltBar.classList.contains('hidden') === false){
+    const w = Math.abs(frac) * 80;
+    tiltFill.style.width = w + 'px';
+    tiltFill.style.left = frac >= 0 ? '50%' : (50 - w/160*100) + '%';
+  }
+}
+
+window.addEventListener('keydown', function(e){
+  if(e.repeat) return;
+  if(e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keyDir = -1;
+  else if(e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keyDir = 1;
+});
+window.addEventListener('keyup', function(e){
+  if(e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A'){ if(keyDir === -1) keyDir = 0; }
+  else if(e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D'){ if(keyDir === 1) keyDir = 0; }
+});
+
+/* ---------- Camera & shake ---------- */
+let cameraY = 0, shakeX = 0, shakeY = 0;
+function updateCamera(){
+  const topY = blocks.length ? topSurfaceY() : groundY;
+  const target = topY - height * 0.42;
+  cameraY += (target - cameraY) * 0.08;
+  if(cameraY > 0) cameraY = 0;
+  if(!reducedMotion){
+    shakeX *= 0.86; shakeY *= 0.86;
+  } else { shakeX = 0; shakeY = 0; }
+}
+
+/* ---------- Render ---------- */
+function drawBlock(b){
+  ctx.save();
+  ctx.translate(b.position.x, b.position.y);
+  ctx.rotate(b.angle);
+  const idx = b.gameIndex || 0;
+  const hue = (200 + idx * 5) % 360;
+  ctx.fillStyle = 'hsl(' + hue + ',62%,56%)';
+  ctx.fillRect(-BW/2, -BH/2, BW, BH);
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.fillRect(-BW/2, -BH/2, BW, 5);
+  ctx.strokeStyle = 'rgba(8,14,28,0.55)';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(-BW/2, -BH/2, BW, BH);
+  ctx.restore();
+}
+
+function render(){
+  // background
+  const g = ctx.createLinearGradient(0,0,0,height);
+  g.addColorStop(0,'#0b1020'); g.addColorStop(1,'#161f3a');
+  ctx.fillStyle = g; ctx.fillRect(0,0,width,height);
+
+  ctx.save();
+  ctx.translate(shakeX, shakeY - cameraY);
+
+  // base marker
+  ctx.strokeStyle = 'rgba(90,209,255,0.25)';
+  ctx.setLineDash([6,8]); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(baseCenterX, groundY - 4000); ctx.lineTo(baseCenterX, groundY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ground
+  ctx.fillStyle = '#0a0f1e';
+  ctx.fillRect(-width*3, groundY, width*6, height*2);
+  ctx.fillStyle = 'rgba(90,209,255,0.5)';
+  ctx.fillRect(-width*3, groundY-3, width*6, 3);
+
+  for(const b of blocks) drawBlock(b);
+
+  ctx.restore();
+}
+
+/* ---------- Game state ---------- */
+const STATE = { START:'start', CALIB:'calib', PLAY:'play', COLLAPSE:'collapse', OVER:'over' };
+let state = STATE.START;
+let collapseStart = 0;
+let finalScore = 0;
+
+function show(el){ el.classList.remove('hidden'); }
+function hide(el){ el.classList.add('hidden'); }
+
+function toStart(){
+  state = STATE.START;
+  resetWorld();
+  hide(hud); hide(tiltBar); hide(calibScreen); hide(overScreen); hide(lbScreen);
+  show(startScreen);
+}
+
+function beginPlay(){
+  state = STATE.PLAY;
+  resetWorld();
+  hide(startScreen); hide(calibScreen); hide(overScreen); hide(lbScreen);
+  show(hud); show(tiltBar);
+  hudBest.textContent = String(best());
+  placeBlock();
+}
+
+function triggerCollapse(){
+  state = STATE.COLLAPSE;
+  collapseStart = performance.now();
+  finalScore = placedCount;
+  if(!reducedMotion){ shakeX = 6; shakeY = 6; }
+}
+
+function finishCollapse(){
+  // record score
+  const b = best();
+  const isBest = finalScore > b;
+  recordScore(finalScore);
+  finalScoreEl.textContent = String(finalScore);
+  if(isBest && finalScore > 0){ newBestEl.classList.remove('hidden'); }
+  else { newBestEl.classList.add('hidden'); }
+  hide(hud); hide(tiltBar);
+  show(overScreen);
+  state = STATE.OVER;
+}
+
+/* ---------- Leaderboards / storage ---------- */
+const memStore = {};
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return memStore[k] != null ? memStore[k] : null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){ memStore[k]=v; } }
+
+function todayKey(){ return 'tilttower_daily_' + new Date().toISOString().slice(0,10); }
+function loadBoard(k){ try{ const v = lsGet(k); return v ? JSON.parse(v) : []; }catch(e){ return []; } }
+function saveBoard(k, arr){ try{ lsSet(k, JSON.stringify(arr)); }catch(e){} }
+function insertScore(arr, score){
+  arr.push({score:score, t:Date.now()});
+  arr.sort(function(a,b){ return b.score - a.score; });
+  return arr.slice(0, LB_CAP);
+}
+function best(){
+  const raw = lsGet('tilttower_best'); if(raw == null) return 0;
+  const n = parseInt(raw, 10); return isNaN(n) ? 0 : n;
+}
+function setBest(n){ lsSet('tilttower_best', String(n)); }
+
+function recordScore(score){
+  if(score <= 0) return;
+  const dk = todayKey();
+  const daily = loadBoard(dk);
+  saveBoard(dk, insertScore(daily, score));
+  // all-time is updated by the game system on run completion (not via a UI write from the daily view)
+  const all = loadBoard('tilttower_alltime');
+  saveBoard('tilttower_alltime', insertScore(all, score));
+  if(score > best()) setBest(score);
+}
+
+function fmtTime(ts){
+  const d = new Date(ts);
+  return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+
+let lbCurrent = 'daily';
+function renderLB(){
+  const k = lbCurrent === 'daily' ? todayKey() : 'tilttower_alltime';
+  const arr = loadBoard(k);
+  if(!arr.length){
+    lbBody.innerHTML = '<div class="lb-empty">No scores yet. Climb something!</div>';
+    return;
+  }
+  let html = '<table><thead><tr><th>#</th><th>Blocks</th><th>Time</th></tr></thead><tbody>';
+  for(let i=0;i<arr.length;i++){
+    html += '<tr><td class="rank">'+(i+1)+'</td><td class="score">'+arr[i].score+'</td><td>'+fmtTime(arr[i].t)+'</td></tr>';
+  }
+  html += '</tbody></table>';
+  lbBody.innerHTML = html;
+}
+
+/* ---------- Main loop (fixed-timestep accumulator, decoupled from render) ---------- */
+let last = performance.now();
+let acc = 0;
+const STEP = 1000/60;
+
+function loop(now){
+  let dt = now - last; last = now;
+  if(dt > 200) dt = 200; // avoid huge jumps after tab switch
+
+  // Input -> gravity once per frame (DOM bar updates once per frame).
+  if(state === STATE.PLAY || state === STATE.COLLAPSE){
+    updateTilt();
+  }
+
+  // Fixed-timestep physics. VLF is applied per step, before integration.
+  acc += dt;
+  let steps = 0;
+  while(acc >= STEP && steps < 5){
+    if(state === STATE.PLAY) applyVLF();
+    Engine.update(engine, STEP);
+    acc -= STEP; steps++;
+  }
+
+  if(state === STATE.PLAY){
+    if(canPlaceNext()) placeBlock();
+    updateCamera();
+    hudHeight.textContent = String(placedCount);
+    if(checkCollapse()) triggerCollapse();
+  } else if(state === STATE.COLLAPSE){
+    updateCamera();
+    if(now - collapseStart >= (reducedMotion ? COLLAPSE_MS_REDUCED : COLLAPSE_MS)){
+      finishCollapse();
+    }
+  } else {
+    // idle physics for menu backdrop
+    updateCamera();
+  }
+
+  render();
+  requestAnimationFrame(loop);
+}
+buildGround();
+requestAnimationFrame(loop);
+
+/* ---------- Calibration live readout ---------- */
+function calibTick(){
+  if(state !== STATE.CALIB) return;
+  const g = inputGamma();
+  const frac = Math.max(-1, Math.min(1, g / 45));
+  const w = Math.abs(frac) * 50;
+  calibFill.style.width = w + 'px';
+  calibFill.style.left = frac >= 0 ? '50%' : (50 - w/320*100) + '%';
+  calibRead.textContent = 'tilt: ' + g.toFixed(1) + '\u00b0';
+  requestAnimationFrame(calibTick);
+}
+
+/* ---------- UI wiring ---------- */
+document.getElementById('startBtn').addEventListener('click', function(){
+  requestOrientationPermission().then(function(){
+    state = STATE.CALIB;
+    hide(startScreen); show(calibScreen);
+    calibTick();
+  });
+});
+document.getElementById('calibStartBtn').addEventListener('click', function(){
+  restGamma = useDevice ? deviceGamma : 0;
+  keyGamma = 0; smoothTilt = 0;
+  beginPlay();
+});
+document.getElementById('againBtn').addEventListener('click', function(){
+  // keep calibration, go straight back into a run
+  beginPlay();
+});
+document.getElementById('menuBtn').addEventListener('click', toStart);
+
+function openLB(){ hide(startScreen); hide(overScreen); show(lbScreen); renderLB(); }
+document.getElementById('lbBtnStart').addEventListener('click', openLB);
+document.getElementById('lbBtnOver').addEventListener('click', openLB);
+document.getElementById('lbCloseBtn').addEventListener('click', function(){
+  hide(lbScreen);
+  if(state === STATE.OVER) show(overScreen); else show(startScreen);
+});
+document.querySelectorAll('.lb-tab').forEach(function(t){
+  t.addEventListener('click', function(){
+    document.querySelectorAll('.lb-tab').forEach(function(x){ x.classList.remove('active'); });
+    t.classList.add('active');
+    lbCurrent = t.getAttribute('data-board');
+    renderLB();
+  });
+});
+
+// Prevent arrow keys from scrolling the page
+window.addEventListener('keydown', function(e){
+  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].indexOf(e.key) !== -1) e.preventDefault();
+}, {passive:false});
+
+})();
+</script>
+</body>
+</html>
