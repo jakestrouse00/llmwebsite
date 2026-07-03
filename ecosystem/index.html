@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ecosystem Sandbox — Deterministic Predator-Prey Simulator</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body style="margin:0;padding:0;overflow:hidden;background:#0a0e14;color:#e6edf6;font-family:system-ui,-apple-system,sans-serif;">
+<div id="app">
+
+  <header id="topbar">
+    <div class="brand">
+      <span class="logo-dot"></span>
+      <h1 style="font-size:18px;font-weight:700;margin:0;">Ecosystem Sandbox</h1>
+      <span class="tag" style="font-size:11px;color:#8a9bb0;margin-left:6px">deterministic predator-prey · canvas 2D</span>
+    </div>
+    <div class="stats" id="stats" style="display:flex;gap:16px;align-items:center">
+      <div class="stat" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#8a9bb0"><span class="dot p"></span>Producers <b id="stP" style="color:#e6edf6">0</b></div>
+      <div class="stat" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#8a9bb0"><span class="dot h"></span>Herbivores <b id="stH" style="color:#e6edf6">0</b></div>
+      <div class="stat" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#8a9bb0"><span class="dot c"></span>Predators <b id="stC" style="color:#e6edf6">0</b></div>
+      <div class="stat step" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#8a9bb0">Step <b id="stStep" style="color:#4fd1ff">0</b></div>
+    </div>
+  </header>
+
+  <main id="stage" style="flex:1;display:flex;gap:14px;padding:14px;min-height:0">
+    <div id="canvasWrap" style="position:relative;flex:1;display:flex;align-items:center;justify-content:center;background:#0f1620;border:1px solid rgba(120,160,220,0.18);border-radius:14px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,0.45);">
+      <canvas id="world" width="600" height="600" style="display:block;cursor:crosshair;image-rendering:pixelated;max-width:100%;max-height:100%;border-radius:8px"></canvas>
+      <div id="scrubBadge" class="hidden" style="position:absolute;top:12px;left:12px;padding:5px 12px;border-radius:20px;background:rgba(239,90,90,0.18);border:1px solid rgba(239,90,90,0.5);color:#ffb4b4;font-size:12px;font-weight:600;letter-spacing:.5px;">REPLAY · step <b id="scrubStepLabel">0</b></div>
+    </div>
+
+    <aside id="panel" style="width:300px;flex-shrink:0;display:flex;flex-direction:column;gap:12px;overflow-y:auto;padding-right:2px">
+
+      <section class="card" style="background:rgba(20,28,40,0.72);backdrop-filter:blur(14px);border:1px solid rgba(120,160,220,0.18);border-radius:14px;padding:14px;box-shadow:0 10px 40px rgba(0,0,0,0.45);">
+        <h2 style="font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#8a9bb0;margin-bottom:12px;font-weight:600">Transport</h2>
+        <div class="transport" style="display:flex;gap:8px;margin-bottom:4px">
+          <button id="btnPlay" class="primary" style="cursor:pointer;border:1px solid rgba(120,160,220,0.18);border-radius:9px;background:linear-gradient(135deg,#4fd1ff,#7c5cff);color:#04121f;padding:8px 12px;font-size:13px;font-weight:600;flex:1">▶ Play</button>
+          <button id="btnStep" style="cursor:pointer;border:1px solid rgba(120,160,220,0.18);border-radius:9px;background:rgba(255,255,255,0.05);color:#e6edf6;padding:8px 12px;font-size:13px;font-weight:600;flex:1">⏭ Step</button>
+          <button id="btnReset" style="cursor:pointer;border:1px solid rgba(120,160,220,0.18);border-radius:9px;background:rgba(255,255,255,0.05);color:#e6edf6;padding:8px 12px;font-size:13px;font-weight:600;flex:1">↺ Reset</button>
+        </div>
+        <label class="row" style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px">
+          <span style="flex:0 0 92px;color:#8a9bb0">Sim speed</span>
+          <input type="range" id="simSpeed" min="1" max="60" value="20" style="flex:1;height:5px;border-radius:3px;background:linear-gradient(90deg,#4fd1ff,#7c5cff);outline:none;cursor:pointer">
+          <b id="simSpeedVal" style="flex:0 0 auto;color:#e6edf6;font-variant-numeric:tabular-nums;min-width:34px;text-align:right">20</b>/s
+        </label>
+      </section>
+
+      <section class="card" style="background:rgba(20,28,40,0.72);backdrop-filter:blur(14px);border:1px solid rgba(120,160,220,0.18);border-radius:14px;padding:14px;box-shadow:0 10px 40px rgba(0,0,0,0.45);">
+        <h2 style="font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#8a9bb0;margin-bottom:12px;font-weight:600">World</h2>
+        <label class="row" style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px">
+          <span style="flex:0 0 92px;color:#8a9bb0">Seed</span>
+          <input type="number" id="seed" value="1337" min="0" max="4294967295" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid rgba(120,160,220,0.18);color:#e6edf6;border-radius:8px;padding:6px 8px;font-size:13px;outline:none">
+          <button id="btnReseed" class="mini" style="cursor:pointer;border:1px solid rgba(120,160,220,0.18);border-radius:9px;background:rgba(255,255,255,0.05);color:#e6edf6;padding:6px 9px;font-size:13px;font-weight:600;flex:0 0 auto">↻</button>
+        </label>
+        <label class="row" style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px">
+          <span style="flex:0 0 92px;color:#8a9bb0">Grid size</span>
+          <input type="range" id="gridSize" min="40" max="200" step="10" value="120" style="flex:1;height:5px;border-radius:3px;background:linear-gradient(90deg,#4fd1ff,#7c5cff);outline:none;cursor:pointer">
+          <b id="gridSizeVal" style="flex:0 0 auto;color:#e6edf6;font-variant-numeric:tabular-nums;min-width:34px;text-align:right">120</b>
+        </label>
+      </section>
+
+      <section class="card" style="background:rgba(20,28,40,0.72);backdrop-filter:blur(14px);border:1px solid rgba(120,160,220,0.18);border-radius:14px;padding:14px;box-shadow:0 10px 40px rgba(0,0,0,0.45);">
+        <h2 style="font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#8a9bb0;margin-bottom:12px;font-weight:600">Parameters</h2>
+        <label class="row" style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px"><span style="flex:0 0 92px;color:#8a9bb0">Birth rate</span>
+          <input type="range" id="birthRate" min="0" max="100" value="50" style="flex:1;height:5px;border-radius:3px;background:linear-gradient(90deg,#4fd1ff,#7c5cff);outline:none;cursor:pointer">
+          <b id="birthRateVal" style="flex:0 0 auto;color:#e6edf6;font-variant-numeric:tabular-nums;min-width:34px;text-align:right">0.50</b></label>
+        <label class="row" style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px"><span style="flex:0 0 92px;color:#8a9bb0">Metabolism</span>
+          <input type="range" id="metabolism" min="0" max="200" value="60" style="flex:1;height:5px;border-radius:3px;background:linear-gradient(90deg,#4fd1ff,#7c5cff);outline:none;cursor:pointer">
+          <b id="metabolismVal" style="flex:0 0 auto;color:#e6edf6;font-variant-numeric:tabular-nums;min-width:34px;text-align:right">0.60</b></label>
+        <label class="row" style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px"><span style="flex:0 0 92px;color:#8a9bb0">Predator aggression</span>
+          <input type="range" id="aggression" min="0" max="100" value="40" style="flex:1;height:5px;border-radius:3px;background:linear-gradient(90deg,#4fd1ff,#7c5cff);outline:none;cursor:pointer">
+          <b id="aggressionVal" style="flex:0 0 auto;color:#e6edf6;font-variant-numeric:tabular-nums;min-width:34px;text-align:right">0.40</b></label>
+        <label class="row" style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px"><span style="flex:0 0 92px;color:#8a9bb0">Resource regrowth</span>
+          <input type="range" id="regrowth" min="0" max="100" value="50" style="flex:1;height:5px;border-radius:3px;background:linear-gradient(90deg,#4fd1ff,#7c5cff);outline:none;cursor:pointer">
+          <b id="regrowthVal" style="flex:0 0 auto;color:#e6edf6;font-variant-numeric:tabular-nums;min-width:34px;text-align:right">0.50</b></label>
+      </section>
+
+      <section class="card" style="background:rgba(20,28,40,0.72);backdrop-filter:blur(14px);border:1px solid rgba(120,160,220,0.18);border-radius:14px;padding:14px;box-shadow:0 10px 40px rgba(0,0,0,0.45);">
+        <h2 style="font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#8a9bb0;margin-bottom:12px;font-weight:600">Brush</h2>
+        <div class="palette" id="palette" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <button data-tool="terrain" data-val="0" class="tool" style="cursor:pointer;border:1px solid rgba(120,160,220,0.18);border-radius:9px;background:rgba(255,255,255,0.05);color:#e6edf6;padding:7px 6px;font-size:12px;text-align:center">Water</button>
+          <button data-tool="terrain" data-val="1" class="tool" style="cursor:pointer;border:1px solid rgba(120,160,220,0.18);border-radius:9px;background:rgba(255,255,255,0.05);color:#e6edf6;padding:7px 6px;font-size:12px;text-align:center">Sand</button>
+          <button data-tool="terrain" data-val="2" class="tool active" style="cursor:pointer;border:1px solid rgba(120,160,220,0.18);border-radius:9px;background:linear-gradient(135deg,#4fd1ff,#7c5cff);color:#04121f;padding:7px 6px;font-size:12px;text-align:center;box-shadow:0 0 10px rgba(79,209,255,0.4)">Grass</button>
+          <button data-tool="terrain" data-val="3" class="tool" style="cursor:pointer;border:1px solid rgba(120,160,220,0.18);border-radius:9px;background:rgba(255,255,255,0.05);color:#e6edf6;padding:7px 6px;font-size:12px;text-align:center">Forest</button>
+          <button data-tool="terrain" data-val="4" class="tool" style="cursor:pointer;border:1px solid rgba(120,160,220,0.18);border-radius:9px;background:rgba(255,255,255,0.05);color:#e6edf6;padding:7px 6px;font-size:12px;text-align:center">Rock</button>
+          <button data-tool="organism" data-val="1" class="tool" style="cursor:pointer;border:1px solid rgba(120,160,220,0.18);border-radius:9px;background:rgba(255,255,255,0.05);color:#e6edf6;padding:7px 6px;font-size:12px;text-align:center">+ Producer</button>
+          <button data-tool="organism" data-val="2" class="tool" style="cursor:pointer;border:1px solid rgba(120,160,220,0.18);border-radius:9px;background:rgba(255,255,255,0.05);color:#e6edf6;padding:7px 6px;font-size:12px;text-align:center">+ Herbivore</button>
+          <button data-tool="organism" data-val="3" class="tool" style="cursor:pointer;border:1px solid rgba(120,160,220,0.18);border-radius:9px;background:rgba(255,255,255,0.05);color:#e6edf6;padding:7px 6px;font-size:12px;text-align:center">+ Predator</button>
+          <button data-tool="erase" data-val="0" class="tool" style="cursor:pointer;border:1px solid rgba(120,160,220,0.18);border-radius:9px;background:rgba(255,255,255,0.05);color:#e6edf6;padding:7px 6px;font-size:12px;text-align:center">Erase</button>
+        </div>
+        <label class="row" style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px"><span style="flex:0 0 92px;color:#8a9bb0">Brush size</span>
+          <input type="range" id="brushSize" min="1" max="12" value="3" style="flex:1;height:5px;border-radius:3px;background:linear-gradient(90deg,#4fd1ff,#7c5cff);outline:none;cursor:pointer">
+          <b id="brushSizeVal" style="flex:0 0 auto;color:#e6edf6;font-variant-numeric:tabular-nums;min-width:34px;text-align:right">3</b></label>
+        <p class="hint" style="font-size:11px;color:#8a9bb0;margin-top:10px;line-height:1.4">Click &amp; drag on the world to paint. Edits replay deterministically.</p>
+      </section>
+
+    </aside>
+  </main>
+
+  <footer id="timeline" style="padding:8px 18px 12px;backdrop-filter:blur(12px);background:linear-gradient(0deg,rgba(15,22,32,0.9),rgba(15,22,32,0.4));border-top:1px solid rgba(120,160,220,0.18);">
+    <div class="tl-label" style="font-size:11px;color:#8a9bb0;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Timeline · scrub to replay any state</div>
+    <div class="tl-strip" style="position:relative;height:28px;border-radius:6px;overflow:hidden;border:1px solid rgba(120,160,220,0.18);background:#060a0f">
+      <canvas id="heatmap" width="2000" height="28" style="display:block;width:100%;height:28px;image-rendering:pixelated"></canvas>
+      <div id="scrubCursor" style="position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 8px #fff;pointer-events:none;left:0"></div>
+    </div>
+    <input type="range" id="scrub" min="0" max="0" value="0" step="1" style="width:100%;margin-top:6px;height:5px;border-radius:3px;background:linear-gradient(90deg,#4fd1ff,#7c5cff);outline:none;cursor:pointer">
+    <div class="tl-foot" style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+      <span id="scrubInfo" style="font-size:11px;color:#8a9bb0">Drag to replay · release to return to present</span>
+      <button id="btnResume" class="mini hidden" style="cursor:pointer;border:1px solid rgba(120,160,220,0.18);border-radius:9px;background:rgba(255,255,255,0.05);color:#e6edf6;padding:6px 9px;font-size:13px;font-weight:600;flex:0 0 auto">Resume from here</button>
+    </div>
+  </footer>
+
+</div>
+<script src="script.js"></script>
+</body>
+</html>
