@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Equilibrium Shift — Why the World Isn't a Matriarchy</title>
+<meta name="description" content="An interactive exploration of why matriarchies are rare and how structural power could shift from vertical hierarchy to circular consensus." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- NAV -->
+<header class="nav" id="top">
+  <a class="brand" href="#top">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-text">Equilibrium&nbsp;Shift</span>
+  </a>
+  <nav class="nav-links" aria-label="Primary">
+    <a href="#why">Why Not</a>
+    <a href="#atlas">Atlas</a>
+    <a href="#paths">Paths</a>
+  </nav>
+</header>
+
+<main id="main">
+
+  <!-- HERO -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <p class="eyebrow">An interactive study in structural power</p>
+    <h1 id="hero-title" class="hero-title">The world isn't a matriarchy.<br/><span class="accent">It could shift.</span></h1>
+    <p class="hero-lede">
+      Not a reversal of power — a rebalancing of it. Explore why egalitarian, consensus-based
+      societies are rare, meet the living cultures that still practice them, and choose the
+      structural levers that could move us from <strong>vertical hierarchy</strong> to
+      <strong>circular consensus</strong>.
+    </p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#why">Begin the shift</a>
+      <a class="btn btn-ghost" href="#atlas">See living evidence</a>
+    </div>
+    <div class="hero-stats" aria-label="Key figures">
+      <div class="stat"><span class="stat-num">~17%</span><span class="stat-label">of documented societies are matrilineal</span></div>
+      <div class="stat"><span class="stat-num">3×</span><span class="stat-label">more transitions away from matriliny than toward it</span></div>
+      <div class="stat"><span class="stat-num">7</span><span class="stat-label">living matrilineal cultures on this map</span></div>
+    </div>
+  </section>
+
+  <!-- WHY NOT -->
+  <section id="why" class="section" aria-labelledby="why-title">
+    <div class="section-head">
+      <p class="eyebrow">01 — Why not</p>
+      <h2 id="why-title">Six forces that tilted the world toward patriarchy</h2>
+      <p class="section-sub">
+        Anthropology points to structural pressures — not destiny. Drag the slider to watch power
+        concentrate at a peak, then redistribute around a center.
+      </p>
+    </div>
+
+    <div class="why-grid">
+      <!-- Power Pivot -->
+      <div class="pivot-card" data-feature="pivot">
+        <div class="pivot-stage">
+          <svg id="morphSvg" viewBox="0 0 300 280" role="img" aria-label="Power structure shape morphing between a pyramid and a circle">
+            <defs>
+              <linearGradient id="morphGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop id="gradStop1" offset="0%" stop-color="#e8b04b"/>
+                <stop id="gradStop2" offset="100%" stop-color="#b07a1f"/>
+              </linearGradient>
+            </defs>
+            <polygon id="morphShape" points="" fill="url(#morphGrad)" stroke="rgba(232,176,75,0.55)" stroke-width="1.5"/>
+            <circle id="centerDot" cx="150" cy="157" r="0" fill="#f4f1ea" opacity="0.9"/>
+          </svg>
+          <div class="pivot-label" id="pivotLabel">Patriarchy · Vertical Hierarchy</div>
+        </div>
+
+        <div class="pivot-controls">
+          <input type="range" id="pivotSlider" min="0" max="100" value="0" step="1" aria-label="Shift power from hierarchy to consensus" />
+          <div class="pivot-ends"><span>Control</span><span>Consensus</span></div>
+        </div>
+
+        <div class="pivot-traits">
+          <ul class="traits control" id="traitsControl">
+            <li>Power flows top → down</li>
+            <li>Wealth concentrates in few hands</li>
+            <li>Decisions made above, obeyed below</li>
+            <li>Lineage tracks the father's line</li>
+          </ul>
+          <ul class="traits consensus" id="traitsConsensus">
+            <li>Power flows center → outward</li>
+            <li>Wealth circulates as mutual gift</li>
+            <li>Decisions made by consent of all</li>
+            <li>Lineage tracks the mother's line</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Six forces -->
+      <ol class="forces-list" aria-label="Six explanations for the rarity of matriarchy">
+        <li><span class="force-num">1</span><div><h3>Subsistence shift</h3><p>Plough agriculture &amp; pastoralism concentrated inheritable wealth in men — "the cow is the enemy of matriliny."</p></div></li>
+        <li><span class="force-num">2</span><div><h3>Colonialism</h3><p>Empires overwrote matrilineal succession with patriarchal law and property regimes.</p></div></li>
+        <li><span class="force-num">3</span><div><h3>The matrilineal puzzle</h3><p>Men were torn between providing for their sisters' children and their wives' children.</p></div></li>
+        <li><span class="force-num">4</span><div><h3>Warfare</h3><p>Patrilocal, patrilineal bands coordinated defense and offense more readily under male lineages.</p></div></li>
+        <li><span class="force-num">5</span><div><h3>State formation</h3><p>Patrilineal descent concentrates power vertically — the engine of long-lasting empires.</p></div></li>
+        <li><span class="force-num">6</span><div><h3>World religions</h3><p>Sacred texts across major faiths encoded bias against women holding authority.</p></div></li>
+      </ol>
+    </div>
+
+    <p class="why-note">
+      <strong>A critical distinction:</strong> scholars like Sanday and Göttner-Abendroth define
+      matriarchy <em>not</em> as women dominating men, but as egalitarian, consensus-based,
+      gift-economy societies. No society that fully excludes men from authority has ever been
+      documented — the goal is balance, not inversion.
+    </p>
+  </section>
+
+  <!-- ATLAS -->
+  <section id="atlas" class="section section-alt" aria-labelledby="atlas-title">
+    <div class="section-head">
+      <p class="eyebrow">02 — Living evidence</p>
+      <h2 id="atlas-title">The Matrilineal Atlas</h2>
+      <p class="section-sub">
+        Matriarchy isn't hypothetical. Tap a pin to meet a culture where descent, property, or
+        decision-making already runs through women.
+      </p>
+    </div>
+
+    <div class="atlas-wrap">
+      <div class="atlas-map" id="atlasMap" role="group" aria-label="Interactive map of living matrilineal societies">
+        <div class="map-grid" aria-hidden="true"></div>
+        <div class="map-equator" aria-hidden="true"></div>
+        <!-- pins injected by JS -->
+      </div>
+
+      <aside class="atlas-card" id="atlasCard" aria-live="polite">
+        <div class="atlas-card-empty" id="atlasEmpty">
+          <div class="atlas-card-empty-icon" aria-hidden="true">◎</div>
+          <p>Select a pin on the map to reveal a living matrilineal society.</p>
+        </div>
+        <div class="atlas-card-content" id="atlasContent" hidden>
+          <span class="atlas-region" id="cardRegion"></span>
+          <h3 id="cardName"></h3>
+          <p class="atlas-where" id="cardWhere"></p>
+          <p id="cardDesc"></p>
+          <ul class="atlas-facts" id="cardFacts"></ul>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- PATHS -->
+  <section id="paths" class="section" aria-labelledby="paths-title">
+    <div class="section-head">
+      <p class="eyebrow">03 — Paths to change</p>
+      <h2 id="paths-title">Choose your levers</h2>
+      <p class="section-sub">
+        Structural change is built from concrete actions. Expand a domain, tick the moves you'd
+        commit to, and watch your equilibrium shift take shape.
+      </p>
+    </div>
+
+    <div class="paths-progress">
+      <div class="paths-progress-ring" aria-hidden="true">
+        <svg viewBox="0 0 120 120" width="120" height="120">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(244,241,234,0.12)" stroke-width="10"/>
+          <circle id="progressRing" cx="60" cy="60" r="52" fill="none" stroke="url(#ringGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7" transform="rotate(-90 60 60)"/>
+          <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e8b04b"/><stop offset="100%" stop-color="#c77dff"/></linearGradient></defs>
+        </svg>
+        <div class="paths-progress-text"><span id="progressCount">0</span><small>committed</small></div>
+      </div>
+      <p class="paths-progress-caption" id="progressCaption">No levers pulled yet. Every shift starts with one.</p>
+    </div>
+
+    <div class="paths-grid" id="pathsGrid">
+      <!-- modules injected by JS -->
+    </div>
+  </section>
+
+  <!-- SOURCES -->
+  <section class="section section-alt sources" aria-labelledby="src-title">
+    <div class="section-head">
+      <p class="eyebrow">Grounding</p>
+      <h2 id="src-title">Sources &amp; further reading</h2>
+    </div>
+    <ul class="sources-list">
+      <li>Shenk, M. K. et al. (2019). <em>Transitions in descent practice.</em> Phil. Trans. R. Soc. B.</li>
+      <li>Aberle, D. (1961); Holden, C. &amp; Mace, R. (2003). <em>The cow is the enemy of matriliny.</em></li>
+      <li>Göttner-Abendroth, H. (2009). <em>Matriarchal societies: egalitarian consensus &amp; gift economies.</em></li>
+      <li>Sanday, P. (2018). <em>Matriarchy.</em> Intl. Encyclopedia of Anthropology.</li>
+      <li>Duindam, J. (2021). <em>Patrilineal descent &amp; the durability of empires.</em> History &amp; Anthropology.</li>
+    </ul>
+  </section>
+</main>
+
+<footer class="footer">
+  <p>The Equilibrium Shift — an interactive essay on structural power. Built as a self-contained demo.</p>
+</footer>
+
+<script src="script.js" defer></script>
+</body>
+</html>
