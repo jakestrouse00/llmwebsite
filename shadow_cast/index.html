@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>SHADOWCAST — Daily Silhouette Puzzle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo-dot"></span>
+        <h1>SHADOW<span class="accent">CAST</span></h1>
+      </div>
+      <div class="date-block">
+        <div id="dateLabel" class="date-label">—</div>
+        <div id="dayLabel" class="day-label">Daily Silhouette</div>
+      </div>
+    </header>
+
+    <main class="stage-wrap">
+      <section class="stage">
+        <canvas id="game" width="640" height="720" aria-label="Shadow puzzle stage"></canvas>
+        <div id="solvedOverlay" class="solved-overlay hidden">
+          <div class="solved-card">
+            <div class="solved-eyebrow">Solved</div>
+            <div id="solvedName" class="solved-name">—</div>
+            <div class="solved-sub">The shadow matched the outline.</div>
+            <button id="nextPuzzleBtn" class="ghost-btn">Try another day →</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <div class="card">
+          <div class="card-head">
+            <h2>Match the Shadow</h2>
+            <div id="statusPill" class="pill">In progress</div>
+          </div>
+          <p class="hint-copy">Rotate the light so the cast shadow fills the glowing outline. Drag the wall <em>left/right</em> for angle, <em>scroll/pinch</em> or the slider for distance.</p>
+
+          <div class="meter">
+            <div class="meter-label">Similarity</div>
+            <div class="meter-track"><div id="meterFill" class="meter-fill"></div></div>
+            <div id="meterVal" class="meter-val">0%</div>
+          </div>
+
+          <div class="control-row">
+            <label class="ctrl-label">Distance</label>
+            <input id="distSlider" type="range" min="4" max="14" step="0.05" value="8" />
+            <span id="distVal" class="ctrl-val">8.0</span>
+          </div>
+
+          <div class="hints">
+            <button id="hintBtn" class="hint-btn">Reveal a hint <span id="hintCount" class="hint-count">2 left</span></button>
+            <div id="hintText" class="hint-text"></div>
+          </div>
+
+          <div class="keys">
+            <span class="kbd">←</span><span class="kbd">→</span> angle
+            <span class="kbd">↑</span><span class="kbd">↓</span> distance
+          </div>
+        </div>
+
+        <div class="card archive-card">
+          <div class="card-head"><h2>Archive</h2>
+            <div class="archive-nav">
+              <button id="prevDay" class="nav-btn" title="Previous day">‹</button>
+              <button id="todayBtn" class="nav-btn today-btn">Today</button>
+              <button id="nextDay" class="nav-btn" title="Next day">›</button>
+            </div>
+          </div>
+          <div id="archiveList" class="archive-list"></div>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="foot">Built with pure 2D vector projection · No backend · One deterministic puzzle per day (UTC)</footer>
+  </div>
+
+  <script src="js/shadow.js"></script>
+  <script src="js/puzzles.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
