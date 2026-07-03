@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIRROR MARKET — Herd-Prediction Trading</title>
+<style>
+  :root{
+    --bg:#07070c; --panel:#0e0e16; --panel2:#13131f; --ink:#e8e8f0; --dim:#7a7a90;
+    --line:#1f1f2e; --cyan:#00f0ff; --mag:#ff2bd6; --lime:#b6ff3a; --red:#ff3b5c; --green:#3affb0;
+    --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--mono);overflow:hidden;-webkit-font-smoothing:antialiased}
+  .app{display:grid;grid-template-rows:auto auto 1fr auto;height:100vh;width:100vw}
+  header.bar{display:flex;align-items:center;gap:18px;padding:10px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#0c0c16,#07070c)}
+  .brand{display:flex;flex-direction:column;line-height:1}
+  .brand .t{font-size:20px;font-weight:800;letter-spacing:3px;color:var(--ink)}
+  .brand .t span{color:var(--cyan)}
+  .brand .s{font-size:10px;color:var(--dim);letter-spacing:2px;margin-top:3px}
+  .clock{margin-left:auto;display:flex;align-items:baseline;gap:10px}
+  .clock .lbl{font-size:10px;color:var(--dim);letter-spacing:2px}
+  .clock .val{font-size:34px;font-weight:800;letter-spacing:2px;color:var(--cyan);font-variant-numeric:tabular-nums}
+  .clock .val.warn{color:var(--red);animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.45}}
+  .stat{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1}
+  .stat .k{font-size:9px;color:var(--dim);letter-spacing:2px}
+  .stat .v{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+  .badge{font-size:9px;letter-spacing:2px;padding:4px 8px;border:1px solid var(--lime);color:var(--lime);border-radius:3px}
+  .badge.live{border-color:var(--cyan);color:var(--cyan)}
+  .sizes{display:flex;gap:6px;padding:8px 16px;border-bottom:1px solid var(--line);align-items:center;flex-wrap:wrap}
+  .sizes .lab{font-size:9px;color:var(--dim);letter-spacing:2px;margin-right:4px}
+  .chip{font-family:var(--mono);font-size:10px;font-weight:700;padding:5px 9px;border:1px solid var(--line);background:var(--panel);color:var(--dim);border-radius:4px;cursor:pointer;letter-spacing:1px}
+  .chip.on{border-color:var(--cyan);color:var(--cyan);background:#0a1a22}
+  main.grid{display:grid;grid-template-columns:1fr 320px;gap:0;min-height:0}
+  .board{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:10px;padding:12px;min-height:0;overflow:hidden}
+  .side{border-left:1px solid var(--line);display:grid;grid-template-rows:1fr auto;min-height:0}
+  .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;overflow:hidden;transition:border-color .15s}
+  .card .heat{position:absolute;inset:0;border-radius:8px;pointer-events:none;transition:box-shadow .2s}
+  .card .row1{display:flex;align-items:center;gap:8px;position:relative;z-index:1}
+  .sym{font-size:15px;font-weight:800;letter-spacing:1.5px}
+  .chg{margin-left:auto;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+  .arrow{font-size:13px;font-weight:800}
+  .up{color:var(--green)} .down{color:var(--red)} .flat{color:var(--dim)}
+  .px{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.5px;position:relative;z-index:1}
+  .spark{width:100%;height:42px;display:block;position:relative;z-index:1}
+  .acts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:auto;position:relative;z-index:1}
+  .btn{font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:1px;padding:7px 0;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:5px;cursor:pointer;transition:all .12s}
+  .btn.buy{border-color:#1f5a3a;color:var(--green)} .btn.buy:hover{background:#0f2a1c;border-color:var(--green)}
+  .btn.sell{border-color:#5a1f2a;color:var(--red)} .btn.sell:hover{background:#2a0f14;border-color:var(--red)}
+  .btn:active{transform:translateY(1px)}
+  .pos{font-size:10px;color:var(--dim);letter-spacing:1px;position:relative;z-index:1}
+  .pos b{color:var(--ink)}
+  .flash{animation:flash .4s}
+  @keyframes flash{0%{background:#1a1a2e}100%{background:var(--panel)}}
+  .feedwrap{display:flex;flex-direction:column;min-height:0}
+  .feedhead{font-size:9px;color:var(--dim);letter-spacing:2px;padding:8px 12px;border-bottom:1px solid var(--line)}
+  .feed{flex:1;overflow:auto;padding:6px 8px;font-size:11px;line-height:1.5}
+  .feed .ln{display:flex;gap:6px;padding:2px 4px;border-radius:3px;white-space:nowrap}
+  .feed .ln .t{color:var(--dim);font-size:9px;min-width:38px}
+  .feed .ln .a{font-weight:800}
+  .feed .ln .q{color:var(--ink)}
+  .feed .ln .p{color:var(--dim);margin-left:auto}
+  .rankwrap{border-top:1px solid var(--line);display:flex;flex-direction:column;max-height:42%;min-height:0}
+  .rankhead{font-size:9px;color:var(--dim);letter-spacing:2px;padding:8px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+  .rank{overflow:auto;padding:4px 8px;font-size:11px}
+  .rank .r{display:flex;gap:8px;padding:3px 4px;border-radius:3px;align-items:center}
+  .rank .r.me{background:#101a22;border:1px solid var(--cyan)}
+  .rank .n{color:var(--dim);min-width:22px;font-size:10px}
+  .rank .nm{font-weight:700;flex:1}
+  .rank .v{color:var(--ink);font-variant-numeric:tabular-nums}
+  footer.disc{font-size:9px;color:var(--dim);letter-spacing:1px;padding:6px 16px;border-top:1px solid var(--line);display:flex;gap:14px;justify-content:space-between;flex-wrap:wrap}
+  .toast{position:fixed;bottom:54px;left:50%;transform:translateX(-50%);background:#15151f;border:1px solid var(--mag);color:var(--ink);padding:8px 14px;border-radius:6px;font-size:11px;letter-spacing:1px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1}
+  .rm .clock .val.warn{animation:none;opacity:.6}
+  .rm .flash{animation:none}
+  .rm .btn{transition:none}
+  .rm .card .heat{transition:none}
+  @media (max-width:900px){
+    main.grid{grid-template-columns:1fr;grid-template-rows:1fr auto}
+    .side{border-left:none;border-top:1px solid var(--line);max-height:40vh}
+    .board{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(3,1fr)}
+    .clock .val{font-size:26px}
+  }
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-thumb{background:#222238;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="brand">
+      <div class="t">MIRROR<span>·</span>MARKET</div>
+      <div class="s">READ THE HERD · FRONT-RUN THE CROWD</div>
+    </div>
+    <div class="clock"><span class="lbl">DAY ENDS IN</span><span class="val" id="clock">05:00</span></div>
+    <div class="stat"><span class="k">CASH</span><span class="v" id="cash">10,000</span></div>
+    <div class="stat"><span class="k">PORTFOLIO</span><span class="v" id="port">10,000</span></div>
+    <div class="stat"><span class="k">BEST RANK</span><span class="v" id="best">—</span></div>
+    <div class="badge" id="mode">BOT CROWD</div>
+  </header>
+  <div class="sizes"><span class="lab">TRADE SIZE</span><div id="chips" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
+  <main class="grid">
+    <div class="board" id="board"></div>
+    <aside class="side">
+      <div class="feedwrap">
+        <div class="feedhead">LIVE ORDER FLOW</div>
+        <div class="feed" id="feed"></div>
+      </div>
+      <div class="rankwrap">
+        <div class="rankhead"><span>DAILY RANKING</span><span id="daykey" style="color:var(--dim)">—</span></div>
+        <div class="rank" id="rank"></div>
+      </div>
+    </aside>
+  </main>
+  <footer class="disc">
+    <span>FICTITIOUS CURRENCY · MIRROR BUCKS · NON-TRANSFERABLE · NO REAL MONEY · NO MONETIZATION</span>
+    <span id="footstat">6 TICKERS · 5:00 DAY · MARKET ORDERS ONLY</span>
+  </footer>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+/* ============================================================
+   MIRROR MARKET — fully client-side herd-prediction trading game
+   PRICE MODEL (bounded, monotonic, commutative over order flow):
+     P(F) = P0 * hi ^ tanh(F / K)
+       F  = aggregate net order flow (buys - sells) for a ticker this day
+       P0 = opening price; hi = upper-bound multiplier (10x); lo = 1/hi (0.1x)
+       tanh bounds F's effect to [-1,1] in log-space => price in [P0/hi, P0*hi]
+       monotonic (tanh is), commutative (F is a pure sum => arrival-order independent)
+       larger |F| moves price more but saturates => no singularities
+     NOTE: no short-selling => aggregate F >= 0 structurally (every share sold
+       was first bought), so price stays >= P0; the 0.1x floor is a safety cap.
+   DAY CYCLE: 5 real minutes, aligned to absolute UTC 300s epochs via Date.now()
+     so a backgrounded tab resumes with the correct countdown.
+   DEFAULT: bot-crowd rebalancing simulation (works offline, zero config).
+   OPTIONAL: set CONFIG.endpoint to a no-signup JSON bin to aggregate cross-player
+     flow (best-effort read-merge-write; degrades to bot-crowd on any failure).
+   PLAYER STATE: lives on the single `player` object (player.cash / player.pos).
+     The UI, sell-qty calc, and localStorage persist/restore all read/write
+     player.* so trades are reflected immediately and survive a mid-day refresh.
+   ============================================================ */
+const CONFIG = {
+  tickers: ["CATMEME","DOGBOT","MOONJUICE","VOIDCOIN","GLITCHCASH","PEPEHYPE"],
+  openPrices: {CATMEME:42, DOGBOT:50, MOONJUICE:88, VOIDCOIN:13, GLITCHCASH:120, PEPEHYPE:7},
+  dayLengthMs: 300000, startCash: 10000,
+  hi: 10, lo: 0.1, K: 800,        // bounds + flow scale
+  botCount: 18, botIntervalMs: 850,
+  revK: 1.1, SCALE: 160,           // bot reversion strength + target-position scale
+  feedCap: 140, sparkLen: 90, persistMs: 1200,
+  // OPTIONAL live aggregation. Leave null for pure bot-crowd (ships as-is).
+  // Example (jsonbin.io): {get:"https://api.jsonbin.io/v3/b/BIN_ID/latest",
+  //   put:"https://api.jsonbin.io/v3/b/BIN_ID", headers:{"X-Master-Key":"KEY"}, pollMs:4000}
+  endpoint: null,
+};
+const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+if (REDUCED) document.body.classList.add("rm");
+const $ = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString("en-US");
+const fmtP = n => (n>=100? n.toFixed(1) : n.toFixed(2));
+
+/* ---------- price model ---------- */
+function priceOf(t, F){ return CONFIG.openPrices[t] * Math.pow(CONFIG.hi, Math.tanh(F / CONFIG.K)); }
+function changePct(t, F){ return (priceOf(t,F)/CONFIG.openPrices[t] - 1) * 100; }
+
+/* ---------- state ---------- */
+let dayEpoch = 0, flow = {}, bots = [];
+let hype = {}, feed = [], priceHist = {}, recentFlow = {}, bestRank = null;
+let liveMode = false, lastRemote = {}, sizePct = 50, dirty = false;
+
+function dayKey(){ return new Date().toISOString().slice(0,10); }
+function currentEpoch(){ return Math.floor(Date.now()/CONFIG.dayLengthMs)*CONFIG.dayLengthMs; }
+
+function newParticipant(id, isBot){
+  const p = {id, cash:CONFIG.startCash, pos:{}, isBot:!!isBot, bias:{}};
+  CONFIG.tickers.forEach(t=>{ p.pos[t]=0; p.bias[t]=(Math.random()-0.5); });
+  return p;
+}
+const player = newParticipant("YOU", false);
+function resetBots(){
+  bots = [];
+  const names = ["ALPHA","BETA","GAMMA","DELTA","EPSI","ZETA","ETA","THETA","IOTA","KAPP","LAMB","MU","NU","XI","OMI","PI","RHO","SIGM"];
+  for (let i=0;i<CONFIG.botCount;i++) bots.push(newParticipant(names[i], true));
+}
+function initHype(){ CONFIG.tickers.forEach(t=>hype[t]=(Math.random()-0.5)*0.3); }
+function portfolio(p){ let v=p.cash; for(const t of CONFIG.tickers) v+=p.pos[t]*priceOf(t,flow[t]); return v; }
+
+/* ---------- orders (market-only, self-impacting) ---------- */
+function executeOrder(p, ticker, qty){
+  const f = flow[ticker]; let newF = f + qty; let price = priceOf(ticker, newF);
+  if (qty > 0){
+    let cost = qty*price;
+    if (cost > p.cash + 1e-6){
+      qty = Math.floor(p.cash / price);
+      if (qty <= 0) return null;
+      newF = f + qty; price = priceOf(ticker, newF); cost = qty*price;
+    }
+    p.cash -= cost; p.pos[ticker] += qty;
+  } else {
+    let s = -qty;
+    if (p.pos[ticker] < s) s = p.pos[ticker];
+    if (s <= 0) return null;
+    qty = -s; newF = f + qty; price = priceOf(ticker, newF);
+    p.cash += s*price; p.pos[ticker] -= s;
+  }
+  flow[ticker] = newF;
+  return {qty, price};
+}
+function playerOrder(ticker, dir){
+  let qty;
+  if (dir > 0){ const spend = player.cash*(sizePct/100); qty = Math.max(1, Math.floor(spend/priceOf(ticker,flow[ticker]))); }
+  else { qty = Math.floor(player.pos[ticker]*(sizePct/100)); if (qty<1 && player.pos[ticker]>0) qty=1; }
+  if (qty < 1){ toast(dir>0?"NOT ENOUGH CASH":"NO SHARES TO SELL"); return; }
+  const r = executeOrder(player, ticker, dir*qty);
+  if (!r){ toast(dir>0?"NOT ENOUGH CASH":"NO SHARES TO SELL"); return; }
+  pushFeed(ticker, r.qty*dir, r.price, false);
+  flashCard(ticker, dir); dirty = true; renderHeader();
+}
+
+/* ---------- bot crowd: rebalancing herd (not a random walk) ----------
+   Each bot holds a target position per ticker:
+     view   = hype[t] (shared herd signal) + 0.5*bot.bias[t] - revK * tanh(flow/K)
+     target = max(0, view * SCALE)        // no shorting => target >= 0
+   Bots buy toward target when under, sell to target when over. Hype mean-reverts
+   with occasional shocks (herd ignition); price-distance reversion creates
+   peak->pullback reversals. Price itself is NEVER used by the price function —
+   only bots read it to decide orders, which is allowed. */
+function botTick(){
+  for (const t of CONFIG.tickers){
+    let h = hype[t];
+    h += -0.06*h + (Math.random()-0.5)*0.14;
+    if (Math.random() < 0.018) h += (Math.random()-0.5)*0.9;
+    hype[t] = Math.max(-1.6, Math.min(1.6, h));
+  }
+  for (const b of bots){
+    for (const t of CONFIG.tickers){
+      const view = hype[t] + 0.5*b.bias[t] - CONFIG.revK*Math.tanh(flow[t]/CONFIG.K);
+      const target = Math.max(0, view*CONFIG.SCALE);
+      const delta = target - b.pos[t];
+      if (Math.abs(delta) < 1) continue;
+      const q = Math.floor(Math.abs(delta)*(0.5+0.5*Math.random()));
+      if (q < 1) continue;
+      const r = (delta > 0) ? executeOrder(b, t, q) : executeOrder(b, t, -q);
+      if (r) pushFeed(t, r.qty*((delta>0)?1:-1), r.price, true);
+    }
+  }
+  dirty = true;
+}
+
+/* ---------- feed ---------- */
+function pushFeed(ticker, signedQty, price, isBot){
+  feed.unshift({t:Date.now(), ticker, qty:signedQty, price, bot:isBot});
+  if (feed.length > CONFIG.feedCap) feed.length = CONFIG.feedCap;
+  recentFlow[ticker] = (recentFlow[ticker]||0) + Math.abs(signedQty);
+  renderFeed();
+}
+
+/* ---------- day lifecycle ---------- */
+function startNewDay(restore){
+  dayEpoch = currentEpoch();
+  if (!restore){
+    player.cash = CONFIG.startCash; player.pos = {}; flow = {};
+    CONFIG.tickers.forEach(t=>{ player.pos[t]=0; flow[t]=0; });
+    initHype(); resetBots(); feed = [];
+    CONFIG.tickers.forEach(t=>{ priceHist[t]=[]; recentFlow[t]=0; });
+  } else {
+    CONFIG.tickers.forEach(t=>{ if(player.pos[t]==null)player.pos[t]=0; if(flow[t]==null)flow[t]=0; if(priceHist[t]==null)priceHist[t]=[]; if(recentFlow[t]==null)recentFlow[t]=0; });
+  }
+  $("daykey").textContent = dayKey();
+  buildBoard(); renderHeader(); renderFeed(); renderRank();
+}
+function finalizeRank(){
+  const all = [player, ...bots].map(p=>({id:p.id, v:portfolio(p), me:!p.isBot}));
+  all.sort((a,b)=>b.v-a.v);
+  const rank = all.findIndex(x=>x.me) + 1;
+  if (bestRank === null || rank < bestRank) bestRank = rank;
+}
+function checkDayReset(){
+  const e = currentEpoch();
+  if (e !== dayEpoch){ finalizeRank(); startNewDay(false); persist(true); }
+}
+
+/* ---------- persistence (per-day portfolio survives refresh; best-rank survives reset) ---------- */
+const STORE = "mirror_market_v1";
+function persist(force){
+  if (!force && !dirty) return;
+  dirty = false;
+  try{ localStorage.setItem(STORE, JSON.stringify({epoch:dayEpoch, cash:player.cash, positions:player.pos, flow, bots, bestRank, dayKey:dayKey()})); }catch(e){}
+}
+function loadState(){
+  let s = null;
+  try{ s = JSON.parse(localStorage.getItem(STORE)); }catch(e){}
+  bestRank = s ? (s.bestRank ?? null) : null;
+  const epoch = currentEpoch();
+  if (s && s.epoch === epoch){
+    player.cash = s.cash ?? CONFIG.startCash; player.pos = s.positions ?? {}; flow = s.flow ?? {};
+    bots = (s.bots && s.bots.length) ? s.bots : (resetBots(), bots);
+    CONFIG.tickers.forEach(t=>{ if(player.pos[t]==null)player.pos[t]=0; if(flow[t]==null)flow[t]=0; });
+    initHype(); return true;
+  }
+  return false;
+}
+
+/* ---------- optional live endpoint (best-effort, degrades to bot-crowd) ---------- */
+async function syncEndpoint(){
+  if (!CONFIG.endpoint) return;
+  try{
+    const r = await fetch(CONFIG.endpoint.get, {headers:CONFIG.endpoint.headers||{}});
+    if (!r.ok) throw 0;
+    const j = await r.json();
+    const remote = (j.record && j.record.flow) ? j.record.flow : (j.flow||{});
+    for (const t of CONFIG.tickers){
+      const rv = remote[t] ?? lastRemote[t] ?? 0;
+      const delta = rv - (lastRemote[t] ?? 0);
+      if (delta) flow[t] += delta;
+      lastRemote[t] = rv;
+    }
+    liveMode = true;
+    fetch(CONFIG.endpoint.put, {method:"PUT", headers:{"Content-Type":"application/json",...(CONFIG.endpoint.headers||{})}, body:JSON.stringify({flow, day:dayKey()})}).catch(()=>{});
+  }catch(e){ liveMode = false; }
+  updateModeBadge();
+}
+function updateModeBadge(){
+  const b = $("mode");
+  if (CONFIG.endpoint && liveMode){ b.textContent="LIVE MARKET"; b.className="badge live"; }
+  else { b.textContent = CONFIG.endpoint ? "BOT CROWD (DEGRADED)" : "BOT CROWD"; b.className="badge"; }
+}
+
+/* ---------- rendering ---------- */
+function buildBoard(){
+  const board = $("board"); board.innerHTML = "";
+  for (const t of CONFIG.tickers){
+    const card = document.createElement("div");
+    card.className = "card"; card.id = "card-"+t;
+    card.innerHTML =
+      '<div class="heat" id="heat-'+t+'"></div>'+
+      '<div class="row1"><span class="sym">'+t+'</span><span class="chg flat" id="chg-'+t+'">▲ +0.0%</span></div>'+
+      '<div class="px" id="px-'+t+'">'+fmtP(CONFIG.openPrices[t])+'</div>'+
+      '<canvas class="spark" id="sp-'+t+'" width="240" height="42"></canvas>'+
+      '<div class="pos">POS <b id="pos-'+t+'">0</b> · VAL <b id="val-'+t+'">0</b></div>'+
+      '<div class="acts"><button class="btn buy" data-t="'+t+'" data-d="1">BUY</button><button class="btn sell" data-t="'+t+'" data-d="-1">SELL</button></div>';
+    board.appendChild(card);
+  }
+  board.querySelectorAll(".btn").forEach(b=> b.addEventListener("click", ()=>playerOrder(b.dataset.t, +b.dataset.d)));
+}
+function flashCard(t, dir){ if (REDUCED) return; const c=$("card-"+t); if(!c) return; c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash"); }
+function renderHeader(){
+  $("cash").textContent = fmt(player.cash);
+  $("port").textContent = fmt(portfolio(player));
+  $("best").textContent = bestRank===null ? "—" : "#"+bestRank;
+}
+function renderPrices(){
+  for (const t of CONFIG.tickers){
+    const F = flow[t], px = priceOf(t,F), chg = changePct(t,F);
+    const cchg = $("chg-"+t);
+    const arrow = chg>0.05?"▲":(chg<-0.05?"▼":"◆");
+    cchg.className = "chg "+(chg>0.05?"up":(chg<-0.05?"down":"flat"));
+    cchg.textContent = arrow+" "+(chg>=0?"+":"")+chg.toFixed(1)+"%";
+    $("px-"+t).textContent = fmtP(px);
+    const pos = player.pos[t]||0;
+    $("pos-"+t).textContent = pos; $("val-"+t).textContent = fmt(pos*px);
+    drawSpark(t);
+  }
+  updateHeat(Date.now());
+}
+function drawSpark(t){
+  const cv = $("sp-"+t); if(!cv) return;
+  const ctx = cv.getContext("2d"); const W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  const hist = priceHist[t]; if(!hist || hist.length<2) return;
+  let min=Infinity,max=-Infinity; for(const v of hist){ if(v<min)min=v; if(v>max)max=v; }
+  if (max-min<1e-6) max=min+1;
+  const col = (changePct(t,flow[t])>=0) ? "#3affb0" : "#ff3b5c";
+  ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.beginPath();
+  for (let i=0;i<hist.length;i++){
+    const x=(i/(CONFIG.sparkLen-1))*W; const y=H-((hist[i]-min)/(max-min))*(H-4)-2;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  ctx.strokeStyle="#1f1f2e"; ctx.lineWidth=1; ctx.setLineDash([2,3]);
+  const baseY=H-((CONFIG.openPrices[t]-min)/(max-min))*(H-4)-2;
+  ctx.beginPath(); ctx.moveTo(0,baseY); ctx.lineTo(W,baseY); ctx.stroke(); ctx.setLineDash([]);
+}
+let lastHeatSample = 0;
+function updateHeat(now){
+  if (now - lastHeatSample < 700) return; lastHeatSample = now;
+  for (const t of CONFIG.tickers){
+    const rate = recentFlow[t]||0; recentFlow[t]=0;
+    const heat = $("heat-"+t); if(!heat) continue;
+    const intensity = Math.min(1, rate/120);
+    if (intensity < 0.04){ heat.style.boxShadow="inset 0 0 0 1px transparent"; continue; }
+    const col = changePct(t,flow[t])>=0 ? "62,255,176" : "255,59,92";
+    const glow = 4 + intensity*16;
+    heat.style.boxShadow = "inset 0 0 "+glow+"px "+(glow/2)+"px rgba("+col+","+(0.10+intensity*0.30)+")";
+  }
+}
+function renderFeed(){
+  $("feed").innerHTML = feed.slice(0,60).map(o=>{
+    const dir = o.qty>0?"BUY":"SELL", cls = o.qty>0?"up":"down";
+    const who = o.bot?"":"<span style='color:var(--cyan)'>●</span>";
+    const tm = new Date(o.t);
+    const ts = String(tm.getMinutes()).padStart(2,"0")+":"+String(tm.getSeconds()).padStart(2,"0");
+    return '<div class="ln"><span class="t">'+ts+'</span>'+who+'<span class="a '+cls+'">'+dir+'</span><span class="q">'+o.ticker+' '+Math.abs(o.qty)+'</span><span class="p">@'+fmtP(o.price)+'</span></div>';
+  }).join("");
+}
+function renderRank(){
+  const all = [player, ...bots].map(p=>({id:p.id, v:portfolio(p), me:!p.isBot})).sort((a,b)=>b.v-a.v);
+  const top = all.slice(0,12); const meIdx = all.findIndex(x=>x.me);
+  let html = top.map((x,i)=>'<div class="r '+(x.me?'me':'')+'"><span class="n">'+(i+1)+'</span><span class="nm">'+x.id+'</span><span class="v">'+fmt(x.v)+'</span></div>').join("");
+  if (meIdx >= 12) html += '<div class="r me"><span class="n">'+(meIdx+1)+'</span><span class="nm">'+player.id+'</span><span class="v">'+fmt(all[meIdx].v)+'</span></div>';
+  $("rank").innerHTML = html;
+}
+function buildChips(){
+  const wrap = $("chips"); wrap.innerHTML = "";
+  [10,25,50,100].forEach(s=>{
+    const c = document.createElement("div");
+    c.className = "chip"+(s===sizePct?" on":""); c.textContent = s+"%";
+    c.onclick = ()=>{ sizePct=s; buildChips(); };
+    wrap.appendChild(c);
+  });
+}
+let toastT = 0;
+function toast(msg){ const el=$("toast"); el.textContent=msg; el.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),1400); }
+
+/* ---------- main loop (timing via Date.now; render via rAF) ---------- */
+let lastBot=0, lastPersist=0, lastRank=0, lastHist=0, lastHdr=0;
+function loop(){
+  const now = Date.now();
+  checkDayReset();
+  const remain = Math.max(0, CONFIG.dayLengthMs - (now - dayEpoch));
+  const mm = String(Math.floor(remain/60000)).padStart(2,"0");
+  const ss = String(Math.floor((remain%60000)/1000)).padStart(2,"0");
+  const clk = $("clock"); clk.textContent = mm+":"+ss; clk.className = "val"+(remain<30000?" warn":"");
+  if (now - lastBot >= CONFIG.botIntervalMs){ lastBot = now; botTick(); }
+  if (now - lastHist >= 333){ lastHist = now;
+    for (const t of CONFIG.tickers){ (priceHist[t]=priceHist[t]||[]).push(priceOf(t,flow[t])); if(priceHist[t].length>CONFIG.sparkLen) priceHist[t].shift(); }
+  }
+  renderPrices();
+  if (now - lastHdr > 90){ lastHdr = now; renderHeader(); }
+  if (now - lastRank > 1000){ lastRank = now; renderRank(); }
+  if (now - lastPersist >= CONFIG.persistMs){ lastPersist = now; persist(false); }
+  requestAnimationFrame(loop);
+}
+
+/* ---------- init ---------- */
+function init(){
+  buildChips();
+  const restored = loadState();
+  startNewDay(restored);
+  updateModeBadge();
+  if (CONFIG.endpoint){ syncEndpoint(); setInterval(syncEndpoint, CONFIG.endpoint.pollMs || 4000); }
+  requestAnimationFrame(loop);
+}
+init();
+</script>
+</body>
+</html>
