@@ -1,0 +1,16 @@
+{
+  "name": "Haptic-Rhythm Memory Game",
+  "short_name": "Haptic-Rhythm",
+  "description": "A neon memory game of pulses, tones, and vibration. Tap and long-press to reproduce growing patterns across visual, audio, and haptic cues.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "icons/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "icons/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="description" content="Haptic-Rhythm — a neon memory game of pulses, tones, and vibration.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Haptic-Rhythm</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <header class="hud">
+      <div class="title">HAPTIC<span style="color: var(--c1); -webkit-text-fill-color: var(--c1);">RHYTHM</span></div>
+      <div class="stats">
+        <div class="stat"><span class="label">Round</span><span id="round" class="value">1</span></div>
+        <div class="stat"><span class="label">Score</span><span id="score" class="value">0</span></div>
+        <div class="stat"><span class="label">Streak</span><span id="streak" class="value">0</span></div>
+        <div class="stat"><span class="label">Best</span><span id="best" class="value">0</span></div>
+      </div>
+    </header>
+
+    <div id="banner" class="banner hidden"></div>
+    <div id="status" class="status">Tap START to begin</div>
+
+    <div class="board" id="board">
+      <button class="zone z0" data-zone="0" aria-label="Zone 1"></button>
+      <button class="zone z1" data-zone="1" aria-label="Zone 2"></button>
+      <button class="zone z2" data-zone="2" aria-label="Zone 3"></button>
+      <button class="zone z3" data-zone="3" aria-label="Zone 4"></button>
+    </div>
+
+    <div class="legend">
+      <span><b>TAP</b> release &lt; 350ms</span>
+      <span><b>HOLD</b> hold &#8805; 350ms</span>
+    </div>
+
+    <div class="controls">
+      <button id="startBtn" class="btn primary">START</button>
+    </div>
+
+    <div id="overlay" class="overlay hidden">
+      <div class="overlay-card">
+        <h2 id="overTitle">Game Over</h2>
+        <p id="overMsg"></p>
+        <button id="againBtn" class="btn primary">Play Again</button>
+      </div>
+    </div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
