@@ -78,10 +78,21 @@
     }
 
     .site-path {
-      margin: 0 0 14px;
+      margin: 0 0 4px;
       color: var(--muted);
       font-size: 0.92rem;
       word-break: break-word;
+    }
+
+    .site-date {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .site-date time {
+      color: var(--text);
+      font-weight: 600;
     }
 
     .site-link {
@@ -135,7 +146,7 @@
     const statusElement = document.getElementById("status");
     const sitesContainer = document.getElementById("sites");
 
-    function createSiteCard(folderName) {
+    function createSiteCard(folderName, pushedDate) {
       const siteUrl = `./${encodeURIComponent(folderName)}/`;
 
       const cardElement = document.createElement("article");
@@ -149,6 +160,20 @@
       pathElement.className = "site-path";
       pathElement.textContent = `${folderName}/index.html`;
 
+      const dateElement = document.createElement("p");
+      dateElement.className = "site-date";
+      if (pushedDate) {
+        const when = new Date(pushedDate);
+        const dateText = `${when.toLocaleDateString(undefined, {
+          year: "numeric", month: "short", day: "numeric"
+        })} ${when.toLocaleTimeString(undefined, {
+          hour: "2-digit", minute: "2-digit"
+        })}`;
+        dateElement.innerHTML = `Last pushed <time datetime="${pushedDate}">${dateText}</time>`;
+      } else {
+        dateElement.textContent = "Last pushed unknown";
+      }
+
       const linkElement = document.createElement("a");
       linkElement.className = "site-link";
       linkElement.href = siteUrl;
@@ -156,6 +181,7 @@
 
       cardElement.appendChild(titleElement);
       cardElement.appendChild(pathElement);
+      cardElement.appendChild(dateElement);
       cardElement.appendChild(linkElement);
 
       return cardElement;
@@ -190,6 +216,21 @@
       );
     }
 
+    async function fetchFolderLastPushed(folderName) {
+      const apiUrl =
+        `https://api.github.com/repos/${githubOwner}/${githubRepository}/commits?path=${encodeURIComponent(folderName)}&ref=${githubBranch}&per_page=1`;
+
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        return null;
+      }
+      const commits = await response.json();
+      if (!Array.isArray(commits) || commits.length === 0) {
+        return null;
+      }
+      return commits[0].commit.committer.date || commits[0].commit.author.date;
+    }
+
     async function loadSites() {
       try {
         const rootItems = await fetchRepositoryRootItems();
@@ -202,14 +243,25 @@
           }))
         );
 
-        const siteFolders = siteChecks
-          .filter((item) => item.hasIndexHtml)
-          .map((item) => item.folderName)
-          .sort((left, right) => left.localeCompare(right));
+        const siteFolders = siteChecks.filter((item) => item.hasIndexHtml);
 
-        statusElement.textContent = `Found ${siteFolders.length} website${siteFolders.length === 1 ? "" : "s"}.`;
+        const withDates = await Promise.all(
+          siteFolders.map(async (item) => ({
+            folderName: item.folderName,
+            pushedDate: await fetchFolderLastPushed(item.folderName),
+          }))
+        );
 
-        if (siteFolders.length === 0) {
+        withDates.sort((left, right) => {
+          if (!left.pushedDate && !right.pushedDate) return 0;
+          if (!left.pushedDate) return 1;
+          if (!right.pushedDate) return -1;
+          return right.pushedDate.localeCompare(left.pushedDate);
+        });
+
+        statusElement.textContent = `Found ${withDates.length} website${withDates.length === 1 ? "" : "s"}.`;
+
+        if (withDates.length === 0) {
           sitesContainer.innerHTML = `
             <div class="empty-state">
               No folders with an <code>index.html</code> file were found in the repo root.
@@ -218,8 +270,8 @@
           return;
         }
 
-        for (const folderName of siteFolders) {
-          sitesContainer.appendChild(createSiteCard(folderName));
+        for (const { folderName, pushedDate } of withDates) {
+          sitesContainer.appendChild(createSiteCard(folderName, pushedDate));
         }
       } catch (error) {
         console.error(error);
