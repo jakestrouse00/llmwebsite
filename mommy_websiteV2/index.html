@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why the World Isn't a Matriarchy — and How to Change That</title>
+<style>
+/* ===== RESET & BASE ===== */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a12;--bg2:#12121f;--surface:#1a1a2e;--surface2:#22223a;
+  --text:#e8e8f0;--text-dim:#9999b0;--text-faint:#6666800;
+  --amber:#f0a040;--rose:#e85a7d;--teal:#4ecdc4;--violet:#9d7cf0;
+  --grad-warm:linear-gradient(135deg,#f0a040,#e85a7d);
+  --grad-cool:linear-gradient(135deg,#4ecdc4,#9d7cf0);
+  --grad-hero:linear-gradient(160deg,#1a0a2e 0%,#0a0a12 60%,#0d1a2a 100%);
+  --radius:16px;--radius-sm:10px;
+  --shadow:0 8px 32px rgba(0,0,0,.4);
+  --font:'Georgia','Times New Roman',serif;
+  --sans:'Helvetica Neue',Arial,sans-serif;
+  --mono:'Courier New',monospace;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6;overflow-x:hidden}
+a{color:var(--teal);text-decoration:none}
+section{padding:80px 24px;max-width:1100px;margin:0 auto}
+
+/* ===== HERO ===== */
+#hero{
+  min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  text-align:center;background:var(--grad-hero);position:relative;overflow:hidden;
+  max-width:100%;padding:40px 24px;
+}
+#hero::before{
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background:radial-gradient(ellipse at 30% 20%,rgba(232,90,125,.12),transparent 50%),
+             radial-gradient(ellipse at 70% 80%,rgba(78,205,196,.1),transparent 50%);
+  pointer-events:none;
+}
+.hero-tag{font-family:var(--mono);font-size:.8rem;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--teal);margin-bottom:24px;position:relative;z-index:1}
+.hero-title{font-family:var(--font);font-size:clamp(2.2rem,7vw,5rem);font-weight:700;
+  line-height:1.1;max-width:900px;position:relative;z-index:1;
+  background:linear-gradient(135deg,#fff 0%,#e85a7d 40%,#f0a040 70%,#fff 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-title em{font-style:italic;font-weight:400}
+.hero-sub{font-size:clamp(1rem,2.5vw,1.3rem);color:var(--text-dim);max-width:600px;
+  margin:28px auto 0;position:relative;z-index:1;line-height:1.7}
+.hero-cta{margin-top:40px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;position:relative;z-index:1}
+.btn{padding:14px 32px;border-radius:50px;font-size:.95rem;font-weight:600;cursor:pointer;
+  border:none;transition:all .3s ease;font-family:var(--sans);letter-spacing:.02em}
+.btn-primary{background:var(--grad-warm);color:#fff;box-shadow:0 4px 20px rgba(232,90,125,.3)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(232,90,125,.45)}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.2)}
+.btn-ghost:hover{border-color:var(--teal);color:var(--teal)}
+.scroll-hint{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
+  color:var(--text-faint);font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;
+  animation:bounce 2s infinite;z-index:1}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(8px)}}
+
+/* ===== SECTION HEADERS ===== */
+.section-num{font-family:var(--mono);font-size:.75rem;letter-spacing:.3em;color:var(--rose);
+  text-transform:uppercase;margin-bottom:12px}
+.section-title{font-family:var(--font);font-size:clamp(1.8rem,4vw,2.8rem);font-weight:700;
+  margin-bottom:16px;line-height:1.2}
+.section-title .accent{background:var(--grad-warm);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent}
+.section-desc{color:var(--text-dim);font-size:1.05rem;max-width:680px;margin-bottom:48px;line-height:1.7}
+
+/* ===== FORENSIC DESCENT — TABBED TIMELINE ===== */
+.timeline-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:40px}
+.tab-btn{padding:10px 20px;border-radius:var(--radius-sm);background:var(--surface);
+  border:1px solid rgba(255,255,255,.08);color:var(--text-dim);cursor:pointer;
+  font-size:.85rem;font-family:var(--sans);transition:all .25s ease;white-space:nowrap}
+.tab-btn:hover{border-color:var(--rose);color:var(--text)}
+.tab-btn.active{background:var(--grad-warm);color:#fff;border-color:transparent}
+.timeline-panel{background:var(--surface);border-radius:var(--radius);padding:40px;
+  box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.06);min-height:320px;
+  display:none;animation:fadeIn .4s ease}
+.timeline-panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.timeline-panel .era{font-family:var(--mono);font-size:.8rem;color:var(--amber);
+  letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px}
+.timeline-panel h3{font-family:var(--font);font-size:1.6rem;margin-bottom:16px;color:var(--text)}
+.timeline-panel p{color:var(--text-dim);margin-bottom:16px;line-height:1.8}
+.timeline-panel .source{font-size:.8rem;color:var(--text-faint);font-style:italic;
+  border-top:1px solid rgba(255,255,255,.08);padding-top:12px;margin-top:20px}
+.timeline-progress{display:flex;gap:4px;margin-bottom:32px;height:4px;border-radius:2px;
+  background:var(--surface);overflow:hidden}
+.timeline-progress .seg{flex:1;background:var(--surface2);transition:background .3s ease}
+.timeline-progress .seg.filled{background:var(--grad-warm)}
+
+/* ===== MATRILINEAL ATLAS — FILTERABLE CARDS ===== */
+.atlas-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:32px}
+.filter-btn{padding:8px 18px;border-radius:50px;background:transparent;
+  border:1px solid rgba(255,255,255,.12);color:var(--text-dim);cursor:pointer;
+  font-size:.82rem;font-family:var(--sans);transition:all .25s ease}
+.filter-btn:hover{border-color:var(--teal);color:var(--text)}
+.filter-btn.active{background:var(--teal);color:var(--bg);border-color:transparent;font-weight:600}
+.atlas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+.atlas-card{background:var(--surface);border-radius:var(--radius);overflow:hidden;
+  border:1px solid rgba(255,255,255,.06);cursor:pointer;transition:all .3s ease;
+  position:relative;min-height:280px;perspective:1000px}
+.atlas-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.5);
+  border-color:rgba(232,90,125,.3)}
+.card-inner{position:relative;width:100%;height:100%;transition:transform .6s ease;
+  transform-style:preserve-3d;min-height:280px}
+.atlas-card.flipped .card-inner{transform:rotateY(180deg)}
+.card-face{position:absolute;top:0;left:0;width:100%;height:100%;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;padding:28px;
+  display:flex;flex-direction:column}
+.card-front{background:var(--surface)}
+.card-back{background:var(--surface2);transform:rotateY(180deg);
+  border:1px solid rgba(232,90,125,.2);border-radius:var(--radius)}
+.card-region{font-family:var(--mono);font-size:.7rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--teal);margin-bottom:8px}
+.card-name{font-family:var(--font);font-size:1.4rem;font-weight:700;margin-bottom:6px}
+.card-meta{font-size:.85rem;color:var(--text-dim);margin-bottom:16px}
+.card-snippet{font-size:.9rem;color:var(--text-dim);line-height:1.6;flex-grow:1}
+.card-flip-hint{font-size:.75rem;color:var(--text-faint);margin-top:16px;
+  letter-spacing:.1em;text-transform:uppercase}
+.card-back h4{font-family:var(--font);font-size:1.1rem;margin-bottom:12px;color:var(--rose)}
+.card-back .puzzle{font-size:.88rem;color:var(--text-dim);line-height:1.7;margin-bottom:12px}
+.card-back .puzzle strong{color:var(--amber)}
+.card-back .source{font-size:.75rem;color:var(--text-faint);font-style:italic;margin-top:auto}
+.card-tag{display:inline-block;padding:3px 10px;border-radius:50px;font-size:.7rem;
+  font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-top:12px}
+.tag-living{background:rgba(78,205,196,.15);color:var(--teal)}
+.tag-ancient{background:rgba(157,124,240,.15);color:var(--violet)}
+
+/* ===== BLUEPRINT — LEVER SIMULATOR ===== */
+.simulator-wrap{background:var(--surface);border-radius:var(--radius);padding:40px;
+  box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.06)}
+.simulator-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+@media(max-width:768px){.simulator-grid{grid-template-columns:1fr}}
+.lever-group{margin-bottom:32px}
+.lever-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.lever-name{font-size:.95rem;font-weight:600}
+.lever-value{font-family:var(--mono);font-size:.8rem;color:var(--amber);padding:2px 10px;
+  background:rgba(240,160,64,.1);border-radius:50px}
+.lever-slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;
+  border-radius:3px;background:var(--surface2);outline:none}
+.lever-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+  width:22px;height:22px;border-radius:50%;background:var(--grad-warm);
+  cursor:pointer;box-shadow:0 2px 8px rgba(232,90,125,.4);transition:transform .2s}
+.lever-slider::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.lever-slider::-moz-range-thumb{width:22px;height:22px;border-radius:50%;
+  background:#e85a7d;cursor:pointer;border:none}
+.lever-desc{font-size:.8rem;color:var(--text-faint);margin-top:8px;line-height:1.5}
+.readout-panel{background:var(--bg2);border-radius:var(--radius-sm);padding:32px;
+  border:1px solid rgba(255,255,255,.06)}
+.readout-title{font-family:var(--mono);font-size:.75rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--teal);margin-bottom:16px}
+.equilibrium-score{font-family:var(--font);font-size:3.5rem;font-weight:700;line-height:1;
+  background:var(--grad-cool);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;margin-bottom:8px;transition:all .3s ease}
+.equilibrium-label{font-size:.85rem;color:var(--text-dim);margin-bottom:24px}
+.equilibrium-bar{height:8px;border-radius:4px;background:var(--surface2);overflow:hidden;margin-bottom:24px}
+.equilibrium-bar-fill{height:100%;border-radius:4px;background:var(--grad-cool);
+  transition:width .4s ease;width:25%}
+.readout-text{font-size:.9rem;color:var(--text-dim);line-height:1.7;min-height:120px}
+.readout-text strong{color:var(--text)}
+.readout-model{margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08);
+  font-size:.8rem;color:var(--text-faint)}
+.readout-model strong{color:var(--rose)}
+
+/* ===== FOOTER ===== */
+footer{padding:60px 24px 40px;max-width:1100px;margin:0 auto;border-top:1px solid rgba(255,255,255,.06)}
+.footer-text{color:var(--text-faint);font-size:.82rem;line-height:1.8;max-width:800px}
+.footer-text strong{color:var(--text-dim)}
+.footer-credits{margin-top:24px;font-size:.78rem;color:var(--text-faint)}
+.footer-credits a{color:var(--teal)}
+
+/* ===== UTILITIES ===== */
+.fade-in{opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease}
+.fade-in.visible{opacity:1;transform:translateY(0)}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:600px){
+  section{padding:60px 20px}
+  .timeline-panel{padding:24px}
+  .simulator-wrap{padding:24px}
+  .atlas-grid{grid-template-columns:1fr}
+  .timeline-tabs{gap:6px}
+  .tab-btn{padding:8px 14px;font-size:.78rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<section id="hero">
+  <div class="hero-tag">An Interactive Investigation</div>
+  <h1 class="hero-title">Why the World<br>Isn't a <em>Matriarchy</em></h1>
+  <p class="hero-sub">Patriarchy has a beginning — around 3100 BCE in Mesopotamia. If it was built, it can be unbuilt. Explore the historical evidence, the societies that defied the trend, and the levers that could reshape the future.</p>
+  <div class="hero-cta">
+    <button class="btn btn-primary" onclick="document.getElementById('forensic').scrollIntoView()">Begin the Descent</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('blueprint').scrollIntoView()">Skip to Solutions</button>
+  </div>
+  <div class="scroll-hint">Scroll to explore</div>
+</section>
+
+<!-- ===== SECTION 1: FORENSIC DESCENT ===== -->
+<section id="forensic" class="fade-in">
+  <div class="section-num">Part I — The Forensic Descent</div>
+  <h2 class="section-title">How Patriarchy Was <span class="accent">Constructed</span></h2>
+  <p class="section-desc">Patriarchy is not a biological inevitability. It emerged over 2,500 years through agriculture, property law, and the codification of gender hierarchy. Trace the layers — from egalitarian origins to rigid law codes.</p>
+
+  <div class="timeline-progress" id="timelineProgress"></div>
+
+  <div class="timeline-tabs" id="timelineTabs"></div>
+  <div id="timelinePanels"></div>
+</section>
+
+<!-- ===== SECTION 2: MATRILINEAL ATLAS ===== -->
+<section id="atlas" class="fade-in">
+  <div class="section-num">Part II — The Matrilineal Atlas</div>
+  <h2 class="section-title">Societies That <span class="accent">Defied the Trend</span></h2>
+  <p class="section-desc">No true matriarchy — women dominating men as a group — has ever been documented. But matrilineal societies have thrived for millennia. Click any card to reveal the "matrilineal puzzle": where descent flowed through women, but power often stayed with men.</p>
+
+  <div class="atlas-filters" id="atlasFilters"></div>
+  <div class="atlas-grid" id="atlasGrid"></div>
+</section>
+
+<!-- ===== SECTION 3: BLUEPRINT FOR EQUILIBRIUM ===== -->
+<section id="blueprint" class="fade-in">
+  <div class="section-num">Part III — Blueprint for Equilibrium</div>
+  <h2 class="section-title">Levers for <span class="accent">Change</span></h2>
+  <p class="section-desc">If patriarchy was assembled through specific mechanisms — inheritance law, childcare structures, political representation, economic control — then each can be redesigned. Adjust the levers below and see how shifting toward matrilineal and egalitarian models changes the equilibrium.</p>
+
+  <div class="simulator-wrap">
+    <div class="simulator-grid">
+      <div class="levers-panel">
+        <div class="lever-group">
+          <div class="lever-label"><span class="lever-name">Inheritance Law</span><span class="lever-value" id="val-inheritance">Patrilineal</span></div>
+          <input type="range" class="lever-slider" id="lever-inheritance" min="0" max="3" value="0" step="1">
+          <div class="lever-desc">Who controls property transfer across generations?</div>
+        </div>
+        <div class="lever-group">
+          <div class="lever-label"><span class="lever-name">Childcare Structure</span><span class="lever-value" id="val-childcare">Privatized</span></div>
+          <input type="range" class="lever-slider" id="lever-childcare" min="0" max="3" value="0" step="1">
+          <div class="lever-desc">Is childcare a private family burden or a communal responsibility?</div>
+        </div>
+        <div class="lever-group">
+          <div class="lever-label"><span class="lever-name">Political Representation</span><span class="lever-value" id="val-political">Male-dominated</span></div>
+          <input type="range" class="lever-slider" id="lever-political" min="0" max="3" value="0" step="1">
+          <div class="lever-desc">Who holds decision-making power in governance?</div>
+        </div>
+        <div class="lever-group">
+          <div class="lever-label"><span class="lever-name">Economic Control</span><span class="lever-value" id="val-economic">Concentrated</span></div>
+          <input type="range" class="lever-slider" id="lever-economic" min="0" max="3" value="0" step="1">
+          <div class="lever-desc">Is wealth concentrated in few hands or distributed across the community?</div>
+        </div>
+      </div>
+      <div class="readout-panel">
+        <div class="readout-title">Equilibrium Index</div>
+        <div class="equilibrium-score" id="eqScore">25</div>
+        <div class="equilibrium-label" id="eqLabel">Patriarchal baseline</div>
+        <div class="equilibrium-bar"><div class="equilibrium-bar-fill" id="eqBar"></div></div>
+        <div class="readout-text" id="eqText"></div>
+        <div class="readout-model" id="eqModel"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="footer-text">
+    <strong>Sources & References:</strong><br>
+    Lerner, G. (1986). <em>The Creation of Patriarchy</em>. Oxford University Press.<br>
+    Sanday, P. R. (2002). <em>Women at the Center: Life in a Highland Matriarchy</em>. Cornell University Press.<br>
+    Kennett, D. et al. (2017). "Archaeogenomic evidence of matrilineal dynasty at Chaco Canyon." <em>Nature Communications</em>.<br>
+    Wang, K. et al. (2025). "Matrilineal community organization in Neolithic China." <em>Nature</em>.<br>
+    Holden, C. & Mace, R. (2003). "Spread of cattle led to the loss of matrilineal descent in Africa." <em>Nature</em>.<br>
+    Schneider, D. & Gough, K. (1961). <em>Matrilineal Kinship</em>. University of California Press.<br>
+    Cveček, D. (2023). "Enthrone, dethrone, rethrone?" <em>Archaeological Dialogues</em>.<br>
+    Engels, F. (1884). <em>The Origin of the Family, Private Property and the State</em>.<br><br>
+    <strong>Key distinction:</strong> Matrilineal descent (inheritance through mothers) ≠ matriarchy (women's political dominance). No true matriarchy — as a mirror-image of patriarchy — has ever been documented. The societies shown here are matrilineal or matrifocal, not matriarchal in the strict sense. The Minangkabau, as argued by Peggy Reeves Sanday, come closest to a form of matriarchy where women are central to economic, religious, and social life without dominating men.
+  </div>
+  <div class="footer-credits">
+    An interactive educational project. Built as a single self-contained HTML file — no dependencies, no build step.
+  </div>
+</footer>
+
+<script>
+/* ===== DATA ===== */
+
+const timelineData = [
+  {
+    era: "Before 12,000 BCE",
+    title: "Egalitarian Origins",
+    body: "For 95% of human history, hunter-gatherer societies were remarkably egalitarian. Anthropological evidence shows that gender roles, while present, did not map onto power hierarchies. Women gathered, men hunted — but both contributions were equally valued. Decision-making was communal. There was no private property to inherit, no state to capture, no surplus to hoard.",
+    source: "Evidence from modern hunter-gatherer studies (e.g., !Kung, Hadza) suggests broad gender egalitarianism was the ancestral condition, not patriarchy."
+  },
+  {
+    era: "~12,000 BCE",
+    title: "The Agricultural Turning Point",
+    body: "The Neolithic Revolution changed everything. Plow agriculture favored male upper-body strength, making men the primary food producers for the first time. Surplus accumulation created property — and property demanded inheritance rules. Patrilineal inheritance (passing wealth father-to-son) became the dominant model, tying women's reproductive capacity to lineage and land. Patrilocal residence (women moving to the husband's family) further eroded women's autonomy.",
+    source: "Engels (1884); Sherratt's plow agriculture hypothesis. Holden & Mace (2003) showed that adoption of cattle led to loss of matrilineal descent in Bantu-speaking groups."
+  },
+  {
+    era: "~3100 BCE",
+    title: "Patriarchy Takes Shape",
+    body: "In Mesopotamia, the world's first states institutionalized gender hierarchy. Women's sexuality was commodified — their reproductive capacity became a resource to be controlled. The process was gradual: first the commodification of women's sexuality, then its codification in law, then its symbolic devaluation in religion and myth. This was not an event but a 2,500-year construction project.",
+    source: "Lerner (1986): 'The reification of women as a historically given socio-structural feature' made private property possible — not the reverse. Meillassoux and Aaby independently reached similar conclusions."
+  },
+  {
+    era: "~1750 BCE",
+    title: "Codified in Law",
+    body: "Hammurabi's Code formalized gender hierarchy in law. Women's movements were restricted, their sexuality policed, their economic independence curtailed. The Middle Assyrian Laws mandated veiling for married women (§40) — one of the earliest documented attempts to control women's visibility in public space. Law transformed custom into compulsion.",
+    source: "Hammurabi's Code (c. 1754 BCE); Middle Assyrian Laws. Lerner (1986) traces the legal codification of gender hierarchy across Mesopotamian law codes."
+  },
+  {
+    era: "~600 BCE",
+    title: "Symbolic Devaluation Complete",
+    body: "By the end of the Axial Age, patriarchy was embedded not just in law but in culture itself. The Genesis creation story framed woman as derivative of man. Aristotle described women as 'mutilated males.' Religion, philosophy, and myth all reinforced the same message: women are secondary, derivative, subordinate. Patriarchy had become invisible — it felt natural, eternal, inevitable. But it was only 2,500 years old.",
+    source: "Lerner (1986): 'Patriarchy is a historical creation, not a biological inevitability. It has a beginning — and therefore it can have an end.'"
+  }
+];
+
+const atlasData = [
+  {name:"Minangkabau",region:"West Sumatra, Indonesia",meta:"~8 million people · Living",tag:"living",filter:"asia",
+   snippet:"The largest matrilineal society on Earth. Property, land, and family name pass from mother to daughter. Muslim since the 16th century, yet matrilineal custom (adat) coexists with Islam through a distinction between 'high inheritance' (matrilineal) and 'low inheritance' (Islamic patrilineal).",
+   puzzle:"Women own property and are central to economic, religious, and social life. Yet men hold formal religious and political positions. Anthropologist Peggy Reeves Sanday argues this is a form of matriarchy — not a mirror of patriarchy, but a system where women are central without dominating men.",
+   source:"Sanday, 'Women at the Center' (2002); Britannica"},
+  {name:"Mosuo",region:"Yunnan/Sichuan, China",meta:"~40,000 people · Living",tag:"living",filter:"asia",
+   snippet:"Often called the 'Kingdom of Women.' Practice 'walking marriages' (zouhun) — men visit women at night, no cohabitation. Children are raised in the mother's household; uncles provide the fatherly role. Wealth passes through the mother.",
+   puzzle:"Women head households and control property, but men still wield political power in wider society. More accurately matrilineal than matriarchal. Currently declining under tourism, modernization, and pressure from Chinese cultural norms — younger generations increasingly adopt nuclear families.",
+   source:"BBC Travel; The Diplomat; Cambridge University Press"},
+  {name:"Chaco Canyon",region:"New Mexico, USA",meta:"800–1130 CE · Ancient",tag:"ancient",filter:"americas",
+   snippet:"Ancient DNA from the elite crypt at Pueblo Bonito reveals a matrilineal dynasty that persisted for 330 years. Nine individuals shared identical mitochondrial genomes, confirming mother-to-daughter inheritance of elite status.",
+   puzzle:"Matrilineal descent is confirmed by DNA, but the nature of political power remains debated. The elite lineage was matrilineal — but who actually governed? The archaeological record shows both male and female ritual leaders, suggesting a more complex power structure than simple matriarchy.",
+   source:"Kennett et al., Nature Communications (2017)"},
+  {name:"Fujia Site",region:"Neolithic China",meta:"2750–2500 BCE · Ancient",tag:"ancient",filter:"asia",
+   snippet:"Ancient DNA reveals a two-clanned matrilineal community spanning 10 generations. Burials were organized strictly by maternal clan — a stable matrilineal lineage maintained over centuries.",
+   puzzle:"The community was organized around maternal clans, but the distribution of grave goods suggests men and women had different but complementary roles. Matriliny structured kinship — but whether it translated to women's political dominance is unknown. The 'matrilineal puzzle' persists even in the archaeological record.",
+   source:"Wang et al., Nature (2025)"},
+  {name:"Hopi",region:"North America",meta:"Living · Matrilineal + egalitarian",tag:"living",filter:"americas",
+   snippet:"Matrilineal descent with matrifocal households. Women owned houses and land; clans traced through mothers. Unusually, the Hopi combined matriliny with gender-egalitarian communal decision-making.",
+   puzzle:"The Hopi come closest to resolving the matrilineal puzzle: women owned the material base (land, homes) while men controlled ritual knowledge. But because ritual and material power were balanced rather than hierarchical, neither gender dominated. This is the model Sanday calls 'egalitarian matriarchy.'",
+   source:"Ethnographic studies; Sanday (2002)"},
+  {name:"Iroquois / Haudenosaunee",region:"Northeastern North America",meta:"Living · Matrilineal",tag:"living",filter:"americas",
+   snippet:"Women controlled food distribution, selected and could remove chiefs, and sat on the Council of Elders. Clan mothers held significant political authority — the power to nominate and depose male chiefs.",
+   puzzle:"Women had real political power — the ability to choose and remove leaders — but men served as the chiefs who made final decisions. This is the classic matrilineal puzzle: women controlled the selection process, men held the office. Power was distributed, not concentrated.",
+   source:"Historical ethnographies; Schneider & Gough (1961)"},
+  {name:"Khasi & Garo",region:"Meghalaya, India",meta:"~1 million people · Living",tag:"living",filter:"asia",
+   snippet:"Matrilineal descent where the youngest daughter (khadduh) inherits ancestral property and the family home. Men move to the wife's household. ~1 million people maintain this system today.",
+   puzzle:"Women inherit property and the family home, but men often manage the businesses and hold political office. The Khasi show that economic matriliny can coexist with male political dominance — inheritance alone does not guarantee power.",
+   source:"Ethnographic studies of Meghalaya"},
+  {name:"Akan",region:"Ghana, West Africa",meta:"Living · Matrilineal",tag:"living",filter:"africa",
+   snippet:"One of the largest matrilineal systems in Africa. Clan membership, inheritance, and political succession traced through the mother's line. The Akan system has survived centuries of colonial pressure.",
+   puzzle:"Inheritance flows through mothers, but political authority has historically been held by male chiefs — selected from the matrilineal line. The 'matrilineal puzzle' is visible here in its purest form: the lineage is female, the office is male.",
+   source:"Ethnographic studies; Cveček (2023)"}
+];
+
+const leverConfig = {
+  inheritance: {
+    labels:["Patrilineal","Bilateral","Matrilineal","Matrilineal + communal"],
+    effects:[
+      "Property passes father-to-son. Women's economic independence is structurally limited. This is the foundation of most patriarchal systems — control of inheritance is control of the future.",
+      "Property can pass through either line. More flexible, but doesn't actively redistribute wealth toward women. A neutral stance that preserves existing imbalances.",
+      "Property passes mother-to-daughter, as in the Minangkabau system. Women control the economic base of the family. This alone doesn't guarantee political equality, but it creates the material conditions for it.",
+      "Matrilineal inheritance combined with communal land trusts, as practiced by the Hopi. No individual 'owns' land — the community holds it in trust through maternal lines. This prevents wealth concentration entirely."
+    ]
+  },
+  childcare: {
+    labels:["Privatized","Subsidized","Communal","Communal + egalitarian"],
+    effects:[
+      "Childcare is each family's private burden, disproportionately falling on women. This is the single biggest barrier to women's economic and political participation worldwide.",
+      "State-subsidized childcare reduces the burden but doesn't eliminate it. Women still perform the majority of unpaid care work. Progress, but the structural imbalance remains.",
+      "Communal childcare, as in many matrilineal societies where the extended family or clan shares child-rearing. The Mosuo model: children belong to the mother's household, and the entire household — including uncles and grandmothers — raises them.",
+      "Fully communal childcare with equal expectation of male participation, as in the Hopi model. When men are equally responsible for care, the 'second shift' disappears and women's participation in all spheres becomes structurally possible."
+    ]
+  },
+  political: {
+    labels:["Male-dominated","Quotas","Parity","Matrifocal governance"],
+    effects:[
+      "Men hold the vast majority of political offices. Decisions about women's bodies, lives, and futures are made primarily by men. This is the current global baseline.",
+      "Gender quotas increase women's representation but treat women as additions to a male-designed system. Rwanda (61% women in parliament) shows quotas can work, but they don't redesign the system itself.",
+      "Gender parity in all decision-making bodies. Not just presence, but equal voice. The Iroquois model: clan mothers selected and could remove chiefs — women controlled the process, even if men held the office.",
+      "Matrifocal governance where women are central to political life without dominating men, as Sanday describes the Minangkabau. Power is distributed, not inverted. The goal is equilibrium, not role-reversal."
+    ]
+  },
+  economic: {
+    labels:["Concentrated","Regulated","Distributed","Communal"],
+    effects:[
+      "Wealth is concentrated in few hands — globally, men hold the majority of wealth, land, and capital. Economic concentration is the material backbone of patriarchy.",
+      "Regulated capitalism with progressive taxation and social safety nets. Reduces extreme concentration but doesn't fundamentally redistribute economic power by gender.",
+      "Distributed wealth through cooperative ownership, women's lending circles, and equal pay. The Khasi model: women control the family economic base, creating structural economic independence.",
+      "Communal ownership where the community — organized through maternal lines — holds wealth in trust. The Hopi and Minangkabau both show that communal property prevents the accumulation that drives patriarchal power."
+    ]
+  }
+};
+
+/* ===== TIMELINE ===== */
+function buildTimeline(){
+  const tabs=document.getElementById('timelineTabs');
+  const panels=document.getElementById('timelinePanels');
+  const progress=document.getElementById('timelineProgress');
+
+  timelineData.forEach((item,i)=>{
+    // progress segment
+    const seg=document.createElement('div');
+    seg.className='seg';progress.appendChild(seg);
+
+    // tab
+    const btn=document.createElement('button');
+    btn.className='tab-btn'+(i===0?' active':'');
+    btn.textContent=item.era;
+    btn.onclick=()=>selectTimeline(i);
+    tabs.appendChild(btn);
+
+    // panel
+    const panel=document.createElement('div');
+    panel.className='timeline-panel'+(i===0?' active':'');
+    panel.innerHTML=`
+      <div class="era">${item.era}</div>
+      <h3>${item.title}</h3>
+      <p>${item.body}</p>
+      <div class="source">${item.source}</div>`;
+    panels.appendChild(panel);
+  });
+  updateProgress(0);
+}
+
+function selectTimeline(index){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===index));
+  document.querySelectorAll('.timeline-panel').forEach((p,i)=>p.classList.toggle('active',i===index));
+  updateProgress(index);
+}
+
+function updateProgress(index){
+  const segs=document.querySelectorAll('#timelineProgress .seg');
+  segs.forEach((s,i)=>s.classList.toggle('filled',i<=index));
+}
+
+/* ===== ATLAS ===== */
+let currentFilter='all';
+
+function buildAtlas(){
+  const filters=document.getElementById('atlasFilters');
+  const filterOptions=[
+    {label:'All',value:'all'},{label:'Living',value:'living'},
+    {label:'Ancient',value:'ancient'},{label:'Asia',value:'asia'},
+    {label:'Americas',value:'americas'},{label:'Africa',value:'africa'}
+  ];
+  filterOptions.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='filter-btn'+(i===0?' active':'');
+    btn.textContent=opt.label;
+    btn.onclick=()=>{currentFilter=opt.value;
+      document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');renderAtlas();};
+    filters.appendChild(btn);
+  });
+  renderAtlas();
+}
+
+function renderAtlas(){
+  const grid=document.getElementById('atlasGrid');
+  grid.innerHTML='';
+  atlasData.forEach((s,i)=>{
+    if(currentFilter!=='all' && s.filter!==currentFilter && s.tag!==currentFilter) return;
+    const card=document.createElement('div');
+    card.className='atlas-card';
+    card.onclick=()=>card.classList.toggle('flipped');
+    card.innerHTML=`
+      <div class="card-inner">
+        <div class="card-face card-front">
+          <div class="card-region">${s.region}</div>
+          <div class="card-name">${s.name}</div>
+          <div class="card-meta">${s.meta}</div>
+          <div class="card-snippet">${s.snippet}</div>
+          <span class="card-tag tag-${s.tag}">${s.tag}</span>
+          <div class="card-flip-hint">↻ Click to reveal the puzzle</div>
+        </div>
+        <div class="card-face card-back">
+          <h4>The Matrilineal Puzzle</h4>
+          <div class="puzzle">${s.puzzle}</div>
+          <div class="source">${s.source}</div>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+/* ===== LEVER SIMULATOR ===== */
+function buildSimulator(){
+  ['inheritance','childcare','political','economic'].forEach(key=>{
+    const slider=document.getElementById('lever-'+key);
+    slider.oninput=()=>updateLevers();
+  });
+  updateLevers();
+}
+
+function updateLevers(){
+  const values={};
+  let total=0;
+  ['inheritance','childcare','political','economic'].forEach(key=>{
+    const v=parseInt(document.getElementById('lever-'+key).value);
+    values[key]=v;
+    total+=v;
+    document.getElementById('val-'+key).textContent=leverConfig[key].labels[v];
+  });
+
+  // score: 0-100
+  const maxTotal=12;
+  const score=Math.round((total/maxTotal)*100);
+  const scoreEl=document.getElementById('eqScore');
+  scoreEl.textContent=score;
+
+  const bar=document.getElementById('eqBar');
+  bar.style.width=score+'%';
+
+  let label;
+  if(score<=20) label='Patriarchal baseline';
+  else if(score<=40) label='Transitional';
+  else if(score<=60) label='Mixed equilibrium';
+  else if(score<=80) label='Matrilineal shift';
+  else label='Egalitarian matriarchy';
+  document.getElementById('eqLabel').textContent=label;
+
+  // build readout text from each lever's current effect
+  let html='';
+  let model='';
+  ['inheritance','childcare','political','economic'].forEach(key=>{
+    const v=values[key];
+    const cfg=leverConfig[key];
+    html+=`<p style="margin-bottom:12px"><strong>${key.charAt(0).toUpperCase()+key.slice(1)}:</strong> ${cfg.effects[v]}</p>`;
+  });
+
+  // model reference
+  if(score>=75){
+    model='<strong>Closest historical model:</strong> Hopi — matrilineal descent, communal property, gender-egalitarian governance. Sanday calls this "egalitarian matriarchy."';
+  } else if(score>=50){
+    model='<strong>Closest historical model:</strong> Minangkabau — matrilineal inheritance with women central to economic and social life, though men retain some political roles.';
+  } else if(score>=25){
+    model='<strong>Closest historical model:</strong> Iroquois/Haudenosaunee — women control selection of leaders and food distribution, but men hold formal office. The matrilineal puzzle in action.';
+  } else {
+    model='<strong>Closest historical model:</strong> Mesopotamia c. 600 BCE — patriarchy fully codified in law, religion, and custom. The system we live in today.';
+  }
+
+  document.getElementById('eqText').innerHTML=html;
+  document.getElementById('eqModel').innerHTML=model;
+}
+
+/* ===== SCROLL ANIMATIONS ===== */
+function setupScrollAnim(){
+  const observer=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')});
+  },{threshold:0.1});
+  document.querySelectorAll('.fade-in').forEach(el=>observer.observe(el));
+}
+
+/* ===== INIT ===== */
+document.addEventListener('DOMContentLoaded',()=>{
+  buildTimeline();
+  buildAtlas();
+  buildSimulator();
+  setupScrollAnim();
+});
+</script>
+</body>
+</html>
