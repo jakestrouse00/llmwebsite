@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0A0A0F">
+<title>ECHO CLIMB — Race Your Best Self</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;width:100%;background:#0A0A0F;overflow:hidden;
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    color:#E0E0E0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+  #game{position:fixed;inset:0}
+  canvas{display:block;width:100%;height:100%;touch-action:none}
+  .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:16px;padding:24px;text-align:center;z-index:10;
+    background:rgba(10,10,15,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .overlay.hidden{display:none}
+  .title{font-size:clamp(34px,9vw,66px);font-weight:900;letter-spacing:0.14em;color:#00FCFF;
+    text-shadow:0 0 22px rgba(0,252,255,0.55);line-height:1}
+  .sub{font-size:clamp(11px,3vw,14px);letter-spacing:0.28em;color:#9a9aa8;text-transform:uppercase}
+  .panel{display:flex;flex-direction:column;align-items:center;gap:14px;width:min(420px,92vw)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .btn{border:2px solid #00FCFF;background:transparent;color:#00FCFF;padding:13px 26px;font:inherit;
+    font-weight:700;letter-spacing:0.16em;cursor:pointer;text-transform:uppercase;font-size:13px;
+    transition:background .12s,color .12s,transform .08s}
+  .btn:hover,.btn:focus{background:#00FCFF;color:#0A0A0F;outline:none}
+  .btn:active{transform:scale(0.96)}
+  .btn.alt{border-color:#FF0055;color:#FF0055}
+  .btn.alt:hover,.btn.alt:focus{background:#FF0055;color:#0A0A0F}
+  .btn.ghost{border-color:#5a5a6a;color:#9a9aa8}
+  .btn.ghost:hover,.btn.ghost:focus{background:#9a9aa8;color:#0A0A0F}
+  .btn.lg{padding:16px 40px;font-size:15px}
+  .seg{display:flex;border:2px solid #2a2a36}
+  .seg button{border:none;background:transparent;color:#9a9aa8;padding:10px 16px;font:inherit;
+    font-weight:700;letter-spacing:0.12em;text-transform:uppercase;font-size:12px;cursor:pointer}
+  .seg button.on{background:#00FCFF;color:#0A0A0F}
+  input.seed{background:#12121F;border:2px solid #2a2a36;color:#E0E0E0;padding:11px 14px;
+    font:inherit;font-size:14px;letter-spacing:0.08em;width:200px;text-align:center;border-radius:0}
+  input.seed:focus{outline:none;border-color:#00FCFF}
+  .stat{font-size:13px;letter-spacing:0.14em;color:#9a9aa8;text-transform:uppercase}
+  .stat b{color:#E0E0E0}
+  .big{font-size:clamp(40px,11vw,72px);font-weight:900;letter-spacing:0.06em;color:#00FCFF;
+    text-shadow:0 0 24px rgba(0,252,255,0.5);line-height:1}
+  .newbest{color:#FF0055;text-shadow:0 0 18px rgba(255,0,85,0.6);font-weight:900;letter-spacing:0.2em;
+    font-size:15px;text-transform:uppercase;animation:blink 0.9s steps(2) infinite}
+  @keyframes blink{50%{opacity:0.35}}
+  .lb{width:min(440px,92vw);max-height:60vh;overflow:auto;border:2px solid #2a2a36;background:#0d0d16}
+  .lb table{width:100%;border-collapse:collapse;font-size:13px}
+  .lb th{position:sticky;top:0;background:#12121F;color:#00FCFF;padding:9px 10px;text-align:left;
+    letter-spacing:0.1em;text-transform:uppercase;font-size:11px}
+  .lb td{padding:8px 10px;border-top:1px solid #1c1c26;color:#cfcfd8}
+  .lb tr.me td{color:#00FCFF;background:rgba(0,252,255,0.06)}
+  .lb .rank{color:#9a9aa8;width:34px}
+  .hint{font-size:11px;letter-spacing:0.16em;color:#6a6a78;text-transform:uppercase;max-width:340px;line-height:1.6}
+  .modal{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:20;
+    background:rgba(10,10,15,0.7)}
+  .modal.hidden{display:none}
+  .card{background:#0d0d16;border:2px solid #00FCFF;padding:26px;display:flex;flex-direction:column;
+    gap:16px;align-items:center;width:min(360px,92vw)}
+  .err{color:#FF0055;font-size:12px;letter-spacing:0.1em;min-height:14px}
+  .ok{color:#00FCFF;font-size:12px;letter-spacing:0.1em;min-height:14px}
+  .spin{font-size:12px;letter-spacing:0.16em;color:#9a9aa8;text-transform:uppercase}
+</style>
+</head>
+<body style="margin:0;padding:0;overflow:hidden;">
+<div id="game">
+  <canvas id="cv"></canvas>
+
+  <!-- START SCREEN -->
+  <div id="start" class="overlay">
+    <div class="title">ECHO&nbsp;CLIMB</div>
+    <div class="sub">Race your best self up the tower</div>
+    <div class="panel">
+      <div class="stat">BEST&nbsp;FLOOR&nbsp;<b id="bestFloor">—</b></div>
+      <div class="row" id="seedRow">
+        <div class="seg" id="seedSeg">
+          <button data-mode="daily" class="on">Daily</button>
+          <button data-mode="random">Random</button>
+          <button data-mode="custom">Custom</button>
+        </div>
+      </div>
+      <input class="seed hidden" id="seedInput" maxlength="32" placeholder="enter seed" inputmode="text">
+      <div class="stat" id="seedDisplay">SEED&nbsp;DAILY&nbsp;—</div>
+      <button class="btn lg" id="climbBtn">CLIMB</button>
+      <div class="row">
+        <button class="btn ghost" id="lbBtnStart">Leaderboard</button>
+      </div>
+      <div class="hint">Swipe ↑ ↓ ← → or use Arrow / WASD keys.<br>One miss ends the run. Hold the beat. Beat the ghost.</div>
+    </div>
+  </div>
+
+  <!-- GAMEOVER SCREEN -->
+  <div id="over" class="overlay hidden">
+    <div class="sub" id="overSub">You fell</div>
+    <div class="big" id="overFloor">FLOOR 1</div>
+    <div class="stat" id="overTime">TIME&nbsp;—</div>
+    <div class="newbest hidden" id="newBest">★ NEW BEST ★</div>
+    <div class="panel">
+      <div class="row">
+        <button class="btn lg" id="againBtn">Climb Again</button>
+        <button class="btn alt" id="submitBtn">Submit Score</button>
+      </div>
+      <div class="row">
+        <button class="btn ghost" id="lbBtnOver">Leaderboard</button>
+        <button class="btn ghost" id="menuBtn">Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD MODAL -->
+  <div id="lbModal" class="modal hidden">
+    <div class="card" style="border-color:#2a2a36;width:min(480px,94vw)">
+      <div class="title" style="font-size:clamp(22px,6vw,34px)">LEADERBOARD</div>
+      <div class="lb" id="lbBox"><table><thead><tr><th>#</th><th>Name</th><th>Floor</th><th>Seed</th></tr></thead><tbody id="lbBody"></tbody></table></div>
+      <div class="row">
+        <button class="btn ghost" id="lbRefresh">Refresh</button>
+        <button class="btn ghost" id="lbClose">Close</button>
+      </div>
+      <div class="ok" id="lbStatus"></div>
+    </div>
+  </div>
+
+  <!-- SUBMIT MODAL -->
+  <div id="submitModal" class="modal hidden">
+    <div class="card">
+      <div class="title" style="font-size:clamp(20px,5vw,30px)">SUBMIT SCORE</div>
+      <div class="stat" id="submitInfo">FLOOR —</div>
+      <input class="seed" id="nameInput" maxlength="20" placeholder="your name" inputmode="text">
+      <div class="err" id="submitErr"></div>
+      <div class="row">
+        <button class="btn" id="submitConfirm">Submit</button>
+        <button class="btn ghost" id="submitCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   ECHO CLIMB — single-file client-side memory-rhythm tower climb
+   Path A: strict state-driven, fixed-timestep accumulator.
+   ============================================================ */
+
+/* ---------- CONFIG ---------- */
+const CADENCE = 600;          // ms per beat (bounded 400..800 per spec; change here)
+const WINDOW  = 150;           // ±ms timing window
+const STEP    = 1000 / 60;     // fixed sim step
+const MAXFLOOR = 20;           // tower completion floor; summit beyond
+const ASCEND_MS = 420;         // climb tween
+const FALL_MS = 760;           // fall tween
+const SWIPE_THRESH = 26;       // px to register a swipe
+const GHOST_KEY = "echoClimb.ghost.v1";
+const LB_KEY = "echoClimb.lb.v1";
+// Opt-in leaderboard: set to a jsonbin.io public bin id to enable live uploads.
+// Empty string => seeded mock board (ships working as-is, no setup).
+const LEADERBOARD_BIN_ID = "";
+
+const PAL = {
+  bg0:"#0A0A0F", bg1:"#12121F",
+  cyan:"#00FCFF", silver:"#E0E0E0", magenta:"#FF0055",
+  dim:"#3a3a48", dim2:"#1c1c26", text:"#cfcfd8", muted:"#6a6a78"
+};
+const DIRS = ["U","D","L","R"];
+const DIRV = { U:[0,-1], D:[0,1], L:[-1,0], R:[1,0] };
+
+/* ---------- PRNG / SEED ---------- */
+function mulberry32(a){
+  return function(){
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function hashStr(s){
+  let h = 2166136261 >>> 0;
+  for (let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function dailySeed(){
+  const d = new Date();
+  const label = d.getUTCFullYear() + "-" + (d.getUTCMonth()+1) + "-" + d.getUTCDate();
+  return { seed: hashStr(label), label: "DAILY " + label };
+}
+function randomSeed(){
+  const n = (Math.random()*4294967296)>>>0;
+  return { seed: n, label: "RAND " + n.toString(16).toUpperCase().padStart(8,"0") };
+}
+function customSeed(raw){
+  const s = (raw||"").trim();
+  if (!s) return null;
+  let seed;
+  if (/^\d+$/.test(s)) seed = (parseInt(s,10) >>> 0);
+  else seed = hashStr(s);
+  return { seed, label: "SEED " + s.slice(0,18) };
+}
+function generateSequence(prng, len){
+  const a = new Array(len);
+  for (let i=0;i<len;i++) a[i] = DIRS[Math.floor(prng()*4)];
+  return a;
+}
+
+/* ---------- STATE ---------- */
+const s = {
+  phase:"BOOT",            // BOOT PLAYBACK INPUT ASCEND FALL GAMEOVER
+  floor:1, seed:0, seedLabel:"", cadence:CADENCE,
+  prng:null, seq:[], stepIdx:0,
+  phaseStart:0, inputStart:0, playbackStep:0, lastBeat:-1,
+  inputQueue:[],
+  playerY:1, ghostY:1, ghostFloor:1,
+  ascendFrom:1, ascendTo:1, fallFrom:1,
+  runStart:0, runFloors:[], endTime:0, score:0,
+  ghost:null, motionScale:1,
+  beatPulse:0, flash:0, banner:null,
+  ahead:0
+};
+
+/* ---------- PERSISTENCE ---------- */
+function persistGhost(){
+  try { localStorage.setItem(GHOST_KEY, JSON.stringify(s.ghost)); } catch(e){}
+}
+function loadGhost(){
+  try {
+    const raw = localStorage.getItem(GHOST_KEY);
+    if (raw){ const g = JSON.parse(raw); if (g && Array.isArray(g.floors)) return g; }
+  } catch(e){}
+  return makeDefaultGhost(CADENCE);
+}
+function makeDefaultGhost(cadence){
+  const floors=[]; let t=0;
+  for (let f=1; f<=8; f++){
+    const len = Math.min(f, MAXFLOOR);
+    t += len*cadence + cadence + len*cadence + ASCEND_MS;
+    floors.push({ floor:f+1, t: Math.round(t*0.92) });
+  }
+  return { seed:"DEFAULT", cadence, bestFloor:9, totalTime:floors[floors.length-1].t, floors };
+}
+
+/* ---------- GHOST REPLAY ---------- */
+function ghostFloorAt(elapsed){
+  let f = 1;
+  const fl = s.ghost.floors;
+  for (let i=0;i<fl.length;i++){
+    if (fl[i].t <= elapsed) f = fl[i].floor; else break;
+  }
+  return f;
+}
+
+/* ---------- PHASE TRANSITIONS ---------- */
+function enterPlayback(t){
+  s.seq = generateSequence(s.prng, Math.min(s.floor, MAXFLOOR));
+  s.phase = "PLAYBACK";
+  s.phaseStart = t;
+  s.stepIdx = 0;
+  s.playbackStep = 0;
+  s.lastBeat = -1;
+  if (s.floor === MAXFLOOR + 1) s.banner = { text:"SUMMIT REACHED", until: t + 1600 };
+}
+function enterInput(t){
+  s.phase = "INPUT";
+  s.phaseStart = t;
+  s.inputStart = t + s.cadence; 
+  s.stepIdx = 0;
+  s.lastBeat = -1;
+}
+function enterAscend(t){
+  s.phase = "ASCEND";
+  s.phaseStart = t;
+  s.ascendFrom = s.floor;
+  s.ascendTo = s.floor + 1;
+  s.runFloors.push({ floor: s.floor + 1, t: Math.round(t - s.runStart) });
+}
+function miss(t){
+  s.phase = "FALL";
+  s.phaseStart = t;
+  s.fallFrom = s.playerY;
+  s.flash = 1;
+  s.endTime = Math.round(t - s.runStart);
+  s.score = s.floor;
+}
+function enterGameover(t){
+  s.phase = "GAMEOVER";
+  const score = s.score, time = s.endTime;
+  const gb = s.ghost.bestFloor || 0;
+  let isBest = false;
+  if (score > gb || (score === gb && time < (s.ghost.totalTime || Infinity))) isBest = true;
+  if (isBest){
+    s.ghost = { seed:s.seedLabel, cadence:s.cadence, bestFloor:score, totalTime:time, floors:s.runFloors.slice() };
+    persistGhost();
+  }
+  showGameover(score, isBest, time);
+}
+
+/* ---------- UPDATE (fixed timestep) ---------- */
+function update(){
+  const t = performance.now();
+  if (s.phase !== "BOOT" && s.phase !== "GAMEOVER"){
+    const elapsed = t - s.runStart;
+    s.ghostFloor = ghostFloorAt(elapsed);
+    s.ghostY += (s.ghostFloor - s.ghostY) * 0.18;
+    s.ahead = s.playerY - s.ghostY;
+  }
+  s.beatPulse *= 0.86;
+  if (s.flash > 0) s.flash *= 0.90;
+
+  switch(s.phase){
+    case "PLAYBACK": updatePlayback(t); break;
+    case "INPUT":    updateInput(t);    break;
+    case "ASCEND":   updateAscend(t);   break;
+    case "FALL":     updateFall(t);     break;
+    default: break;
+  }
+  if (s.phase !== "INPUT") s.inputQueue.length = 0;
+}
+
+function updatePlayback(t){
+  const elapsed = t - s.phaseStart;
+  const len = s.seq.length;
+  const step = Math.floor(elapsed / s.cadence);
+  s.playbackStep = Math.min(step, len - 1);
+  if (step !== s.lastBeat && step < len){ s.lastBeat = step; s.beatPulse = 1; }
+  if (elapsed >= len * s.cadence + s.cadence * 0.5){
+    enterInput(t);
+  }
+}
+function updateInput(t){
+  const len = s.seq.length;
+  const beatIdx = Math.floor((t - s.phaseStart) / s.cadence);
+  if (beatIdx !== s.lastBeat){ s.lastBeat = beatIdx; s.beatPulse = 1; }
+  const q = s.inputQueue;
+  while (q.length){
+    const sw = q.shift();
+    const expectedBeat = s.inputStart + s.stepIdx * s.cadence;
+    const wo = expectedBeat - WINDOW, wc = expectedBeat + WINDOW;
+    if (sw.ts >= wo && sw.ts <= wc){
+      if (sw.dir === s.seq[s.stepIdx]){
+        s.stepIdx++;
+        if (s.stepIdx >= len){ enterAscend(t); return; }
+      } else {
+        return miss(t);
+      }
+    }
+  }
+  const expectedBeat = s.inputStart + s.stepIdx * s.cadence;
+  if (t > expectedBeat + WINDOW && s.stepIdx < len) return miss(t);
+}
+function updateAscend(t){
+  const dur = ASCEND_MS * s.motionScale;
+  const p = Math.min(1, (t - s.phaseStart) / dur);
+  s.playerY = s.ascendFrom + easeOutCubic(p) * (s.ascendTo - s.ascendFrom);
+  if (p >= 1){
+    s.floor = s.ascendTo;
+    s.playerY = s.ascendTo;
+    enterPlayback(t);
+  }
+}
+function updateFall(t){
+  const dur = FALL_MS * s.motionScale;
+  const p = Math.min(1, (t - s.phaseStart) / dur);
+  s.playerY = s.fallFrom - easeInQuad(p) * s.fallFrom;
+  if (p >= 1) enterGameover(t);
+}
+function easeOutCubic(x){ return 1 - Math.pow(1 - x, 3); }
+function easeInQuad(x){ return x * x; }
+
+/* ---------- INPUT ---------- */
+function pushSwipe(dir){
+  if (s.phase !== "INPUT") return;
+  s.inputQueue.push({ dir, ts: performance.now() });
+}
+function keyToDir(code){
+  switch(code){
+    case "ArrowUp": case "KeyW": return "U";
+    case "ArrowDown": case "KeyS": return "D";
+    case "ArrowLeft": case "KeyA": return "L";
+    case "ArrowRight": case "KeyD": return "R";
+  }
+  return null;
+}
+window.addEventListener("keydown", function(e){
+  const d = keyToDir(e.code);
+  if (d){
+    if (e.repeat) return;
+    e.preventDefault();
+    pushSwipe(d);
+  }
+}, { passive:false });
+
+let touchStart = null, touchFired = false;
+const cv = document.getElementById("cv");
+cv.addEventListener("touchstart", function(e){
+  if (e.touches.length !== 1) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  touchStart = { x:t.clientX, y:t.clientY };
+  touchFired = false;
+}, { passive:false });
+cv.addEventListener("touchmove", function(e){
+  if (!touchStart) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  const dx = t.clientX - touchStart.x, dy = t.clientY - touchStart.y;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) > SWIPE_THRESH && !touchFired){
+    let dir;
+    if (Math.abs(dx) > Math.abs(dy)) dir = dx > 0 ? "R" : "L";
+    else dir = dy > 0 ? "D" : "U";
+    pushSwipe(dir);
+    touchFired = true;
+    touchStart = { x:t.clientX, y:t.clientY };
+    touchFired = false;
+  }
+}, { passive:false });
+cv.addEventListener("touchend", function(){ touchStart = null; touchFired = false; }, { passive:false });
+cv.addEventListener("touchcancel", function(){ touchStart = null; touchFired = false; }, { passive:false });
+
+/* ---------- RENDER ---------- */
+const ctx = cv.getContext("2d");
+let cssW = 0, cssH = 0, dpr = 1;
+function resize(){
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cssW = cv.clientWidth; cssH = cv.clientHeight;
+  cv.width = Math.round(cssW * dpr);
+  cv.height = Math.round(cssH * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener("resize", resize);
+
+function lerpColor(a, b, t){
+  const pa = hexRGB(a), pb = hexRGB(b);
+  const r = Math.round(pa[0] + (pb[0]-pa[0])*t);
+  const g = Math.round(pa[1] + (pb[1]-pa[1])*t);
+  const bl = Math.round(pa[2] + (pb[2]-pa[2])*t);
+  return "rgb(" + r + "," + g + "," + bl + ")";
+}
+function hexRGB(h){
+  const x = h.replace("#","");
+  return [parseInt(x.slice(0,2),16), parseInt(x.slice(2,4),16), parseInt(x.slice(4,6),16)];
+}
+
+function bandH(){ return Math.max(40, Math.min(70, cssH * 0.072)); }
+function floorScreenY(f){
+  return cssH * 0.52 - (f - s.playerY) * bandH();
+}
+
+function drawBackground(){
+  const pulse = Math.min(1, s.beatPulse);
+  const col = lerpColor(PAL.bg0, PAL.bg1, pulse * 0.55);
+  ctx.fillStyle = col;
+  ctx.fillRect(0, 0, cssW, cssH);
+  const g = ctx.createRadialGradient(cssW/2, cssH/2, cssH*0.2, cssW/2, cssH/2, cssH*0.75);
+  g.addColorStop(0, "rgba(0,0,0,0)");
+  g.addColorStop(1, "rgba(0,0,0,0.45)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,cssW,cssH);
+}
+
+function drawTower(){
+  const bh = bandH();
+  const cam = s.playerY;
+  const f0 = Math.floor(cam) - 2;
+  const f1 = Math.ceil(cam) + 9;
+  ctx.lineWidth = 4;
+  for (let f = f0; f <= f1; f++){
+    if (f < 1) continue;
+    const y = floorScreenY(f);
+    if (y < -20 || y > cssH + 20) continue;
+    ctx.fillStyle = (f % 2 === 0) ? "rgba(28,28,38,0.55)" : "rgba(18,18,30,0.45)";
+    ctx.fillRect(0, y - bh/2, cssW, bh);
+    ctx.strokeStyle = PAL.dim;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cssW, y); ctx.stroke();
+    ctx.strokeStyle = PAL.dim2; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, y - bh/2 + 2); ctx.lineTo(cssW, y - bh/2 + 2); ctx.stroke();
+    ctx.lineWidth = 4;
+    ctx.fillStyle = (f === s.floor) ? PAL.cyan : PAL.muted;
+    ctx.font = "700 11px ui-monospace,monospace";
+    ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    const lbl = (f > MAXFLOOR) ? ("S" + (f - MAXFLOOR)) : ("F" + f);
+    ctx.fillText(lbl, 10, y);
+    if (f === MAXFLOOR){
+      ctx.strokeStyle = "rgba(0,252,255,0.25)"; ctx.lineWidth = 2;
+      ctx.setLineDash([6,6]);
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cssW, y); ctx.stroke();
+      ctx.setLineDash([]); ctx.lineWidth = 4;
+    }
+  }
+}
+
+function drawMarker(x, y, color, alpha, glow, label){
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const size = 15;
+  ctx.fillStyle = color;
+  if (glow){ ctx.shadowColor = color; ctx.shadowBlur = glow; }
+  ctx.beginPath();
+  ctx.moveTo(x, y - size);
+  ctx.lineTo(x - size * 0.8, y + size * 0.7);
+  ctx.lineTo(x + size * 0.8, y + size * 0.7);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillRect(x - size, y + size * 0.7, size * 2, 3);
+  if (label){
+    ctx.fillStyle = color;
+    ctx.font = "700 10px ui-monospace,monospace";
+    ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    ctx.fillText(label, x, y - size - 4);
+  }
+  ctx.restore();
+}
+
+function drawMarkers(){
+  const py = floorScreenY(s.playerY);
+  const gy = floorScreenY(s.ghostY);
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = PAL.silver;
+  for (let i=1;i<=6;i++){
+    const ty = floorScreenY(s.ghostY - i*0.6);
+    if (ty > cssH || ty < 0) continue;
+    ctx.globalAlpha = 0.18 * (1 - i/7);
+    ctx.beginPath();
+    ctx.arc(cssW*0.72, ty, 4, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+  drawMarker(cssW*0.72, gy, PAL.silver, 0.42, 0, "GHOST");
+  drawMarker(cssW*0.28, py, PAL.cyan, 1, 16, "YOU");
+}
+
+function drawArrow(dir, cx, cy, size, color, glow, lw){
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw || Math.max(2, size * 0.14);
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  if (glow){ ctx.shadowColor = color; ctx.shadowBlur = glow; }
+  ctx.beginPath();
+  const h = size / 2;
+  if (dir === "U"){ ctx.moveTo(cx - h, cy + h*0.45); ctx.lineTo(cx, cy - h); ctx.lineTo(cx + h, cy + h*0.45); }
+  else if (dir === "D"){ ctx.moveTo(cx - h, cy - h*0.45); ctx.lineTo(cx, cy + h); ctx.lineTo(cx + h, cy - h*0.45); }
+  else if (dir === "L"){ ctx.moveTo(cx + h*0.45, cy - h); ctx.lineTo(cx - h, cy); ctx.lineTo(cx + h*0.45, cy + h); }
+  else { ctx.moveTo(cx - h*0.45, cy - h); ctx.lineTo(cx + h, cy); ctx.lineTo(cx - h*0.45, cy + h); }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawRibbon(){
+  if (s.phase !== "PLAYBACK" && s.phase !== "INPUT") return;
+  const seq = s.seq;
+  const n = seq.length;
+  if (n === 0) return;
+  const maxW = cssW - 36;
+  const size = Math.min(46, Math.max(16, maxW / n - 8));
+  const gap = size + 8;
+  const total = n * gap - 8;
+  const startX = (cssW - total) / 2 + size/2;
+  const cy = cssH * 0.17;
+  ctx.save();
+  ctx.fillStyle = "rgba(18,18,30,0.55)";
+  ctx.fillRect(0, cy - size, cssW, size*2 + 8);
+  ctx.restore();
+
+  if (s.phase === "PLAYBACK"){
+    for (let i=0;i<n;i++){
+      const cx = startX + i*gap;
+      const active = (i === s.playbackStep);
+      const col = active ? PAL.cyan : PAL.dim;
+      const glow = active ? 18 : 0;
+      drawArrow(seq[i], cx, cy, size, col, glow);
+    }
+  } else {
+    for (let i=0;i<n;i++){
+      const cx = startX + i*gap;
+      const done = i < s.stepIdx;
+      if (done){
+        ctx.save();
+        ctx.fillStyle = PAL.cyan; ctx.globalAlpha = 0.9;
+        ctx.shadowColor = PAL.cyan; ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.arc(cx, cy, size*0.18, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+      } else {
+        ctx.save();
+        ctx.strokeStyle = PAL.dim; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(cx, cy, size*0.18, 0, Math.PI*2); ctx.stroke();
+        ctx.restore();
+      }
+    }
+    ctx.fillStyle = PAL.text;
+    ctx.font = "700 12px ui-monospace,monospace";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("REPEAT THE BEAT", cssW/2, cy + size + 14);
+  }
+}
+
+function drawDPad(){
+  const cx = cssW/2, cy = cssH * 0.84;
+  const off = Math.min(46, cssW*0.11);
+  const size = Math.min(30, cssW*0.075);
+  const zones = [
+    { dir:"U", x:cx, y:cy - off },
+    { dir:"D", x:cx, y:cy + off },
+    { dir:"L", x:cx - off, y:cy },
+    { dir:"R", x:cx + off, y:cy }
+  ];
+  let activeDir = null;
+  if (s.phase === "PLAYBACK") activeDir = s.seq[s.playbackStep];
+  for (const z of zones){
+    const active = (z.dir === activeDir);
+    const col = active ? PAL.cyan : PAL.dim;
+    const glow = active ? 16 : 0;
+    drawArrow(z.dir, z.x, z.y, size, col, glow);
+  }
+}
+
+function drawHUD(){
+  ctx.save();
+  ctx.fillStyle = "rgba(10,10,15,0.6)";
+  ctx.fillRect(0, 0, cssW, 50);
+  ctx.fillStyle = PAL.cyan;
+  ctx.font = "900 14px ui-monospace,monospace";
+  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  const floorTxt = (s.floor > MAXFLOOR) ? ("SUMMIT " + (s.floor - MAXFLOOR)) : ("FLOOR " + s.floor + "/" + MAXFLOOR);
+  ctx.fillText(floorTxt, 14, 25);
+  ctx.fillStyle = PAL.muted;
+  ctx.font = "700 11px ui-monospace,monospace";
+  ctx.textAlign = "center";
+  ctx.fillText(s.seedLabel || "", cssW/2, 25);
+  ctx.fillStyle = PAL.silver;
+  ctx.textAlign = "right";
+  ctx.fillText("BEST " + ((s.ghost && s.ghost.bestFloor) ? s.ghost.bestFloor : 0), cssW - 14, 25);
+
+  if (s.phase !== "BOOT" && s.phase !== "GAMEOVER"){
+    const ahead = s.ahead > 0.08;
+    const behind = s.ahead < -0.08;
+    const col = ahead ? PAL.cyan : (behind ? PAL.magenta : PAL.muted);
+    const txt = ahead ? "▲ AHEAD" : (behind ? "▼ BEHIND" : "● EVEN");
+    ctx.fillStyle = col;
+    ctx.font = "900 12px ui-monospace,monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(txt, cssW/2, 64);
+  }
+  ctx.restore();
+
+  if (s.banner && performance.now() < s.banner.until){
+    const t = performance.now();
+    const remain = (s.banner.until - t) / 1600;
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, remain * 2);
+    ctx.fillStyle = PAL.cyan;
+    ctx.font = "900 clamp(22px,7vw,40px) ui-monospace,monospace";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.shadowColor = PAL.cyan; ctx.shadowBlur = 24;
+    ctx.fillText(s.banner.text, cssW/2, cssH*0.4);
+    ctx.restore();
+  } else if (s.banner){
+    s.banner = null;
+  }
+
+  if (s.flash > 0.02){
+    ctx.save();
+    ctx.fillStyle = "rgba(255,0,85," + (s.flash * 0.4) + ")";
+    ctx.fillRect(0,0,cssW,cssH);
+    ctx.restore();
+  }
+}
+
+function render(){
+  if (cssW === 0) resize();
+  drawBackground();
+  drawTower();
+  drawMarkers();
+  drawRibbon();
+  drawDPad();
+  drawHUD();
+}
+
+/* ---------- MAIN LOOP ---------- */
+let lastT = performance.now(), acc = 0;
+function frame(t){
+  let dt = t - lastT; lastT = t;
+  if (dt > 200) dt = 200;
+  acc += dt;
+  let guard = 0;
+  while (acc >= STEP && guard < 6){ update(); acc -= STEP; guard++; }
+  if (guard >= 6) acc = 0;
+  render();
+  requestAnimationFrame(frame);
+}
+
+/* ---------- RUN CONTROL ---------- */
+function startRun(seedObj){
+  s.seed = seedObj.seed;
+  s.seedLabel = seedObj.label;
+  s.cadence = CADENCE;
+  s.floor = 1;
+  s.runStart = performance.now();
+  s.runFloors = [];
+  s.prng = mulberry32(seedObj.seed >>> 0);
+  s.playerY = 1;
+  s.ghostY = 1;
+  s.ghostFloor = 1;
+  s.banner = null;
+  s.flash = 0;
+  hideAllOverlays();
+  enterPlayback(performance.now());
+}
+
+/* ---------- UI WIRING ---------- */
+const $ = id => document.getElementById(id);
+let seedMode = "daily";
+let pendingSeed = dailySeed();
+
+function refreshSeedDisplay(){
+  if (seedMode === "daily") pendingSeed = dailySeed();
+  else if (seedMode === "random") pendingSeed = randomSeed();
+  $("seedDisplay").textContent = "SEED " + (pendingSeed.label || "—");
+  $("seedInput").classList.toggle("hidden", seedMode !== "custom");
+}
+
+$("seedSeg").addEventListener("click", function(e){
+  const b = e.target.closest("button"); if (!b) return;
+  seedMode = b.dataset.mode;
+  [...this.children].forEach(c => c.classList.toggle("on", c === b));
+  if (seedMode === "random") pendingSeed = randomSeed();
+  if (seedMode === "daily") pendingSeed = dailySeed();
+  refreshSeedDisplay();
+});
+$("seedInput").addEventListener("input", function(){
+  const cs = customSeed(this.value);
+  if (cs) { pendingSeed = cs; $("seedDisplay").textContent = "SEED " + cs.label; }
+});
+$("climbBtn").addEventListener("click", function(){
+  if (seedMode === "custom"){
+    const cs = customSeed($("seedInput").value);
+    if (!cs){ $("seedInput").focus(); return; }
+    pendingSeed = cs;
+  }
+  if (seedMode === "random") pendingSeed = randomSeed();
+  if (seedMode === "daily") pendingSeed = dailySeed();
+  startRun(pendingSeed);
+});
+$("againBtn").addEventListener("click", function(){
+  if (seedMode === "random") pendingSeed = randomSeed();
+  if (seedMode === "daily") pendingSeed = dailySeed();
+  if (seedMode === "custom"){
+    const cs = customSeed($("seedInput").value); if (cs) pendingSeed = cs;
+  }
+  startRun(pendingSeed);
+});
+$("menuBtn").addEventListener("click", function(){ showStart(); });
+
+function showStart(){
+  s.phase = "BOOT";
+  hideAllOverlays();
+  $("start").classList.remove("hidden");
+  $("bestFloor").textContent = (s.ghost && s.ghost.bestFloor) ? s.ghost.bestFloor : 0;
+  refreshSeedDisplay();
+}
+function showGameover(score, isBest, time){
+  hideAllOverlays();
+  $("over").classList.remove("hidden");
+  $("overFloor").textContent = "FLOOR " + score;
+  $("overTime").textContent = "TIME " + (time/1000).toFixed(2) + "s";
+  $("newBest").classList.toggle("hidden", !isBest);
+  $("overSub").textContent = isBest ? "New personal best" : "You fell";
+  $("submitInfo").textContent = "FLOOR " + score + " · " + (time/1000).toFixed(2) + "s";
+  $("submitErr").textContent = "";
+  $("bestFloor").textContent = (s.ghost && s.ghost.bestFloor) ? s.ghost.bestFloor : 0;
+}
+function hideAllOverlays(){
+  $("start").classList.add("hidden");
+  $("over").classList.add("hidden");
+  $("lbModal").classList.add("hidden");
+  $("submitModal").classList.add("hidden");
+}
+
+/* ---------- LEADERBOARD ---------- */
+const LB_NAMES = ["NEON","VOID","ECHO","PRISM","GLITCH","PULSE","ZENITH","APEX","RIFT","FLUX","NOVA","ORBIT"];
+function mockBoard(){
+  const p = mulberry32(0xC0FFEE);
+  const arr = [];
+  for (let i=0;i<10;i++){
+    const f = 20 - i - Math.floor(p()*2);
+    arr.push({
+      name: LB_NAMES[i % LB_NAMES.length],
+      floor: Math.max(1, f),
+      seed: "DAILY",
+      cadence: CADENCE,
+      ts: new Date(Date.UTC(2024,0,15) + i*3600000).toISOString(),
+      mock: true
+    });
+  }
+  return arr;
+}
+function sortBoard(b){
+  b.sort((a,c) => (c.floor - a.floor) || (new Date(a.ts) - new Date(c.ts)));
+  return b;
+}
+let board = sortBoard(mockBoard());
+
+function renderLB(highlightFloor){
+  const tb = $("lbBody");
+  tb.innerHTML = "";
+  board.slice(0,50).forEach((e,i) => {
+    const tr = document.createElement("tr");
+    if (e._mine) tr.className = "me";
+    tr.innerHTML = "<td class='rank'>" + (i+1) + "</td><td>" + esc(e.name) +
+      "</td><td>" + e.floor + "</td><td>" + esc(String(e.seed).slice(0,12)) + "</td>";
+    tb.appendChild(tr);
+  });
+}
+function esc(x){ return String(x).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+async function loadLeaderboard(){
+  $("lbStatus").textContent = "Loading…";
+  if (!LEADERBOARD_BIN_ID){
+    board = sortBoard(mockBoard());
+    renderLB();
+    $("lbStatus").textContent = "Demo board (no bin configured)";
+    return;
+  }
+  try{
+    const res = await fetch("https://api.jsonbin.io/v3/b/" + LEADERBOARD_BIN_ID + "/latest?meta=false", {
+      headers: { "Content-Type":"application/json" }
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    const scores = (data && data.scores) ? data.scores : (Array.isArray(data) ? data : []);
+    board = sortBoard(scores.length ? scores : mockBoard());
+    renderLB();
+    $("lbStatus").textContent = "Live board";
+  } catch(err){
+    board = sortBoard(mockBoard());
+    renderLB();
+    $("lbStatus").textContent = "Unavailable — demo board";
+  }
+}
+
+async function submitScore(name, floor, seedLabel, cadence){
+  const entry = { name:name.slice(0,20), floor, seed:seedLabel, cadence, ts:new Date().toISOString() };
+  if (!LEADERBOARD_BIN_ID){
+    const local = board.filter(e => !e._mine);
+    local.push(Object.assign({}, entry, { _mine:true }));
+    board = sortBoard(local);
+    renderLB();
+    try { localStorage.setItem(LB_KEY, JSON.stringify(board)); } catch(e){}
+    return { ok:true, msg:"Saved locally (demo board)" };
+  }
+  try{
+    const res = await fetch("https://api.jsonbin.io/v3/b/" + LEADERBOARD_BIN_ID + "/latest?meta=false", {
+      headers: { "Content-Type":"application/json" }
+    });
+    if (!res.ok) throw new Error("read HTTP " + res.status);
+    const data = await res.json();
+    let scores = (data && data.scores) ? data.scores.slice() : [];
+    scores.push(entry);
+    sortBoard(scores);
+    scores = scores.slice(0,50);
+    const put = await fetch("https://api.jsonbin.io/v3/b/" + LEADERBOARD_BIN_ID, {
+      method:"PUT",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ scores })
+    });
+    if (!put.ok) throw new Error("write HTTP " + put.status);
+    board = sortBoard(scores.map(e => e.name===entry.name && e.ts===entry.ts ? Object.assign(e,{_mine:true}) : e));
+    renderLB();
+    return { ok:true, msg:"Uploaded to live board" };
+  } catch(err){
+    const local = board.filter(e => !e._mine);
+    local.push(Object.assign({}, entry, { _mine:true }));
+    board = sortBoard(local);
+    renderLB();
+    return { ok:false, msg:"Upload failed — saved locally" };
+  }
+}
+
+$("lbBtnStart").addEventListener("click", function(){ $("lbModal").classList.remove("hidden"); loadLeaderboard(); });
+$("lbBtnOver").addEventListener("click", function(){ $("lbModal").classList.remove("hidden"); loadLeaderboard(); });
+$("lbClose").addEventListener("click", function(){ $("lbModal").classList.add("hidden"); });
+$("lbRefresh").addEventListener("click", function(){ loadLeaderboard(); });
+
+$("submitBtn").addEventListener("click", function(){
+  $("submitModal").classList.remove("hidden");
+  $("nameInput").value = "";
+  $("nameInput").focus();
+});
+$("submitCancel").addEventListener("click", function(){ $("submitModal").classList.add("hidden"); });
+$("submitConfirm").addEventListener("click", async function(){
+  const name = $("nameInput").value.trim();
+  if (!name){ $("submitErr").textContent = "Enter a name"; return; }
+  $("submitErr").textContent = "";
+  const btn = $("submitConfirm"); btn.disabled = true; btn.textContent = "…";
+  const r = await submitScore(name, s.score, s.seedLabel, s.cadence);
+  btn.disabled = false; btn.textContent = "Submit";
+  $("submitErr").textContent = r.msg;
+  if (r.ok){ setTimeout(function(){ $("submitModal").classList.add("hidden"); }, 900); }
+});
+$("nameInput").addEventListener("keydown", function(e){
+  if (e.key === "Enter") $("submitConfirm").click();
+});
+
+/* ---------- INIT ---------- */
+function init(){
+  try {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+      s.motionScale = 0.3;
+    }
+  } catch(e){}
+  s.ghost = loadGhost();
+  try {
+    const lb = localStorage.getItem(LB_KEY);
+    if (lb) board = sortBoard(JSON.parse(lb));
+  } catch(e){}
+  resize();
+  showStart();
+  requestAnimationFrame(frame);
+}
+init();
+</script>
+</body>
+</html>
