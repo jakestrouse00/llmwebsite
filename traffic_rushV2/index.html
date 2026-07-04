@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>TRAFFIC RUSH — Weave, Boost, Survive</title>
+<style>
+  :root{
+    --bg:#0a0e17; --road:#1c2230; --road2:#161b27; --lane:#3a4258;
+    --accent:#00e5ff; --accent2:#ff2d6f; --nitro:#7c4dff; --good:#3ddc84;
+    --text:#e8eefc; --muted:#8a93a8; --panel:rgba(14,18,28,0.86);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    touch-action:none;overscroll-behavior:none;}
+  #game{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    padding:max(0px,env(safe-area-inset-top)) max(0px,env(safe-area-inset-right))
+            max(0px,env(safe-area-inset-bottom)) max(0px,env(safe-area-inset-left));}
+  #stage{position:relative;width:100%;height:100%;max-width:560px;margin:0 auto;overflow:hidden;
+    background:linear-gradient(180deg,#0a0e17,#05070c);}
+  canvas{display:block;width:100%;height:100%;touch-action:none;}
+
+  /* HUD */
+  #hud{position:absolute;inset:0;pointer-events:none;font-variant-numeric:tabular-nums;}
+  .topbar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;
+    align-items:flex-start;padding:12px 14px;gap:10px;}
+  .stat{background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:12px;
+    padding:7px 11px;backdrop-filter:blur(6px);}
+  .stat .lab{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+  .stat .val{font-size:20px;font-weight:800;line-height:1.05;transition:transform .12s ease-out;}
+  .stat .val small{font-size:11px;font-weight:600;color:var(--muted);}
+  .stat .val.pop{transform:scale(1.22);color:var(--good);}
+  #speedVal{color:var(--accent);}
+  #nearMissWrap{position:absolute;top:12px;left:50%;transform:translateX(-50%);
+    font-size:10px;letter-spacing:2px;color:#fff;text-transform:uppercase;
+    background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);
+    border-radius:20px;padding:4px 10px;opacity:0;transition:opacity .25s;backdrop-filter:blur(6px);}
+  #nearMissWrap.on{opacity:1;}
+  #nitroWrap{position:absolute;left:14px;right:14px;bottom:14px;}
+  #nitroLabel{display:flex;justify-content:space-between;font-size:9px;letter-spacing:2px;
+    color:var(--muted);text-transform:uppercase;margin-bottom:5px;}
+  #nitroTrack{height:14px;border-radius:8px;background:rgba(255,255,255,0.07);
+    border:1px solid rgba(255,255,255,0.06);overflow:hidden;position:relative;}
+  #nitroFill{height:100%;width:0%;border-radius:8px;
+    background:linear-gradient(90deg,var(--nitro),var(--accent));
+    box-shadow:0 0 12px var(--nitro);transition:width 0.06s linear;}
+  #nitroFill.empty{filter:grayscale(0.6) brightness(0.6);box-shadow:none;}
+  #nitroFill.shake{animation:nsh .12s linear infinite;}
+  @keyframes nsh{0%{transform:translateX(0)}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}100%{transform:translateX(0)}}
+  #boostHint{position:absolute;left:0;right:0;bottom:46px;text-align:center;font-size:11px;
+    color:var(--accent);letter-spacing:1px;opacity:0;transition:opacity .2s;}
+  #boostHint.on{opacity:1;}
+
+  /* Overlays */
+  .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;padding:24px;gap:18px;
+    background:radial-gradient(120% 120% at 50% 30%,rgba(10,14,23,0.72),rgba(5,7,12,0.96));
+    backdrop-filter:blur(3px);pointer-events:auto;z-index:5;}
+  .overlay.hidden{display:none;}
+  .logo{font-size:clamp(30px,9vw,52px);font-weight:900;letter-spacing:2px;line-height:.95;
+    background:linear-gradient(90deg,var(--accent),#fff 40%,var(--accent2));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 0 30px rgba(0,229,255,0.25);}
+  .tag{font-size:12px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-top:-8px;}
+  .diff{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .diff button{flex:0 0 auto;min-width:84px;padding:11px 16px;border-radius:12px;cursor:pointer;
+    font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--text);
+    background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);transition:.15s;}
+  .diff button:hover,.diff button.active{background:linear-gradient(90deg,var(--accent),var(--nitro));
+    color:#04111a;border-color:transparent;box-shadow:0 6px 22px rgba(0,229,255,0.35);}
+  .hs{font-size:13px;color:var(--muted);letter-spacing:1px;}
+  .hs b{color:var(--good);}
+  .play{margin-top:4px;padding:14px 34px;border-radius:14px;font-size:16px;font-weight:900;
+    letter-spacing:2px;text-transform:uppercase;color:#04111a;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--good));
+    box-shadow:0 8px 26px rgba(0,229,255,0.4);transition:.15s;}
+  .play:active{transform:translateY(1px) scale(.99);}
+  .help{font-size:11px;line-height:1.7;color:var(--muted);max-width:300px;}
+  .help b{color:var(--text);}
+  #overTitle{font-size:clamp(28px,8vw,44px);font-weight:900;letter-spacing:2px;color:var(--accent2);
+    text-shadow:0 0 26px rgba(255,45,111,0.4);}
+  .resStat{display:flex;gap:26px;}
+  .resStat .b .lab{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+  .resStat .b .v{font-size:30px;font-weight:900;}
+  #newBest{font-size:12px;letter-spacing:3px;color:var(--good);text-transform:uppercase;
+    opacity:0;transition:.2s;}
+  #newBest.on{opacity:1;}
+  .mute{position:absolute;top:12px;right:14px;pointer-events:auto;z-index:6;
+    width:34px;height:34px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);
+    background:var(--panel);color:var(--text);font-size:15px;cursor:pointer;display:none;}
+  #stage.playing .mute{display:block;}
+  #warn{position:absolute;bottom:64px;left:0;right:0;text-align:center;font-size:10px;
+    color:var(--accent2);letter-spacing:1px;display:none;}
+  #warn.on{display:block;}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="stage">
+    <canvas id="cv"></canvas>
+
+    <div id="hud">
+      <div class="topbar">
+        <div class="stat"><div class="lab">Distance</div><div class="val" id="distBox"><span id="distVal">0</span><small> m</small></div></div>
+        <div class="stat"><div class="lab">Speed</div><div class="val"><span id="speedVal">0</span><small> km/h</small></div></div>
+      </div>
+      <div id="nearMissWrap">NEAR MISS ×<span id="nearMissCount">0</span></div>
+      <div id="boostHint">BOOST</div>
+      <div id="nitroWrap">
+        <div id="nitroLabel"><span>Nitro</span><span id="nitroPct">0%</span></div>
+        <div id="nitroTrack"><div id="nitroFill" class="empty"></div></div>
+      </div>
+      <div id="warn">localStorage unavailable — high score will not persist</div>
+    </div>
+
+    <button class="mute" id="muteBtn" title="Mute">♪</button>
+
+    <!-- Start -->
+    <div class="overlay" id="startScreen">
+      <div>
+        <div class="logo">TRAFFIC<br>RUSH</div>
+        <div class="tag">Weave · Boost · Survive</div>
+      </div>
+      <div class="diff" id="diffPicker">
+        <button data-d="easy">Easy</button>
+        <button data-d="medium" class="active">Medium</button>
+        <button data-d="hard">Hard</button>
+      </div>
+      <div class="hs">Best: <b id="hsStart">0 m</b></div>
+      <button class="play" id="playBtn">Drive</button>
+      <div class="help">
+        <b>Desktop:</b> ← → / A D to switch lanes · hold <b>Space</b> or <b>Shift</b> to boost<br>
+        <b>Mobile:</b> swipe ← → to switch lanes · hold or double-tap to boost<br>
+        Grab <b style="color:var(--nitro)">nitro cans</b> to fill the meter. One crash ends the run.
+      </div>
+    </div>
+
+    <!-- Game Over -->
+    <div class="overlay hidden" id="overScreen">
+      <div id="overTitle">CRASHED</div>
+      <div class="resStat">
+        <div class="b"><div class="lab">Distance</div><div class="v"><span id="distOver">0</span> m</div></div>
+        <div class="b"><div class="lab">Best</div><div class="v"><span id="hsOver">0</span> m</div></div>
+      </div>
+      <div id="newBest">NEW BEST!</div>
+      <button class="play" id="retryBtn">Retry</button>
+      <div class="help">Tap Retry or press <b>Space</b> / <b>Enter</b></div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+(function(){
+  // ---------- Setup ----------
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const stage = document.getElementById('stage');
+  const startScreen = document.getElementById('startScreen');
+  const overScreen = document.getElementById('overScreen');
+  const distVal = document.getElementById('distVal');
+  const distBox = document.getElementById('distBox');
+  const speedVal = document.getElementById('speedVal');
+  const nitroFill = document.getElementById('nitroFill');
+  const nitroPct = document.getElementById('nitroPct');
+  const boostHint = document.getElementById('boostHint');
+  const hsStart = document.getElementById('hsStart');
+  const distOver = document.getElementById('distOver');
+  const hsOver = document.getElementById('hsOver');
+  const newBest = document.getElementById('newBest');
+  const warn = document.getElementById('warn');
+  const muteBtn = document.getElementById('muteBtn');
+  const nearMissWrap = document.getElementById('nearMissWrap');
+  const nearMissCount = document.getElementById('nearMissCount');
+
+  const LANES = 5;
+  const STEP = 1000/120;            // fixed sim timestep (120 Hz)
+  const MAX_FRAME = 250;           // clamp huge deltas (tab throttle)
+
+  // Tunables
+  const CFG = {
+    startSpeed: 320,              // px/s forward
+    ramp: 14,                      // px/s added per second (perceptible < 30s)
+    speedCap: 1500,                // px/s max base speed
+    boostMult: 1.7,
+    nitroMax: 100,
+    nitroPerCan: 34,
+    nitroDrain: 42,                // per second while boosting
+    laneSwitchTime: 0.12,          // seconds
+    distScale: 0.05,               // px -> meters
+    speedDisplay: 0.36,            // px/s -> km/h-ish display
+    nearMissGap: 0.10,             // fraction of laneW added to carW for near-miss threshold (tight)
+    carColors: ['#ff2d6f','#ffb020','#3ddc84','#00e5ff','#ff6e40','#b388ff','#ff5252']
+  };
+  const DIFF = {
+    // minOpenLanes guarantees a viable path: never block below this many free lanes in the top band
+    easy:   {spawnInt:1.15, carSpeedMin:50, carSpeedMax:150, multi:0.25, minOpenLanes:3},
+    medium: {spawnInt:0.80, carSpeedMin:60, carSpeedMax:180, multi:0.45, minOpenLanes:2},
+    hard:   {spawnInt:0.55, carSpeedMin:70, carSpeedMax:210, multi:0.7,  minOpenLanes:2}
+  };
+
+  // ---------- State ----------
+  let W=0,H=0,dpr=1,roadW=0,roadLeft=0,laneW=0,carW=0,carH=0;
+  let state='menu';                // menu | playing | over
+  let difficulty='medium';
+  let player, traffic, cans, dashes, sparks;
+  let baseSpeed, effSpeed, distance, nitro, boosting, spawnTimer, dashOffset;
+  let shake=0, boostFx=0, nearMiss=0, nearMissFlash=0, lastMilestone=0;
+  let highScore=0, hsAvailable=true;
+  let laneCooldown; // per-lane spawn cooldown to prevent vertical walls
+
+  // ---------- High score persistence ----------
+  function loadHS(){
+    try{
+      const v = localStorage.getItem('trafficRushHS');
+      if(v!=null){ highScore = parseFloat(v)||0; hsAvailable=true; warn.classList.remove('on'); return; }
+      localStorage.setItem('trafficRushHS_probe','1');
+      localStorage.removeItem('trafficRushHS_probe');
+      hsAvailable=true; warn.classList.remove('on');
+    }catch(e){
+      hsAvailable=false; warn.classList.add('on');
+    }
+  }
+  function saveHS(v){
+    if(!hsAvailable) return;
+    try{ localStorage.setItem('trafficRushHS', String(Math.floor(v))); }catch(e){ hsAvailable=false; warn.classList.add('on'); }
+  }
+  function refreshHSUI(){ hsStart.textContent = Math.floor(highScore)+' m'; }
+
+  // ---------- Resize ----------
+  function resize(){
+    const r = stage.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio||1, 2);
+    W = r.width; H = r.height;
+    cv.width = Math.floor(W*dpr); cv.height = Math.floor(H*dpr);
+    cv.style.width = W+'px'; cv.style.height = H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    roadW = W;
+    laneW = roadW / LANES;
+    roadLeft = 0;
+    carW = laneW*0.60;
+    carH = carW*1.85;
+    if(player){ player.y = H*0.74; }
+  }
+  window.addEventListener('resize', resize);
+
+  function laneCenter(i){ return roadLeft + laneW*(i+0.5); }
+
+  // ---------- Audio (procedural, no assets) ----------
+  let actx=null, muted=false;
+  function audio(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
+  function beep(freq, dur, type, vol){
+    if(muted) return; const a=audio(); if(!a) return;
+    try{
+      const o=a.createOscillator(), g=a.createGain();
+      o.type=type||'sine'; o.frequency.value=freq;
+      g.gain.value=0; o.connect(g); g.connect(a.destination);
+      const t=a.currentTime; g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(vol||0.08, t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+      o.start(t); o.stop(t+dur+0.02);
+    }catch(e){}
+  }
+  function sfxCan(){ beep(880,0.12,'triangle',0.10); beep(1320,0.10,'triangle',0.06); }
+  function sfxSwitch(){ beep(420,0.05,'square',0.04); }
+  function sfxBoost(){ beep(220,0.25,'sawtooth',0.07); beep(440,0.25,'sawtooth',0.05); }
+  function sfxNearMiss(){ beep(1400,0.06,'sine',0.05); }
+  function sfxCrash(){
+    if(muted) return; const a=audio(); if(!a) return;
+    try{
+      const o=a.createOscillator(), g=a.createGain();
+      o.type='sawtooth'; o.frequency.setValueAtTime(180,a.currentTime);
+      o.frequency.exponentialRampToValueAtTime(40,a.currentTime+0.5);
+      g.gain.setValueAtTime(0.16,a.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+0.5);
+      o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime+0.55);
+    }catch(e){}
+  }
+  muteBtn.addEventListener('click', ()=>{ muted=!muted; muteBtn.textContent = muted?'♪̸':'♪'; });
+
+  // ---------- Game lifecycle ----------
+  function reset(){
+    player = { lane:2, x:laneCenter(2), y:H*0.74, w:carW, h:carH, fromX:laneCenter(2), switchT:0, color:'#00e5ff' };
+    traffic = []; cans = []; dashes = []; sparks = [];
+    baseSpeed = CFG.startSpeed; effSpeed = baseSpeed;
+    distance = 0; nitro = 0; boosting = false;
+    spawnTimer = 0.6; dashOffset = 0; shake = 0; boostFx = 0;
+    nearMiss = 0; nearMissFlash = 0; lastMilestone = 0;
+    laneCooldown = new Array(LANES).fill(0);
+    const dashGap = 46;
+    for(let y=-dashGap; y<H+dashGap; y+=dashGap){ dashes.push(y); }
+  }
+
+  function startGame(){
+    audio();
+    reset();
+    state='playing';
+    startScreen.classList.add('hidden');
+    overScreen.classList.add('hidden');
+    stage.classList.add('playing');
+  }
+
+  function endGame(){
+    state='over';
+    sfxCrash(); shake = 22;
+    const finalDist = Math.floor(distance);
+    distOver.textContent = finalDist;
+    let isBest = false;
+    if(finalDist > highScore){ highScore = finalDist; saveHS(highScore); isBest = true; refreshHSUI(); }
+    hsOver.textContent = Math.floor(highScore);
+    newBest.classList.toggle('on', isBest);
+    setTimeout(()=>{ overScreen.classList.remove('hidden'); stage.classList.remove('playing'); }, 650);
+  }
+
+  // ---------- Spawning (fairness-aware) ----------
+  function laneOccupiedNearTop(lane){
+    const band = carH*1.7;
+    for(let i=0;i<traffic.length;i++){
+      const c = traffic[i];
+      if(c.lane===lane && c.y < band) return true;
+    }
+    return false;
+  }
+  function freeLanesNearTop(){
+    const free = [];
+    for(let i=0;i<LANES;i++) if(!laneOccupiedNearTop(i) && laneCooldown[i]<=0) free.push(i);
+    return free;
+  }
+  function spawnTraffic(){
+    const d = DIFF[difficulty];
+    const free = freeLanesNearTop();
+    if(free.length===0) return;
+    // Only spawn if at least minOpenLanes remain free afterward.
+    if(free.length - 1 < d.minOpenLanes) return;
+
+    const lane = free[(Math.random()*free.length)|0];
+    const sp = d.carSpeedMin + Math.random()*(d.carSpeedMax-d.carSpeedMin);
+    traffic.push({
+      lane, x:laneCenter(lane), y:-carH-Math.random()*40, w:carW, h:carH,
+      vy: sp, color: CFG.carColors[(Math.random()*CFG.carColors.length)|0], passed:false
+    });
+    laneCooldown[lane] = d.spawnInt*0.9;
+
+    // extra car chance scales difficulty, but never below minOpenLanes free
+    if(Math.random() < d.multi){
+      const free2 = free.filter(l=>l!==lane && !laneOccupiedNearTop(l));
+      if(free2.length && (free2.length-1) >= d.minOpenLanes){
+        const l2 = free2[(Math.random()*free2.length)|0];
+        const sp2 = d.carSpeedMin + Math.random()*(d.carSpeedMax-d.carSpeedMin);
+        traffic.push({ lane:l2, x:laneCenter(l2), y:-carH-Math.random()*60, w:carW, h:carH,
+          vy:sp2, color: CFG.carColors[(Math.random()*CFG.carColors.length)|0], passed:false });
+        laneCooldown[l2] = d.spawnInt*0.9;
+      }
+    }
+  }
+  function spawnCan(){
+    const free = [];
+    for(let i=0;i<LANES;i++) if(!laneOccupiedNearTop(i)) free.push(i);
+    if(!free.length) return;
+    const lane = free[(Math.random()*free.length)|0];
+    cans.push({ lane, x:laneCenter(lane), y:-30, r:laneW*0.16, taken:false });
+  }
+
+  // ---------- Input ----------
+  let keyHold=false, touchHold=false, autoBoost=false;
+  function requestBoost(){ return (keyHold||touchHold||autoBoost) && nitro>0 && state==='playing'; }
+
+  function switchLane(dir){
+    if(state!=='playing') return;
+    const nl = Math.max(0, Math.min(LANES-1, player.lane+dir));
+    if(nl===player.lane) return;
+    player.fromX = player.x; player.lane = nl; player.switchT = CFG.laneSwitchTime;
+    sfxSwitch();
+  }
+
+  window.addEventListener('keydown', e=>{
+    if(e.repeat) return;
+    const k = e.key;
+    if(k==='ArrowLeft'||k==='a'||k==='A'){ switchLane(-1); e.preventDefault(); }
+    else if(k==='ArrowRight'||k==='d'||k==='D'){ switchLane(1); e.preventDefault(); }
+    else if(k===' '||k==='Shift'){ keyHold=true; e.preventDefault(); }
+    else if(k==='Enter' && state!=='playing'){ startGame(); }
+    else if(k===' ' && state!=='playing'){ startGame(); e.preventDefault(); }
+  });
+  window.addEventListener('keyup', e=>{
+    const k = e.key;
+    if(k===' '||k==='Shift'){ keyHold=false; }
+  });
+
+  // Touch — swipe and hold are mutually exclusive.
+  // Hold is armed via setTimeout on touchstart and instantly cleared on the
+  // first touchmove that exceeds MOVE_TOL. This eliminates the polling race
+  // where an interval could briefly set touchHold before touchmove cancels it.
+  let tStartX=0,tStartY=0,tActive=false,tMoved=false,tLastTap=0,swipedThisTouch=false;
+  let holdTimer=null;
+  const SWIPE = 28, HOLD_DELAY = 90, MOVE_TOL = 10;
+
+  function clearHold(){ if(holdTimer){ clearTimeout(holdTimer); holdTimer=null; } }
+
+  stage.addEventListener('touchstart', e=>{
+    if(state!=='playing') return;
+    const t=e.changedTouches[0];
+    tStartX=t.clientX; tStartY=t.clientY;
+    tActive=true; tMoved=false; swipedThisTouch=false; touchHold=false;
+    clearHold();
+    // double-tap toggle for sustained auto-boost
+    const now=performance.now();
+    if(now - tLastTap < 300){ autoBoost = !autoBoost; if(autoBoost) sfxBoost(); }
+    tLastTap = now;
+    // arm hold-to-boost: fires only if finger stays still past HOLD_DELAY
+    holdTimer = setTimeout(()=>{
+      if(tActive && !tMoved && state==='playing'){ touchHold=true; }
+      holdTimer=null;
+    }, HOLD_DELAY);
+  }, {passive:true});
+
+  stage.addEventListener('touchmove', e=>{
+    if(!tActive||state!=='playing') return;
+    const t=e.changedTouches[0];
+    const dx=t.clientX-tStartX, dy=t.clientY-tStartY;
+    // Any real movement instantly cancels the pending hold (mutual exclusion)
+    if(Math.abs(dx)>MOVE_TOL || Math.abs(dy)>MOVE_TOL){
+      if(!tMoved){ tMoved=true; touchHold=false; clearHold(); }
+    }
+    if(Math.abs(dx)>SWIPE && Math.abs(dx)>Math.abs(dy)*0.8 && !swipedThisTouch){
+      switchLane(dx>0?1:-1);
+      swipedThisTouch=true;
+      tStartX=t.clientX; tStartY=t.clientY; swipedThisTouch=false; // allow repeated swipes
+    }
+  }, {passive:true});
+
+  stage.addEventListener('touchend', ()=>{
+    tActive=false; touchHold=false; clearHold();
+  }, {passive:true});
+  stage.addEventListener('touchcancel', ()=>{
+    tActive=false; touchHold=false; clearHold();
+  }, {passive:true});
+
+  // ---------- Update (fixed timestep) ----------
+  function update(dt){
+    if(state!=='playing') return;
+
+    // ramp (frozen while boosting)
+    if(!boosting && baseSpeed < CFG.speedCap){
+      baseSpeed = Math.min(CFG.speedCap, baseSpeed + CFG.ramp*dt);
+    }
+    boosting = requestBoost();
+    effSpeed = boosting ? baseSpeed*CFG.boostMult : baseSpeed;
+
+    // distance
+    distance += effSpeed * dt * CFG.distScale;
+
+    // milestone pop
+    const ms = Math.floor(distance/100)*100;
+    if(ms > lastMilestone && ms>0){ lastMilestone = ms; distBox.classList.add('pop'); setTimeout(()=>distBox.classList.remove('pop'),130); }
+
+    // nitro drain
+    if(boosting){ nitro = Math.max(0, nitro - CFG.nitroDrain*dt); if(nitro<=0){ autoBoost=false; } }
+
+    // player lane interpolation
+    if(player.switchT>0){
+      player.switchT = Math.max(0, player.switchT - dt);
+      const targetX = laneCenter(player.lane);
+      const t = 1 - (player.switchT/CFG.laneSwitchTime);
+      player.x = player.fromX + (targetX-player.fromX)*easeOutCubic(t);
+    } else { player.x = laneCenter(player.lane); }
+
+    // lane cooldowns
+    for(let i=0;i<LANES;i++) if(laneCooldown[i]>0) laneCooldown[i]-=dt;
+
+    // spawn
+    spawnTimer -= dt;
+    if(spawnTimer<=0){
+      spawnTraffic();
+      if(Math.random()<0.5) spawnCan();
+      spawnTimer = DIFF[difficulty].spawnInt * (0.85+Math.random()*0.4);
+    }
+
+    // move traffic downward (approach player)
+    for(let i=traffic.length-1;i>=0;i--){
+      const c=traffic[i];
+      const prevY = c.y;
+      c.y += (effSpeed + c.vy) * dt;
+      // near-miss: car crosses player's y band while close horizontally
+      if(!c.passed && prevY < player.y && c.y >= player.y){
+        c.passed = true;
+        const dx = Math.abs(c.x - player.x);
+        // tight threshold: carW + small fraction of laneW — only genuine weaves trigger
+        if(dx > 0 && dx < laneW*1.05 && dx < carW + laneW*CFG.nearMissGap){
+          nearMiss++; nearMissFlash = 1; sfxNearMiss();
+          nearMissCount.textContent = nearMiss;
+          nearMissWrap.classList.add('on');
+          sparks.push({ x:(c.x+player.x)/2, y:player.y, life:0.35, max:0.35 });
+        }
+      }
+      if(c.y > H+carH*2) traffic.splice(i,1);
+    }
+    // move cans with road
+    for(let i=cans.length-1;i>=0;i--){
+      const cn=cans[i];
+      cn.y += effSpeed*dt;
+      if(cn.y > H+40) cans.splice(i,1);
+    }
+    // sparks
+    for(let i=sparks.length-1;i>=0;i--){ sparks[i].life -= dt; if(sparks[i].life<=0) sparks.splice(i,1); }
+
+    // dashes scroll
+    dashOffset = (dashOffset + effSpeed*dt) % 100000;
+    for(let i=0;i<dashes.length;i++){ dashes[i] += effSpeed*dt; }
+    const dashGap=46;
+    for(let i=0;i<dashes.length;i++){
+      if(dashes[i] > H+dashGap){ dashes[i] -= (H+dashGap*2); }
+    }
+
+    // collisions
+    const pad = carW*0.12;
+    for(let i=0;i<traffic.length;i++){
+      const c=traffic[i];
+      if(aabb(player.x-player.w/2+pad, player.y-player.h/2+pad, player.w-pad*2, player.h-pad*2,
+             c.x-c.w/2+pad,    c.y-c.h/2+pad,    c.w-pad*2,    c.h-pad*2)){
+        endGame(); return;
+      }
+    }
+    // can pickup (squared distance, no Math.hypot)
+    for(let i=0;i<cans.length;i++){
+      const cn=cans[i]; if(cn.taken) continue;
+      const dx=cn.x-player.x, dy=cn.y-player.y;
+      const r = cn.r + carW*0.4;
+      if(dx*dx+dy*dy < r*r){
+        cn.taken=true; nitro = Math.min(CFG.nitroMax, nitro+CFG.nitroPerCan); sfxCan();
+      }
+    }
+    cans = cans.filter(c=>!c.taken);
+
+    if(shake>0) shake = Math.max(0, shake-dt*60);
+    boostFx = boosting ? Math.min(1, boostFx+dt*6) : Math.max(0, boostFx-dt*6);
+    if(nearMissFlash>0){ nearMissFlash = Math.max(0, nearMissFlash-dt*3); if(nearMissFlash<=0) nearMissWrap.classList.remove('on'); }
+  }
+
+  function easeOutCubic(t){ return 1-Math.pow(1-t,3); }
+  function aabb(x1,y1,w1,h1,x2,y2,w2,h2){ return x1<x2+w2 && x1+w1>x2 && y1<y2+h2 && y1+h1>y2; }
+
+  // ---------- Render ----------
+  function drawRoad(){
+    ctx.fillStyle = '#1c2230';
+    ctx.fillRect(roadLeft,0,roadW,H);
+    // edge glow
+    const g = ctx.createLinearGradient(0,0,roadW,0);
+    g.addColorStop(0,'rgba(0,229,255,0.10)'); g.addColorStop(0.06,'rgba(0,0,0,0)');
+    g.addColorStop(0.94,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(255,45,111,0.10)');
+    ctx.fillStyle=g; ctx.fillRect(roadLeft,0,roadW,H);
+    // lane dividers
+    ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=2; ctx.setLineDash([22,24]);
+    for(let i=1;i<LANES;i++){
+      const x = roadLeft + laneW*i;
+      ctx.lineDashOffset = -dashOffset;
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    // moving dashes overlay (brighter tick marks)
+    ctx.fillStyle='rgba(255,255,255,0.5)';
+    for(let i=0;i<dashes.length;i++){
+      const y=dashes[i];
+      if(y<-10||y>H+10) continue;
+      for(let l=1;l<LANES;l++){
+        const x=roadLeft+laneW*l;
+        ctx.fillRect(x-2,y,4,18);
+      }
+    }
+  }
+
+  function drawCar(x,y,w,h,color,glow){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.fillStyle='rgba(0,0,0,0.35)';
+    roundRect(-w/2+2,-h/2+4,w,h,w*0.22); ctx.fill();
+    const g = ctx.createLinearGradient(-w/2,0,w/2,0);
+    g.addColorStop(0,shade(color,-0.25)); g.addColorStop(0.5,color); g.addColorStop(1,shade(color,-0.25));
+    ctx.fillStyle=g; roundRect(-w/2,-h/2,w,h,w*0.22); ctx.fill();
+    ctx.fillStyle='rgba(10,16,28,0.85)';
+    roundRect(-w/2+w*0.16,-h/2+h*0.16,w*0.68,h*0.26,w*0.14); ctx.fill();
+    roundRect(-w/2+w*0.16, h/2-h*0.40,w*0.68,h*0.22,w*0.14); ctx.fill();
+    ctx.fillStyle=shade(color,0.12);
+    roundRect(-w/2+w*0.22,-h/2+h*0.44,w*0.56,h*0.12,w*0.12); ctx.fill();
+    if(glow){
+      ctx.shadowColor=color; ctx.shadowBlur=18;
+      ctx.fillStyle=color;
+      ctx.fillRect(-w/2+w*0.10,-h/2+2,w*0.16,4);
+      ctx.fillRect(w/2-w*0.26,-h/2+2,w*0.16,4);
+      ctx.shadowBlur=0;
+    } else {
+      ctx.fillStyle='rgba(255,255,255,0.85)';
+      ctx.fillRect(-w/2+w*0.12,-h/2+2,w*0.14,3);
+      ctx.fillRect(w/2-w*0.26,-h/2+2,w*0.14,3);
+      ctx.fillStyle='rgba(255,60,60,0.9)';
+      ctx.fillRect(-w/2+w*0.12,h/2-5,w*0.14,3);
+      ctx.fillRect(w/2-w*0.26,h/2-5,w*0.14,3);
+    }
+    ctx.restore();
+  }
+
+  function drawCan(cn){
+    ctx.save(); ctx.translate(cn.x,cn.y);
+    ctx.shadowColor='#7c4dff'; ctx.shadowBlur=16;
+    const r=cn.r;
+    const g=ctx.createLinearGradient(0,-r,0,r);
+    g.addColorStop(0,'#b388ff'); g.addColorStop(1,'#7c4dff');
+    ctx.fillStyle=g; roundRect(-r,-r*1.1,r*2,r*2.2,r*0.5); ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.fillStyle='#fff'; ctx.font='bold '+(r*1.1)+'px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('N',0,1);
+    ctx.restore();
+  }
+
+  function drawSparks(){
+    for(let i=0;i<sparks.length;i++){
+      const s=sparks[i]; const a=s.life/s.max;
+      ctx.save(); ctx.globalAlpha=a;
+      ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.shadowColor='#fff'; ctx.shadowBlur=10;
+      for(let k=0;k<5;k++){
+        const ang=Math.random()*Math.PI*2; const len=6+Math.random()*10;
+        ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(s.x+Math.cos(ang)*len, s.y+Math.sin(ang)*len); ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  function drawBoostStreaks(){
+    if(boostFx<=0) return;
+    ctx.save(); ctx.globalAlpha=boostFx*0.5;
+    ctx.strokeStyle='#00e5ff'; ctx.lineWidth=2;
+    const n = 10 + Math.floor(boostFx*10);
+    for(let i=0;i<n;i++){
+      const x = roadLeft + Math.random()*roadW;
+      const y = Math.random()*H;
+      ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y+40+Math.random()*70); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function render(){
+    ctx.clearRect(0,0,W,H);
+    ctx.save();
+    if(shake>0){ ctx.translate((Math.random()-0.5)*shake,(Math.random()-0.5)*shake); }
+
+    // Visual velocity: subtle zoom toward player during boost
+    if(boostFx>0){
+      const z = 1 + boostFx*0.06;
+      ctx.translate(player.x, player.y);
+      ctx.scale(z,z);
+      ctx.translate(-player.x, -player.y);
+    }
+
+    drawRoad();
+    drawBoostStreaks();
+    for(let i=0;i<cans.length;i++) drawCan(cans[i]);
+    for(let i=0;i<traffic.length;i++){ const c=traffic[i]; drawCar(c.x,c.y,c.w,c.h,c.color,false); }
+    if(player){ drawCar(player.x,player.y,player.w,player.h,player.color,true); }
+    drawSparks();
+
+    ctx.restore();
+
+    // Boost vignette + chromatic edge fringing (cheap single-pass overlays)
+    if(boostFx>0){
+      ctx.save(); ctx.globalAlpha=boostFx*0.28;
+      const v=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.2,W/2,H/2,Math.max(W,H)*0.7);
+      v.addColorStop(0,'rgba(0,0,0,0)'); v.addColorStop(1,'#00e5ff');
+      ctx.fillStyle=v; ctx.fillRect(0,0,W,H);
+      // chromatic stress: red fringe left, blue fringe right
+      const lf=ctx.createLinearGradient(0,0,W*0.18,0);
+      lf.addColorStop(0,'rgba(255,45,111,0.5)'); lf.addColorStop(1,'rgba(255,45,111,0)');
+      ctx.fillStyle=lf; ctx.fillRect(0,0,W*0.18,H);
+      const rf=ctx.createLinearGradient(W*0.82,0,W,0);
+      rf.addColorStop(0,'rgba(0,229,255,0)'); rf.addColorStop(1,'rgba(0,229,255,0.5)');
+      ctx.fillStyle=rf; ctx.fillRect(W*0.82,0,W*0.18,H);
+      ctx.restore();
+    }
+    // near-miss flash
+    if(nearMissFlash>0){
+      ctx.save(); ctx.globalAlpha=nearMissFlash*0.18; ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H); ctx.restore();
+    }
+
+    // HUD update
+    distVal.textContent = Math.floor(distance);
+    speedVal.textContent = Math.floor(effSpeed*CFG.speedDisplay);
+    const pct = Math.round(nitro/CFG.nitroMax*100);
+    nitroFill.style.width = pct+'%';
+    nitroFill.classList.toggle('empty', nitro<=0);
+    nitroFill.classList.toggle('shake', boosting && nitro>0 && nitro<18);
+    nitroPct.textContent = pct+'%';
+    boostHint.classList.toggle('on', boosting);
+  }
+
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+  function shade(hex,amt){
+    const c=hex.replace('#',''); const n=parseInt(c,16);
+    let r=(n>>16)&255, g=(n>>8)&255, b=n&255;
+    r=Math.round(r+(amt>0?(255-r):r)*amt);
+    g=Math.round(g+(amt>0?(255-g):g)*amt);
+    b=Math.round(b+(amt>0?(255-b):b)*amt);
+    return 'rgb('+r+','+g+','+b+')';
+  }
+
+  // ---------- Main loop ----------
+  let acc=0, last=performance.now();
+  function loop(now){
+    let dt = now - last; last = now;
+    if(dt>MAX_FRAME) dt=MAX_FRAME;
+    acc += dt;
+    let guard=0;
+    while(acc>=STEP){ update(STEP/1000); acc-=STEP; if(++guard>10){ acc=0; break; } }
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- UI wiring ----------
+  document.getElementById('diffPicker').addEventListener('click', e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    difficulty = b.dataset.d;
+    document.querySelectorAll('#diffPicker button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+  });
+  document.getElementById('playBtn').addEventListener('click', startGame);
+  document.getElementById('retryBtn').addEventListener('click', startGame);
+
+  // ---------- Init ----------
+  loadHS(); refreshHSUI(); resize(); reset();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
