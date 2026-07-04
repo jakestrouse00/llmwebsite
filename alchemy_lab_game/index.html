@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ALCHEMY LAB — Merge Isotopes Into Heavier Elements</title>
+<style>
+  :root{
+    --bg:#070b14; --bg2:#0c1322; --panel:#111a2e; --panel2:#0e1626;
+    --line:#1e2a44; --txt:#e6edf7; --mut:#8190ad; --acc:#38bdf8;
+    --hot:#ef4444; --warn:#f59e0b; --good:#22c55e;
+    --cell:44px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{
+    background:radial-gradient(1200px 800px at 70% -10%,#15233f 0%,transparent 60%),
+               radial-gradient(900px 700px at 10% 110%,#1a1030 0%,transparent 55%),
+               var(--bg);
+    color:var(--txt);font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;
+  }
+
+  /* ===== HUD ===== */
+  header.hud{
+    display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+    padding:14px 18px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(20,30,52,.9),rgba(8,12,22,.6));
+    backdrop-filter:blur(6px);position:sticky;top:0;z-index:20;
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.14em;font-size:15px}
+  .brand .logo{width:30px;height:30px;border-radius:8px;background:conic-gradient(from 0deg,#38bdf8,#a855f7,#ef4444,#f59e0b,#38bdf8);box-shadow:0 0 18px rgba(56,189,248,.5)}
+  .brand small{display:block;font-weight:500;letter-spacing:.04em;color:var(--mut);font-size:10px}
+
+  .heat-wrap{flex:1 1 260px;min-width:200px;display:flex;flex-direction:column;gap:5px}
+  .heat-top{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.12em;color:var(--mut)}
+  .heat-top b{color:var(--txt);letter-spacing:.18em}
+  .heat-track{position:relative;height:14px;border-radius:8px;background:#0a1120;border:1px solid var(--line);overflow:hidden}
+  #heatBar{position:absolute;left:0;top:0;height:100%;width:0%;
+    background:linear-gradient(90deg,#22c55e,#eab308 55%,#f97316 80%,#ef4444);
+    border-radius:8px;transition:width .3s ease;box-shadow:0 0 14px rgba(239,68,68,.0)}
+  #heatBar.critical{animation:critpulse .5s linear infinite}
+  @keyframes critpulse{0%,100%{filter:brightness(1.3) saturate(1.4);box-shadow:0 0 22px rgba(239,68,68,.9)}50%{filter:brightness(2) saturate(1.8);box-shadow:0 0 34px rgba(239,68,68,1)}}
+  .heat-track.vent{animation:vent .45s ease}
+  @keyframes vent{0%{box-shadow:0 0 0 0 rgba(56,189,248,.7)}100%{box-shadow:0 0 0 16px rgba(56,189,248,0)}}
+
+  .scores{display:flex;gap:10px}
+  .score{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 14px;min-width:84px;text-align:center}
+  .score .k{font-size:10px;letter-spacing:.16em;color:var(--mut)}
+  .score .v{font-size:20px;font-weight:800;line-height:1.1}
+  .score .v small{font-size:11px;color:var(--mut);font-weight:600}
+  #persistWarn{display:none;font-size:10px;color:var(--warn);margin-top:3px;letter-spacing:.04em}
+
+  /* ===== LAYOUT ===== */
+  main{flex:1;display:flex;gap:22px;padding:22px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+  .stage{display:flex;flex-direction:column;align-items:center;gap:14px}
+  .board{
+    display:grid;grid-template-columns:repeat(6,var(--cell));grid-template-rows:repeat(6,var(--cell));
+    gap:8px;padding:14px;border-radius:18px;
+    background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--line);box-shadow:0 24px 60px rgba(0,0,0,.5),inset 0 0 40px rgba(0,0,0,.4);
+  }
+  .cell{
+    width:var(--cell);height:var(--cell);border-radius:12px;
+    background:#0a1120;border:1px solid #18233a;position:relative;
+    display:flex;align-items:center;justify-content:center;touch-action:none;
+  }
+  .cell.hover{border-color:var(--good);box-shadow:0 0 0 2px rgba(34,197,94,.6),0 0 18px rgba(34,197,94,.4)}
+  .cell.source .tile{opacity:.25;filter:grayscale(.6)}
+  .cell.autoflash{animation:autoflash .5s ease}
+  @keyframes autoflash{0%{box-shadow:0 0 0 0 rgba(245,158,11,.9)}100%{box-shadow:0 0 0 14px rgba(245,158,11,0)}}
+  .cell.decaying .tile{animation:decayout .25s ease forwards}
+  @keyframes decayout{to{opacity:0;transform:scale(.4) rotate(20deg);filter:blur(2px)}}
+
+  .tile{
+    position:absolute;inset:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    border-radius:50%;color:#06101f;font-weight:800;text-align:center;cursor:grab;
+    background:radial-gradient(circle at 32% 28%,color-mix(in srgb,var(--c) 92%,#fff 18%),var(--c) 70%,color-mix(in srgb,var(--c) 70%,#000 25%));
+    box-shadow:0 4px 10px rgba(0,0,0,.45),inset 0 2px 4px rgba(255,255,255,.35),inset 0 -3px 6px rgba(0,0,0,.3);
+    transition:transform .18s cubic-bezier(.2,1.4,.4,1);user-select:none;
+  }
+  .tile:active{cursor:grabbing}
+  .tile .sym{font-size:18px;line-height:1;letter-spacing:-.02em;text-shadow:0 1px 1px rgba(255,255,255,.4)}
+  .tile .nm{font-size:7px;font-weight:700;opacity:.72;margin-top:2px;letter-spacing:.04em;text-transform:uppercase}
+  .tile .tn{position:absolute;top:3px;left:5px;font-size:8px;font-weight:800;opacity:.55}
+  .tile.unstable{outline:2px dashed rgba(239,68,68,.85);outline-offset:-3px}
+  .tile.merge-pop{animation:pop .26s cubic-bezier(.2,1.5,.4,1)}
+  @keyframes pop{0%{transform:scale(.4)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+  .tile.spawn{animation:spawnin .4s ease}
+  @keyframes spawnin{0%{opacity:0;transform:scale(.3)}100%{opacity:1;transform:scale(1)}}
+  .tile.dragging{cursor:grabbing;transform:scale(1.08) rotate(-3deg);filter:brightness(1.15);box-shadow:0 16px 34px rgba(0,0,0,.6)}
+
+  .decay-bar{position:absolute;left:8%;right:8%;bottom:5px;height:5px;border-radius:3px;background:rgba(0,0,0,.35);overflow:hidden}
+  .decay-bar i{display:block;height:100%;width:100%;transform-origin:left center;
+    background:linear-gradient(90deg,#fde68a,#f59e0b 50%,#ef4444);animation:deplete 12s linear forwards}
+  @keyframes deplete{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+  .decay-num{position:absolute;top:3px;right:5px;font-size:9px;font-weight:800;color:#fff;
+    background:rgba(239,68,68,.85);border-radius:6px;padding:0 4px;line-height:1.3}
+
+  .legend{font-size:11px;color:var(--mut);letter-spacing:.06em;text-align:center;max-width:340px}
+  .legend b{color:var(--txt)}
+
+  /* ===== LADDER PANEL ===== */
+  .ladder{width:230px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px}
+  .ladder h3{margin:0 0 10px;font-size:11px;letter-spacing:.18em;color:var(--mut)}
+  .rung{display:flex;align-items:center;gap:9px;padding:5px 6px;border-radius:9px;font-size:12px}
+  .rung .sw{width:22px;height:22px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:9px;color:#06101f;border:1px solid rgba(0,0,0,.25)}
+  .rung .lab{flex:1}
+  .rung .lab b{font-size:13px}
+  .rung .lab small{display:block;color:var(--mut);font-size:9px;letter-spacing:.04em}
+  .rung .tag{font-size:8px;font-weight:800;letter-spacing:.1em;padding:2px 6px;border-radius:6px}
+  .rung .tag.u{background:rgba(239,68,68,.2);color:#fca5a5}
+  .rung .tag.g{background:rgba(34,197,94,.2);color:#86efac}
+  .rung.cur{background:rgba(56,189,248,.12);box-shadow:inset 0 0 0 1px rgba(56,189,248,.4)}
+
+  /* ===== BANNER ===== */
+  #banner{position:fixed;top:78px;left:50%;transform:translate(-50%,-16px);z-index:30;
+    background:linear-gradient(90deg,#7f1d1d,#ef4444,#7f1d1d);color:#fff;font-weight:800;
+    letter-spacing:.18em;padding:10px 22px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;
+    box-shadow:0 10px 30px rgba(239,68,68,.5);transition:opacity .2s,transform .2s}
+  #banner.show{opacity:1;transform:translate(-50%,0);animation:banpulse .6s ease infinite}
+  @keyframes banpulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35)}}
+
+  /* ===== OVERLAYS ===== */
+  .overlay{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;
+    background:rgba(5,8,16,.86);backdrop-filter:blur(8px);padding:24px}
+  .overlay.hidden{display:none}
+  .card{max-width:440px;width:100%;background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--line);border-radius:20px;padding:30px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .card h1{margin:0 0 6px;font-size:26px;letter-spacing:.06em}
+  .card h1.win{color:#fbbf24;text-shadow:0 0 24px rgba(251,191,36,.5)}
+  .card h1.lose{color:#f87171}
+  .card p{color:var(--mut);font-size:13px;line-height:1.6;margin:10px 0}
+  .card .big{font-size:46px;font-weight:800;margin:14px 0 4px}
+  .card .big small{font-size:14px;color:var(--mut);display:block;font-weight:600;letter-spacing:.1em}
+  .rules{text-align:left;background:#0a1120;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:16px 0;font-size:12px;line-height:1.7;color:#c7d3e8}
+  .rules b{color:var(--acc)}
+  button.cta{margin-top:8px;background:linear-gradient(90deg,#38bdf8,#6366f1);color:#06101f;border:none;
+    font-weight:800;letter-spacing:.1em;padding:13px 26px;border-radius:12px;font-size:14px;cursor:pointer;
+    box-shadow:0 10px 26px rgba(56,189,248,.4);transition:transform .12s}
+  button.cta:hover{transform:translateY(-2px)}
+  button.cta:active{transform:translateY(0)}
+
+  @media (max-width:760px){
+    :root{--cell:46px}
+    main{padding:14px;gap:14px}
+    .ladder{width:100%;order:2}
+    .brand small{display:none}
+  }
+  @media (max-width:420px){:root{--cell:42px}}
+
+  @media (prefers-reduced-motion: reduce){
+    .tile{transition:none !important}
+    .tile.merge-pop,.tile.spawn,.cell.autoflash,.cell.decaying .tile{animation:none !important}
+    .decay-bar i{animation:none !important}
+    #heatBar{transition:width .08s linear !important}
+    #heatBar.critical,#banner.show{animation:none !important}
+    .tile.dragging{transform:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="hud">
+  <div class="brand"><span class="logo"></span><div>ALCHEMY LAB<small>Merge isotopes · H → U</small></div></div>
+
+  <div class="heat-wrap">
+    <div class="heat-top"><b>REACTOR HEAT</b><span id="heatLabel">stable</span></div>
+    <div class="heat-track" id="heatTrack"><div id="heatBar"></div></div>
+  </div>
+
+  <div class="scores">
+    <div class="score"><div class="k">RUN BEST</div><div class="v" id="curScore">—</div></div>
+    <div class="score"><div class="k">ALL-TIME</div><div class="v" id="bestScore">—</div><div id="persistWarn">persistence unavailable</div></div>
+  </div>
+</header>
+
+<div id="banner">⚠ REACTOR CRITICAL — AUTO-MERGE IMMINENT</div>
+
+<main>
+  <div class="stage">
+    <div class="board" id="board"></div>
+    <div class="legend">Drag an isotope onto an <b>identical</b> isotope to fuse it into the next element. Idle too long and the reactor auto-merges for you. Higher tiers <b style="color:#f87171">decay</b> — fuse them before they vanish. Synthesize <b>U</b> to win.</div>
+  </div>
+
+  <aside class="ladder">
+    <h3>SYNTHESIS LADDER</h3>
+    <div id="ladderList"></div>
+  </aside>
+</main>
+
+<!-- START -->
+<div class="overlay" id="startOverlay">
+  <div class="card">
+    <h1>ALCHEMY LAB</h1>
+    <p>Bottle the escalating tension of a merge ladder layered with decay and reactor pressure. Every placement is a bet against the heat and the clock.</p>
+    <div class="rules">
+      <b>Goal:</b> Synthesize Uranium (U) — the top of a 16-rung ladder.<br>
+      <b>Move:</b> Drag-and-drop an isotope onto an <b>identical</b> one to fuse into the next tier.<br>
+      <b>Reactor heat:</b> Rises while you idle. When full it warns, then auto-merges a random pair.<br>
+      <b>Decay:</b> Higher tiers (Zn, Ag, Au) vanish after ~12s if neglected — watch the countdown.<br>
+      <b>Score:</b> The highest element tier you reach. It persists across sessions.<br>
+      <b>Lose:</b> Board full with no possible merges.
+    </div>
+    <button class="cta" id="startBtn">BEGIN SYNTHESIS</button>
+  </div>
+</div>
+
+<!-- END -->
+<div class="overlay hidden" id="endOverlay">
+  <div class="card">
+    <h1 id="endTitle">VICTORY</h1>
+    <p id="endMsg"></p>
+    <div class="big" id="endScore">—<small>HIGHEST TIER REACHED</small></div>
+    <p id="endBest"></p>
+    <button class="cta" id="restartBtn">NEW RUN</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ===== ELEMENT LADDER (16 rungs, H -> U) ===== */
+const ELEMENTS = [
+  {sym:"H",  name:"Hydrogen",  color:"#7dd3fc", shape:"50%"},
+  {sym:"He", name:"Helium",    color:"#38bdf8", shape:"42%"},
+  {sym:"C",  name:"Carbon",    color:"#6366f1", shape:"34%"},
+  {sym:"N",  name:"Nitrogen",  color:"#8b5cf6", shape:"26%"},
+  {sym:"O",  name:"Oxygen",    color:"#a855f7", shape:"18%"},
+  {sym:"Ne", name:"Neon",      color:"#d946ef", shape:"12%"},
+  {sym:"Na", name:"Sodium",    color:"#ec4899", shape:"8%"},
+  {sym:"Al", name:"Aluminium", color:"#f43f5e", shape:"4%"},
+  {sym:"Si", name:"Silicon",   color:"#fb923c", shape:"0%"},
+  {sym:"Ca", name:"Calcium",   color:"#f59e0b", shape:"50% 8% 50% 8%"},
+  {sym:"Fe", name:"Iron",      color:"#eab308", shape:"8% 50% 8% 50%"},
+  {sym:"Cu", name:"Copper",    color:"#84cc16", shape:"30% 30% 50% 50%"},
+  {sym:"Zn", name:"Zinc",      color:"#22c55e", shape:"50% 50% 30% 30%"},
+  {sym:"Ag", name:"Silver",    color:"#94a3b8", shape:"20% 60% 20% 60%"},
+  {sym:"Au", name:"Gold",      color:"#fbbf24", shape:"60% 20% 60% 20%"},
+  {sym:"U",  name:"Uranium",   color:"#ef4444", shape:"45% 45% 5% 5%"}
+];
+const WIN_TIER = 15;          // U
+const UNSTABLE_FROM = 12;      // tiers 12,13,14 (Zn,Ag,Au) decay; 15 = instant win
+const DECAY_MS = 12000;
+const HEAT_MS = 18000;
+const SPAWN_MS = 4200;
+const WARNING_MS = 1200;
+const CELLS = 36;
+const SPAWN_TIERS = [0,0,0,0,1,1,2]; // weighted low-tier spawns
+
+/* ===== STATE ===== */
+let state = new Array(CELLS).fill(null); // null | {tier,id,decayTimer,decayLeft,numEl,barEl}
+let nextId = 1, maxTier = -1, bestTier = -1;
+let persistenceAvailable = true, gameOver = false, running = false;
+let spawnTimer = null, heatTimeout = null, warningActive = false, drag = null;
+
+/* ===== PERSISTENCE ===== */
+try{
+  const v = localStorage.getItem("alchemyLabBest");
+  if(v !== null) bestTier = parseInt(v,10);
+}catch(e){ persistenceAvailable = false; }
+function saveBest(){
+  if(!persistenceAvailable) return;
+  try{ localStorage.setItem("alchemyLabBest", String(bestTier)); }catch(e){}
+}
+
+/* ===== DOM ===== */
+const boardEl = document.getElementById("board");
+const heatBar = document.getElementById("heatBar");
+const heatTrack = document.getElementById("heatTrack");
+const heatLabel = document.getElementById("heatLabel");
+const curScoreEl = document.getElementById("curScore");
+const bestScoreEl = document.getElementById("bestScore");
+const persistWarnEl = document.getElementById("persistWarn");
+const bannerEl = document.getElementById("banner");
+const startOverlay = document.getElementById("startOverlay");
+const endOverlay = document.getElementById("endOverlay");
+const endTitle = document.getElementById("endTitle");
+const endMsg = document.getElementById("endMsg");
+const endScore = document.getElementById("endScore");
+const endBest = document.getElementById("endBest");
+const startBtn = document.getElementById("startBtn");
+const restartBtn = document.getElementById("restartBtn");
+
+const cellEls = [];
+for(let i=0;i<CELLS;i++){
+  const c = document.createElement("div");
+  c.className = "cell"; c.dataset.idx = i;
+  boardEl.appendChild(c); cellEls.push(c);
+}
+
+/* ===== LADDER PANEL ===== */
+const ladderList = document.getElementById("ladderList");
+ELEMENTS.forEach((e,i)=>{
+  const r = document.createElement("div"); r.className="rung"; r.dataset.tier=i;
+  const tag = i===WIN_TIER ? '<span class="tag g">GOAL</span>'
+            : (i>=UNSTABLE_FROM ? '<span class="tag u">UNSTABLE</span>' : '');
+  r.innerHTML = '<div class="sw" style="background:'+e.color+';border-radius:'+e.shape+'">'+e.sym+'</div>'+
+    '<div class="lab"><b>'+e.sym+'</b> <small>'+e.name+' · T'+i+'</small></div>'+tag;
+  ladderList.appendChild(r);
+});
+
+/* ===== HELPERS ===== */
+function isUnstable(tier){ return tier>=UNSTABLE_FROM && tier<WIN_TIER; }
+function rand(n){ return Math.floor(Math.random()*n); }
+function clearTileTimeout(idx){
+  const t = state[idx]; if(!t) return;
+  if(t.decayTimer){ clearTimeout(t.decayTimer); t.decayTimer=null; }
+}
+
+/* ===== RENDER ===== */
+function makeTileEl(tier, extraClass){
+  const e = ELEMENTS[tier];
+  const el = document.createElement("div");
+  el.className = "tile" + (extraClass?" "+extraClass:"");
+  el.style.setProperty("--c", e.color);
+  el.style.borderRadius = e.shape;
+  el.innerHTML = '<div class="tn">'+tier+'</div><div class="sym">'+e.sym+'</div><div class="nm">'+e.name+'</div>';
+  return el;
+}
+function renderTile(idx, animClass){
+  const cell = cellEls[idx];
+  cell.innerHTML = "";
+  cell.classList.remove("occupied","source","hover","autoflash","decaying");
+  const t = state[idx];
+  if(!t) return;
+  cell.classList.add("occupied");
+  const el = makeTileEl(t.tier, animClass);
+  if(isUnstable(t.tier)){
+    el.classList.add("unstable");
+    el.insertAdjacentHTML("beforeend",'<div class="decay-bar"><i></i></div><div class="decay-num">12</div>');
+  }
+  cell.appendChild(el);
+  t.numEl = el.querySelector(".decay-num");
+  t.barEl = el.querySelector(".decay-bar i");
+}
+function placeTile(idx, tier, animClass){
+  const t = {tier, id:nextId++, decayTimer:null, decayLeft:DECAY_MS, numEl:null, barEl:null};
+  state[idx] = t;
+  renderTile(idx, animClass);
+  if(isUnstable(tier)) startDecay(idx);
+}
+
+/* ===== DECAY (event-driven, no rAF) ===== */
+function startDecay(idx){
+  const t = state[idx]; if(!t) return;
+  t.decayLeft = DECAY_MS;
+  tickDecay(idx);
+}
+function tickDecay(idx){
+  const t = state[idx];
+  if(!t || gameOver) return;
+  t.decayLeft -= 1000;
+  if(t.numEl) t.numEl.textContent = Math.max(0, Math.ceil(t.decayLeft/1000));
+  if(t.decayLeft <= 0){ decayTile(idx); return; }
+  t.decayTimer = setTimeout(function(){ tickDecay(idx); }, 1000);
+}
+function decayTile(idx){
+  if(!state[idx] || gameOver) return;
+  cellEls[idx].classList.add("decaying");
+  setTimeout(function(){
+    if(!state[idx]) return;
+    clearTileTimeout(idx);
+    state[idx] = null;
+    renderTile(idx);
+    updateHud();
+    checkLose();
+  }, 250);
+}
+
+/* ===== DRAG & DROP (pointer events: mouse + touch) ===== */
+function cellFromPoint(x,y){
+  const el = document.elementFromPoint(x,y);
+  return el ? el.closest(".cell") : null;
+}
+function onPointerDown(e){
+  if(gameOver || !running) return;
+  const cell = e.target.closest(".cell");
+  if(!cell) return;
+  const idx = +cell.dataset.idx;
+  const t = state[idx];
+  if(!t) return;
+  e.preventDefault();
+  const rect = cell.getBoundingClientRect();
+  drag = {idx, tier:t.tier, pointerId:e.pointerId,
+    offX:e.clientX-rect.left, offY:e.clientY-rect.top, w:rect.width, h:rect.height};
+  const clone = makeTileEl(t.tier, "dragging");
+  clone.style.position="fixed";
+  clone.style.left=(e.clientX-drag.offX)+"px";
+  clone.style.top=(e.clientY-drag.offY)+"px";
+  clone.style.width=drag.w+"px"; clone.style.height=drag.h+"px";
+  clone.style.pointerEvents="none"; clone.style.zIndex="1000";
+  document.body.appendChild(clone);
+  drag.clone = clone;
+  cellEls[idx].classList.add("source");
+  document.addEventListener("pointermove", onPointerMove);
+  document.addEventListener("pointerup", onPointerUp);
+  document.addEventListener("pointercancel", onPointerUp);
+}
+function onPointerMove(e){
+  if(!drag) return;
+  drag.clone.style.left=(e.clientX-drag.offX)+"px";
+  drag.clone.style.top=(e.clientY-drag.offY)+"px";
+  document.querySelectorAll(".cell.hover").forEach(c=>c.classList.remove("hover"));
+  const target = cellFromPoint(e.clientX, e.clientY);
+  if(target){
+    const ti = +target.dataset.idx;
+    if(ti!==drag.idx && state[ti] && state[ti].tier===drag.tier) target.classList.add("hover");
+  }
+}
+function onPointerUp(e){
+  if(!drag) return;
+  const target = cellFromPoint(e.clientX, e.clientY);
+  let merged = false;
+  if(target){
+    const ti = +target.dataset.idx;
+    if(ti!==drag.idx && state[ti] && state[ti].tier===drag.tier){
+      doMerge(ti, drag.idx); merged = true;
+    }
+  }
+  drag.clone.remove();
+  cellEls[drag.idx].classList.remove("source");
+  document.querySelectorAll(".cell.hover").forEach(c=>c.classList.remove("hover"));
+  document.removeEventListener("pointermove", onPointerMove);
+  document.removeEventListener("pointerup", onPointerUp);
+  document.removeEventListener("pointercancel", onPointerUp);
+  drag = null;
+}
+boardEl.addEventListener("pointerdown", onPointerDown);
+
+/* ===== MERGE ===== */
+function doMerge(targetIdx, sourceIdx){
+  if(gameOver) return;
+  clearWarning();
+  clearTileTimeout(targetIdx); clearTileTimeout(sourceIdx);
+  const newTier = state[targetIdx].tier + 1;
+  state[sourceIdx] = null; state[targetIdx] = null;
+  renderTile(sourceIdx); renderTile(targetIdx);
+  placeTile(targetIdx, newTier, "merge-pop");
+  if(newTier > maxTier){ maxTier = newTier; if(maxTier>bestTier){ bestTier=maxTier; saveBest(); } }
+  updateHud();
+  if(newTier >= WIN_TIER){ winGame(); return; }
+  resetHeat();
+  checkLose();
+}
+
+/* ===== HEAT METER (CSS width transition + setTimeout, no frame loop) ===== */
+function clearHeatTimeout(){
+  if(heatTimeout){ clearTimeout(heatTimeout); heatTimeout=null; }
+}
+function clearWarning(){
+  if(warningActive){
+    warningActive = false;
+    heatBar.classList.remove("critical");
+    bannerEl.classList.remove("show");
+    heatLabel.textContent = "stable";
+  }
+  clearHeatTimeout();
+}
+function resetHeat(){
+  clearHeatTimeout();
+  clearWarning();
+  heatBar.style.transition = "width 0.3s ease";
+  heatBar.style.width = "0%";
+  heatTimeout = setTimeout(startHeatFill, 320);
+}
+function startHeatFill(){
+  if(gameOver || !running) return;
+  heatBar.style.transition = "width "+HEAT_MS+"ms linear";
+  heatBar.style.width = "100%";
+  heatLabel.textContent = "rising";
+  heatTimeout = setTimeout(heatFull, HEAT_MS);
+}
+function heatFull(){
+  if(gameOver || !running) return;
+  warningActive = true;
+  heatBar.classList.add("critical");
+  bannerEl.classList.add("show");
+  heatLabel.textContent = "CRITICAL";
+  heatTimeout = setTimeout(doAutoMerge, WARNING_MS);
+}
+function findPairs(){
+  const byTier = {};
+  for(let i=0;i<CELLS;i++){ const t=state[i]; if(!t) continue; (byTier[t.tier]=byTier[t.tier]||[]).push(i); }
+  const pairs=[];
+  for(const k in byTier){ if(byTier[k].length>=2) pairs.push([byTier[k][0], byTier[k][1]]); }
+  return pairs;
+}
+function doAutoMerge(){
+  warningActive = false;
+  heatBar.classList.remove("critical");
+  bannerEl.classList.remove("show");
+  heatLabel.textContent = "auto-merge";
+  const pairs = findPairs();
+  if(pairs.length === 0){
+    // vent: no identical pair exists
+    heatTrack.classList.add("vent");
+    setTimeout(()=>heatTrack.classList.remove("vent"), 450);
+    heatLabel.textContent = "vented";
+    resetHeat();
+    return;
+  }
+  const p = pairs[rand(pairs.length)];
+  cellEls[p[0]].classList.add("autoflash");
+  cellEls[p[1]].classList.add("autoflash");
+  setTimeout(()=>{ cellEls[p[0]].classList.remove("autoflash"); cellEls[p[1]].classList.remove("autoflash"); }, 500);
+  doMerge(p[1], p[0]); // doMerge resets heat
+}
+
+/* ===== SPAWN ===== */
+function spawnTick(){
+  if(gameOver || !running) return;
+  const empties = [];
+  for(let i=0;i<CELLS;i++) if(!state[i]) empties.push(i);
+  if(empties.length){
+    const idx = empties[rand(empties.length)];
+    placeTile(idx, SPAWN_TIERS[rand(SPAWN_TIERS.length)], "spawn");
+  }
+  updateHud();
+  checkLose();
+  spawnTimer = setTimeout(spawnTick, SPAWN_MS);
+}
+
+/* ===== WIN / LOSE ===== */
+function checkLose(){
+  if(gameOver) return;
+  let empty = 0;
+  for(let i=0;i<CELLS;i++) if(!state[i]) empty++;
+  if(empty > 0) return;            // board not full
+  if(findPairs().length === 0) loseGame();
+}
+function stopTimers(){
+  if(spawnTimer){ clearTimeout(spawnTimer); spawnTimer=null; }
+  clearHeatTimeout();
+  for(let i=0;i<CELLS;i++) clearTileTimeout(i);
+}
+function winGame(){
+  gameOver = true; running = false;
+  stopTimers();
+  clearWarning();
+  endTitle.textContent = "VICTORY";
+  endTitle.className = "win";
+  endMsg.textContent = "You synthesized Uranium. The reactor is stable — for now.";
+  showEnd();
+}
+function loseGame(){
+  gameOver = true; running = false;
+  stopTimers();
+  clearWarning();
+  endTitle.textContent = "REACTOR STALLED";
+  endTitle.className = "lose";
+  endMsg.textContent = "The board is full and no two isotopes can fuse. The run is lost.";
+  showEnd();
+}
+function showEnd(){
+  const e = ELEMENTS[maxTier] || {sym:"—",name:"nothing"};
+  endScore.innerHTML = e.sym + "<small>HIGHEST TIER REACHED · "+e.name+" (T"+maxTier+")</small>";
+  const b = bestTier>=0 ? ELEMENTS[bestTier] : null;
+  endBest.textContent = b ? "All-time best: "+b.sym+" · "+b.name+" (T"+bestTier+")" : "All-time best: —";
+  endOverlay.classList.remove("hidden");
+}
+
+/* ===== HUD ===== */
+function updateHud(){
+  const cur = maxTier>=0 ? ELEMENTS[maxTier] : null;
+  curScoreEl.innerHTML = cur ? cur.sym+' <small>T'+maxTier+'</small>' : '—';
+  const b = bestTier>=0 ? ELEMENTS[bestTier] : null;
+  bestScoreEl.innerHTML = b ? b.sym+' <small>T'+bestTier+'</small>' : '—';
+  if(!persistenceAvailable) persistWarnEl.style.display = "block";
+  document.querySelectorAll(".rung").forEach(r=>{
+    r.classList.toggle("cur", +r.dataset.tier === maxTier);
+  });
+}
+
+/* ===== GAME FLOW ===== */
+function initGame(){
+  // reset
+  stopTimers();
+  state = new Array(CELLS).fill(null);
+  maxTier = -1; gameOver = false; warningActive = false; drag = null;
+  cellEls.forEach(c=>{ c.innerHTML=""; c.className="cell"; });
+  heatBar.style.transition="width 0.3s ease"; heatBar.style.width="0%";
+  heatBar.classList.remove("critical"); bannerEl.classList.remove("show");
+  heatLabel.textContent = "stable";
+
+  // seed a few low-tier tiles
+  const seed = [0,0,1,1,2];
+  const idxs = [...Array(CELLS).keys()].sort(()=>Math.random()-0.5);
+  seed.forEach((t,k)=> placeTile(idxs[k], t, "spawn"));
+
+  running = true;
+  updateHud();
+  resetHeat();
+  spawnTimer = setTimeout(spawnTick, SPAWN_MS);
+}
+startBtn.addEventListener("click", function(){
+  startOverlay.classList.add("hidden");
+  initGame();
+});
+restartBtn.addEventListener("click", function(){
+  endOverlay.classList.add("hidden");
+  initGame();
+});
+
+updateHud();
+})();
+</script>
+</body>
+</html>
