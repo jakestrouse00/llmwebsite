@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>TRAFFIC RUSH — Weave, Boost, Survive</title>
+<style>
+  :root{
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{
+    width:100%;height:100%;overflow:hidden;background:#0a0e17;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    color:#e8eefc;touch-action:none;overscroll-behavior:none;
+    user-select:none;-webkit-user-select:none;
+  }
+  #stage{
+    position:fixed;
+    top:var(--safe-top);left:var(--safe-left);
+    width:calc(100vw - var(--safe-left) - var(--safe-right));
+    height:calc(100vh - var(--safe-top) - var(--safe-bottom));
+    overflow:hidden;background:#0a0e17;
+  }
+  canvas{display:block;width:100%;height:100%;touch-action:none;}
+
+  /* ---------- HUD ---------- */
+  #hud{
+    position:absolute;top:0;left:0;right:0;
+    padding:10px 14px;pointer-events:none;
+    display:flex;justify-content:space-between;align-items:flex-start;
+    gap:10px;z-index:5;
+  }
+  .hud-box{
+    background:rgba(10,14,23,0.55);border:1px solid rgba(120,160,255,0.25);
+    border-radius:10px;padding:6px 10px;backdrop-filter:blur(4px);
+  }
+  #distBox{font-variant-numeric:tabular-nums;}
+  #distLabel{font-size:10px;letter-spacing:2px;color:#7c8bb5;text-transform:uppercase;}
+  #distVal{font-size:22px;font-weight:800;color:#fff;line-height:1.1;}
+  #distUnit{font-size:11px;color:#7c8bb5;font-weight:600;}
+  #speedBox{text-align:right;}
+  #speedLabel{font-size:10px;letter-spacing:2px;color:#7c8bb5;text-transform:uppercase;}
+  #speedVal{font-size:18px;font-weight:800;color:#5ad1ff;line-height:1.1;}
+
+  /* nitro meter */
+  #nitroWrap{
+    position:absolute;left:14px;right:14px;bottom:calc(var(--safe-bottom) + 14px);
+    pointer-events:none;z-index:5;
+  }
+  #nitroLabel{font-size:10px;letter-spacing:2px;color:#7c8bb5;text-transform:uppercase;margin-bottom:4px;}
+  #nitroTrack{
+    height:14px;border-radius:8px;background:rgba(10,14,23,0.6);
+    border:1px solid rgba(120,160,255,0.25);overflow:hidden;position:relative;
+  }
+  #nitroFill{
+    height:100%;width:0%;border-radius:8px;
+    background:linear-gradient(90deg,#ff8a00,#ffd000,#ff8a00);
+    box-shadow:0 0 12px rgba(255,170,0,0.6);
+    transition:width 0.08s linear;
+  }
+  #nitroFill.boosting{background:linear-gradient(90deg,#00e0ff,#7c5cff,#00e0ff);box-shadow:0 0 16px rgba(0,224,255,0.8);}
+
+  /* ---------- NITRO BUTTON (mobile) ---------- */
+  #nitroBtn{
+    position:absolute;right:14px;bottom:calc(var(--safe-bottom) + 44px);
+    width:74px;height:74px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#1b2440,#0a0e17);
+    border:2px solid rgba(255,170,0,0.55);
+    color:#ffd000;font-weight:800;font-size:13px;letter-spacing:1px;
+    display:none;align-items:center;justify-content:center;text-align:center;
+    z-index:6;touch-action:none;cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,0.5),inset 0 0 12px rgba(255,170,0,0.15);
+  }
+  #nitroBtn:active,#nitroBtn.held{
+    background:radial-gradient(circle at 35% 30%,#3a2a00,#1a1100);
+    border-color:#ffd000;box-shadow:0 0 22px rgba(255,170,0,0.7);
+  }
+  #nitroBtn small{display:block;font-size:9px;color:#ffae42;font-weight:600;letter-spacing:0.5px;}
+
+  /* ---------- Overlays ---------- */
+  .overlay{
+    position:absolute;inset:0;z-index:10;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:24px;
+    background:radial-gradient(ellipse at center,rgba(12,18,34,0.92),rgba(6,9,16,0.98));
+    backdrop-filter:blur(3px);
+  }
+  .overlay.hidden{display:none;}
+  #titleTag{font-size:13px;letter-spacing:6px;color:#5ad1ff;text-transform:uppercase;margin-bottom:6px;font-weight:700;}
+  #titleName{
+    font-size:clamp(40px,11vw,76px);font-weight:900;letter-spacing:2px;line-height:0.95;
+    background:linear-gradient(90deg,#ff8a00,#ffd000,#5ad1ff,#7c5cff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 0 40px rgba(90,209,255,0.25);
+  }
+  #titleSub{font-size:14px;color:#7c8bb5;margin-top:8px;letter-spacing:3px;text-transform:uppercase;}
+  #bestLine{font-size:15px;color:#ffd000;margin:22px 0 4px;font-weight:700;}
+  #bestLine b{font-size:22px;}
+  .diffRow{display:flex;gap:10px;margin:18px 0 8px;flex-wrap:wrap;justify-content:center;}
+  .diffBtn{
+    pointer-events:auto;cursor:pointer;
+    background:rgba(20,28,48,0.8);border:1.5px solid rgba(120,160,255,0.35);
+    color:#cfe0ff;font-weight:700;font-size:14px;letter-spacing:1px;
+    padding:11px 22px;border-radius:12px;text-transform:uppercase;transition:all 0.15s;
+  }
+  .diffBtn:hover{border-color:#5ad1ff;color:#fff;}
+  .diffBtn.sel{background:linear-gradient(135deg,#1a3a6a,#0e1f3a);border-color:#5ad1ff;color:#fff;box-shadow:0 0 16px rgba(90,209,255,0.4);}
+  #startBtn{
+    pointer-events:auto;cursor:pointer;margin-top:14px;
+    background:linear-gradient(135deg,#ff8a00,#ff4d00);border:none;color:#fff;
+    font-weight:800;font-size:18px;letter-spacing:2px;text-transform:uppercase;
+    padding:15px 46px;border-radius:14px;
+    box-shadow:0 6px 22px rgba(255,90,0,0.45);transition:transform 0.1s;
+  }
+  #startBtn:active{transform:scale(0.96);}
+  .controlsHelp{margin-top:20px;font-size:12px;color:#5e6e94;line-height:1.7;max-width:340px;}
+  .controlsHelp b{color:#9fb3d8;}
+
+  /* game over */
+  #goTitle{font-size:clamp(34px,9vw,58px);font-weight:900;color:#ff3b3b;letter-spacing:2px;text-shadow:0 0 30px rgba(255,59,59,0.5);}
+  #goDist{font-size:16px;color:#7c8bb5;margin-top:14px;letter-spacing:2px;text-transform:uppercase;}
+  #goDistVal{font-size:clamp(40px,12vw,64px);font-weight:900;color:#fff;line-height:1;}
+  #goDistUnit{font-size:18px;color:#7c8bb5;font-weight:700;}
+  #goBest{font-size:16px;margin-top:14px;color:#ffd000;font-weight:700;}
+  #goNewBest{display:none;font-size:14px;color:#5ad1ff;font-weight:800;letter-spacing:2px;margin-top:6px;text-transform:uppercase;animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+  #restartBtn{
+    pointer-events:auto;cursor:pointer;margin-top:24px;
+    background:linear-gradient(135deg,#5ad1ff,#3a7bff);border:none;color:#0a0e17;
+    font-weight:800;font-size:17px;letter-spacing:2px;text-transform:uppercase;
+    padding:14px 40px;border-radius:14px;box-shadow:0 6px 22px rgba(90,209,255,0.4);
+  }
+  #restartBtn:active{transform:scale(0.96);}
+
+  #warnBanner{
+    position:absolute;top:calc(var(--safe-top) + 4px);left:50%;transform:translateX(-50%);
+    background:rgba(255,170,0,0.15);border:1px solid rgba(255,170,0,0.5);
+    color:#ffd000;font-size:11px;padding:5px 12px;border-radius:8px;
+    z-index:8;display:none;letter-spacing:0.5px;
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="game"></canvas>
+
+  <div id="warnBanner">High score won't persist on this device.</div>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div class="hud-box" id="distBox">
+      <div id="distLabel">Distance</div>
+      <div><span id="distVal">0</span> <span id="distUnit">m</span></div>
+    </div>
+    <div class="hud-box" id="speedBox">
+      <div id="speedLabel">Speed</div>
+      <div id="speedVal">0</div>
+    </div>
+  </div>
+
+  <div id="nitroWrap" class="hidden">
+    <div id="nitroLabel">Nitro</div>
+    <div id="nitroTrack"><div id="nitroFill"></div></div>
+  </div>
+
+  <div id="nitroBtn">NITRO<small>HOLD</small></div>
+
+  <!-- Title overlay -->
+  <div id="titleOverlay" class="overlay">
+    <div id="titleTag">Endless Lane Dodger</div>
+    <div id="titleName">TRAFFIC RUSH</div>
+    <div id="titleSub">Weave · Boost · Survive</div>
+    <div id="bestLine">Best: <b id="titleBest">0</b> m</div>
+    <div class="diffRow">
+      <button class="diffBtn sel" data-diff="easy">Easy</button>
+      <button class="diffBtn" data-diff="medium">Medium</button>
+      <button class="diffBtn" data-diff="hard">Hard</button>
+    </div>
+    <button id="startBtn">Start</button>
+    <div class="controlsHelp">
+      <b>Desktop:</b> ← → / A D to switch lanes · Space or Shift to boost<br>
+      <b>Mobile:</b> swipe left/right to switch · hold NITRO button to boost
+    </div>
+  </div>
+
+  <!-- Game over overlay -->
+  <div id="gameOverOverlay" class="overlay hidden">
+    <div id="goTitle">CRASHED</div>
+    <div id="goDist">Distance</div>
+    <div><span id="goDistVal">0</span> <span id="goDistUnit">m</span></div>
+    <div id="goBest">Best: <b id="goBestVal">0</b> m</div>
+    <div id="goNewBest">★ New Best! ★</div>
+    <button id="restartBtn">Restart</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   TRAFFIC RUSH — single-file vanilla JS Canvas2D endless runner
+   Implements approved SPEC.md. All tuning lives in CONFIG.
+   ============================================================ */
+
+const CONFIG = {
+  LANES: 5,
+  // speed ramp (monotonic, capped, boost-paused)
+  SPEED_BASE: 320,        // px/s
+  SPEED_RAMP: 14,         // px/s^2
+  SPEED_CAP: 1500,         // px/s
+  BOOST_MULT: 2.0,
+  // nitro meter
+  NITRO_PER_CAN: 35,
+  BOOST_DRAIN: 25,        // %/s
+  // lane switch
+  LANE_TWEEN: 0.22,       // exponential approach factor per step (snappy)
+  // scoring
+  PX_PER_METER: 100,
+  // loop
+  FIXED_DT: 1/60,
+  MAX_STEPS: 5,
+  DT_CLAMP: 0.1,
+  // input
+  SWIPE_MIN: 24,
+  // difficulty
+  DIFF: {
+    easy:   { spawnRate: 1.6, speedOffset: -40 },
+    medium: { spawnRate: 2.2, speedOffset: 0   },
+    hard:   { spawnRate: 3.0, speedOffset: 60  }
+  },
+  // nitro can spawn interval range (s)
+  CAN_MIN: 4, CAN_MAX: 7,
+  // car sizes (relative to laneW)
+  CAR_W_RATIO: 0.74,
+  CAR_H_RATIO: 1.7,      // car height in lane-widths
+  PLAYER_H_RATIO: 1.7,
+  // colors
+  PLAYER_COLOR: "#ff3b6b",
+  PLAYER_COLOR2: "#b81d4a",
+  TRAFFIC_COLORS: ["#5ad1ff","#7c5cff","#39d98a","#ffd000","#ff8a00","#ff5ad1","#9b6cff"],
+  CAN_COLOR: "#ffd000",
+  ROAD_COLOR: "#1a2238",
+  LANE_LINE: "rgba(255,255,255,0.18)",
+  SCENERY_TOP: "#0d1320",
+  SCENERY_BOT: "#070a12",
+};
+
+/* ---------- DOM refs ---------- */
+const stage = document.getElementById('stage');
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const hud = document.getElementById('hud');
+const nitroWrap = document.getElementById('nitroWrap');
+const nitroFill = document.getElementById('nitroFill');
+const nitroBtn = document.getElementById('nitroBtn');
+const distVal = document.getElementById('distVal');
+const speedVal = document.getElementById('speedVal');
+const titleOverlay = document.getElementById('titleOverlay');
+const gameOverOverlay = document.getElementById('gameOverOverlay');
+const titleBest = document.getElementById('titleBest');
+const goDistVal = document.getElementById('goDistVal');
+const goBestVal = document.getElementById('goBestVal');
+const goNewBest = document.getElementById('goNewBest');
+const warnBanner = document.getElementById('warnBanner');
+
+/* ---------- State ---------- */
+let W = 0, H = 0, DPR = 1;       // CSS pixel stage size
+let laneW = 0, roadW = 0, roadX = 0;
+let playerY = 0;                  // fixed player Y (CSS px)
+let scrollOffset = 0;             // for road stripe animation
+
+const STATE = { TITLE:'title', PLAY:'play', OVER:'over' };
+let state = STATE.TITLE;
+
+let difficulty = 'easy';
+let elapsedNonBoost = 0;          // seconds (ramp clock, paused while boosting)
+let scrollSpeed = CONFIG.SPEED_BASE;
+let distanceMeters = 0;
+let nitroMeter = 0;               // 0..100
+let boosting = false;
+let boostHeld = false;            // input intent
+
+let player = { lane: 2, x: 0, targetX: 0 };
+let pendingMove = 0;              // -1,0,+1 queued
+
+let cars = [];                    // traffic
+let cans = [];                    // nitro cans
+let carPool = [];
+let canPool = [];
+
+let spawnTimer = 0;
+let canTimer = 0;
+let nextCanDelay = 0;
+
+let best = 0;
+let persistenceOK = true;
+
+/* ---------- Persistence ---------- */
+function loadBest(){
+  persistenceOK = true;
+  try {
+    const v = localStorage.getItem('trafficRush.best');
+    if (v !== null) { best = parseInt(v,10) || 0; return; }
+  } catch(e){ persistenceOK = false; }
+  // fallback in-memory
+  if (!persistenceOK) { best = 0; warnBanner.style.display='block'; }
+}
+function saveBest(){
+  try { localStorage.setItem('trafficRush.best', String(best)); }
+  catch(e){ /* in-memory only, already warned */ }
+}
+
+/* ---------- Layout / resize ---------- */
+function resize(){
+  const rect = stage.getBoundingClientRect();
+  W = rect.width; H = rect.height;
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(W * DPR);
+  canvas.height = Math.round(H * DPR);
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+
+  // road width: 5 lanes. Fit width in portrait, but cap so it doesn't dominate landscape.
+  // Use min of (W*0.92) and a height-derived cap so cars look reasonable.
+  const maxRoadByWidth = W * 0.96;
+  laneW = Math.floor(maxRoadByWidth / CONFIG.LANES);
+  // ensure lane not absurdly wide in landscape: cap laneW by height ratio
+  const maxLaneByH = H / 9;
+  if (laneW > maxLaneByH) laneW = Math.floor(maxLaneByH);
+  laneW = Math.max(40, laneW);
+  roadW = laneW * CONFIG.LANES;
+  roadX = (W - roadW) / 2;
+
+  playerY = H * 0.74;
+  if (player.x === 0 || state === STATE.TITLE) {
+    player.x = laneCenter(player.lane);
+    player.targetX = player.x;
+  }
+}
+function laneCenter(lane){ return roadX + laneW * (lane + 0.5); }
+window.addEventListener('resize', resize);
+
+/* ---------- Difficulty selection ---------- */
+document.querySelectorAll('.diffBtn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('.diffBtn').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel');
+    difficulty = b.dataset.diff;
+  });
+});
+
+/* ---------- Start / restart ---------- */
+document.getElementById('startBtn').addEventListener('click', startRun);
+document.getElementById('restartBtn').addEventListener('click', startRun);
+
+function startRun(){
+  titleOverlay.classList.add('hidden');
+  gameOverOverlay.classList.add('hidden');
+  hud.classList.remove('hidden');
+  nitroWrap.classList.remove('hidden');
+  // show nitro button on touch devices
+  if (isTouch()) nitroBtn.style.display = 'flex';
+
+  const d = CONFIG.DIFF[difficulty];
+  elapsedNonBoost = 0;
+  scrollSpeed = CONFIG.SPEED_BASE + d.speedOffset;
+  distanceMeters = 0;
+  nitroMeter = 0;
+  boosting = false; boostHeld = false;
+  player.lane = 2;
+  player.x = laneCenter(player.lane);
+  player.targetX = player.x;
+  pendingMove = 0;
+  cars.length = 0; cans.length = 0;
+  spawnTimer = 0;
+  canTimer = 0;
+  nextCanDelay = randRange(CONFIG.CAN_MIN, CONFIG.CAN_MAX);
+  state = STATE.PLAY;
+  lastTime = performance.now();
+  accumulator = 0;
+}
+
+function isTouch(){
+  return ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+}
+
+/* ---------- Input: unified handlers ---------- */
+function tryLaneMove(dir){
+  if (state !== STATE.PLAY) return;
+  const nl = Math.max(0, Math.min(CONFIG.LANES-1, player.lane + dir));
+  if (nl !== player.lane){
+    player.lane = nl;
+    player.targetX = laneCenter(nl);
+  } else if (pendingMove === 0) {
+    // queue one extra move if at edge (allows rapid double-tap)
+    pendingMove = dir;
+  }
+}
+function setBoost(active){
+  boostHeld = active;
+}
+
+/* keyboard */
+window.addEventListener('keydown', e=>{
+  if (e.repeat) {
+    // still allow boost hold; lane handled on keydown edge
+  }
+  switch(e.key){
+    case 'ArrowLeft': case 'a': case 'A': tryLaneMove(-1); e.preventDefault(); break;
+    case 'ArrowRight': case 'd': case 'D': tryLaneMove(1); e.preventDefault(); break;
+    case ' ': case 'Shift': setBoost(true); e.preventDefault(); break;
+  }
+});
+window.addEventListener('keyup', e=>{
+  switch(e.key){
+    case ' ': case 'Shift': setBoost(false); break;
+  }
+});
+
+/* touch swipe on stage */
+let touchStart = null;
+stage.addEventListener('touchstart', e=>{
+  if (e.target === nitroBtn) return; // button handles itself
+  if (e.touches.length === 1){
+    touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: performance.now() };
+  }
+}, {passive:true});
+stage.addEventListener('touchend', e=>{
+  if (!touchStart) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchStart.x;
+  const dy = t.clientY - touchStart.y;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > CONFIG.SWIPE_MIN){
+    tryLaneMove(dx > 0 ? 1 : -1);
+  }
+  touchStart = null;
+}, {passive:true});
+
+/* nitro button hold */
+function nitroBtnDown(e){ e.preventDefault(); setBoost(true); nitroBtn.classList.add('held'); }
+function nitroBtnUp(e){ e.preventDefault(); setBoost(false); nitroBtn.classList.remove('held'); }
+nitroBtn.addEventListener('touchstart', nitroBtnDown, {passive:false});
+nitroBtn.addEventListener('touchend', nitroBtnUp, {passive:false});
+nitroBtn.addEventListener('touchcancel', nitroBtnUp, {passive:false});
+nitroBtn.addEventListener('mousedown', nitroBtnDown);
+nitroBtn.addEventListener('mouseup', nitroBtnUp);
+nitroBtn.addEventListener('mouseleave', nitroBtnUp);
+
+/* ---------- Spawning ---------- */
+function randRange(a,b){ return a + Math.random()*(b-a); }
+function randLane(){ return Math.floor(Math.random()*CONFIG.LANES); }
+
+function spawnCar(){
+  // pick a lane; ensure not all 5 lanes blocked at player Y band
+  // gather lanes that currently have a car near top overlapping spawn row
+  const blocked = new Set();
+  const spawnY = -laneW * CONFIG.CAR_H_RATIO;
+  for (const c of cars){
+    if (c.y < laneW * 2 && c.y > -laneW*3){ // near top region
+      blocked.add(c.lane);
+    }
+  }
+  // candidate lanes = not blocked
+  let candidates = [];
+  for (let i=0;i<CONFIG.LANES;i++) if (!blocked.has(i)) candidates.push(i);
+  // anti-grief: if 4 lanes already blocked near top, force the free one
+  if (blocked.size >= CONFIG.LANES - 1 && candidates.length === 1){
+    // ensure at least one passable: use the single free lane (rare)
+  }
+  if (candidates.length === 0) candidates = [randLane()]; // fallback
+  const lane = candidates[Math.floor(Math.random()*candidates.length)];
+
+  const c = carPool.length ? carPool.pop() : {};
+  c.lane = lane;
+  c.x = laneCenter(lane);
+  c.y = spawnY - Math.random()*laneW*0.5;
+  c.w = laneW * CONFIG.CAR_W_RATIO;
+  c.h = laneW * CONFIG.CAR_H_RATIO;
+  c.color = CONFIG.TRAFFIC_COLORS[Math.floor(Math.random()*CONFIG.TRAFFIC_COLORS.length)];
+  c.jitter = randRange(-18, 18); // small speed jitter px/s
+  cars.push(c);
+}
+
+function spawnCan(){
+  const c = canPool.length ? canPool.pop() : {};
+  c.lane = randLane();
+  c.x = laneCenter(c.lane);
+  c.y = -laneW*0.8;
+  c.r = laneW * 0.22;
+  c.collected = false;
+  cans.push(c);
+}
+
+/* ---------- Simulation step (fixed) ---------- */
+function step(dt){
+  if (state !== STATE.PLAY) return;
+
+  // boost logic
+  if (boostHeld && nitroMeter > 0 && !boosting){
+    boosting = true;
+  }
+  if (boosting){
+    nitroMeter -= CONFIG.BOOST_DRAIN * dt;
+    if (nitroMeter <= 0){ nitroMeter = 0; boosting = false; }
+    if (!boostHeld){ boosting = false; }
+  }
+
+  // ramp clock: pauses while boosting
+  if (!boosting){
+    elapsedNonBoost += dt;
+  }
+  const baseSpeed = Math.min(CONFIG.SPEED_CAP, CONFIG.SPEED_BASE + CONFIG.SPEED_RAMP * elapsedNonBoost + CONFIG.DIFF[difficulty].speedOffset);
+  scrollSpeed = Math.min(CONFIG.SPEED_CAP, baseSpeed);
+  const effSpeed = boosting ? scrollSpeed * CONFIG.BOOST_MULT : scrollSpeed;
+
+  // distance accrual (forward progress = scroll)
+  distanceMeters += (effSpeed * dt) / CONFIG.PX_PER_METER;
+
+  // scroll world: move cars & cans down
+  for (const c of cars){
+    c.y += (effSpeed + c.jitter) * dt;
+  }
+  for (const c of cans){
+    c.y += effSpeed * dt;
+  }
+  scrollOffset = (scrollOffset + effSpeed * dt) % (laneW*2);
+
+  // recycle off-screen cars
+  for (let i=cars.length-1;i>=0;i--){
+    if (cars[i].y > H + laneW*2){
+      carPool.push(cars[i]);
+      cars.splice(i,1);
+    }
+  }
+  for (let i=cans.length-1;i>=0;i--){
+    if (cans[i].y > H + laneW*2 || cans[i].collected){
+      canPool.push(cans[i]);
+      cans.splice(i,1);
+    }
+  }
+
+  // spawning
+  const d = CONFIG.DIFF[difficulty];
+  spawnTimer += dt;
+  // spawn interval shrinks slightly with speed for ramp feel
+  const spawnInterval = 1 / (d.spawnRate * (1 + (scrollSpeed - CONFIG.SPEED_BASE)/2400));
+  if (spawnTimer >= spawnInterval){
+    spawnTimer = 0;
+    spawnCar();
+  }
+  canTimer += dt;
+  if (canTimer >= nextCanDelay){
+    canTimer = 0;
+    nextCanDelay = randRange(CONFIG.CAN_MIN, CONFIG.CAN_MAX);
+    spawnCan();
+  }
+
+  // player lane tween (exponential approach toward targetX)
+  player.x += (player.targetX - player.x) * CONFIG.LANE_TWEEN;
+  if (Math.abs(player.targetX - player.x) < 0.5) player.x = player.targetX;
+
+  // consume pending move once settled near target
+  if (pendingMove !== 0 && Math.abs(player.targetX - player.x) < laneW*0.15){
+    const nl = Math.max(0, Math.min(CONFIG.LANES-1, player.lane + pendingMove));
+    if (nl !== player.lane){
+      player.lane = nl;
+      player.targetX = laneCenter(nl);
+    }
+    pendingMove = 0;
+  }
+
+  // collision: AABB player vs traffic (use logical lane center for fairness)
+  const pw = laneW * CONFIG.CAR_W_RATIO;
+  const ph = laneW * CONFIG.PLAYER_H_RATIO;
+  const px = laneCenter(player.lane) - pw/2;
+  const py = playerY - ph/2;
+  for (const c of cars){
+    const cx = c.x - c.w/2;
+    const cy = c.y - c.h/2;
+    if (aabb(px,py,pw,ph, cx,cy,c.w,c.h)){
+      crash();
+      return;
+    }
+  }
+  // can collection
+  for (const c of cans){
+    if (c.collected) continue;
+    const cx = c.x - c.r;
+    const cy = c.y - c.r;
+    const s = c.r*2;
+    if (aabb(px,py,pw,ph, cx,cy,s,s)){
+      c.collected = true;
+      nitroMeter = Math.min(100, nitroMeter + CONFIG.NITRO_PER_CAN);
+    }
+  }
+}
+
+function aabb(ax,ay,aw,ah,bx,by,bw,bh){
+  return ax < bx+bw && ax+aw > bx && ay < by+bh && ay+ah > by;
+}
+
+function crash(){
+  state = STATE.OVER;
+  boosting = false; boostHeld = false;
+  nitroBtn.classList.remove('held');
+  const dist = Math.floor(distanceMeters);
+  goDistVal.textContent = dist;
+  let isNew = false;
+  if (dist > best){
+    best = dist;
+    isNew = true;
+    saveBest();
+  }
+  goBestVal.textContent = best;
+  goNewBest.style.display = isNew ? 'block' : 'none';
+  titleBest.textContent = best;
+  hud.classList.add('hidden');
+  nitroWrap.classList.add('hidden');
+  nitroBtn.style.display = 'none';
+  gameOverOverlay.classList.remove('hidden');
+}
+
+/* ---------- Render ---------- */
+function render(){
+  ctx.clearRect(0,0,W,H);
+
+  // scenery background
+  const sg = ctx.createLinearGradient(0,0,0,H);
+  sg.addColorStop(0, CONFIG.SCENERY_TOP);
+  sg.addColorStop(1, CONFIG.SCENERY_BOT);
+  ctx.fillStyle = sg;
+  ctx.fillRect(0,0,W,H);
+
+  // side scenery stripes (subtle motion)
+  drawSideScenery();
+
+  // road
+  ctx.fillStyle = CONFIG.ROAD_COLOR;
+  ctx.fillRect(roadX, 0, roadW, H);
+
+  // road edge lines
+  ctx.strokeStyle = "rgba(255,255,255,0.35)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(roadX,0); ctx.lineTo(roadX,H);
+  ctx.moveTo(roadX+roadW,0); ctx.lineTo(roadX+roadW,H);
+  ctx.stroke();
+
+  // lane dashed lines (scrolling)
+  ctx.strokeStyle = CONFIG.LANE_LINE;
+  ctx.lineWidth = Math.max(2, laneW*0.04);
+  ctx.setLineDash([laneW*0.5, laneW*0.5]);
+  for (let i=1;i<CONFIG.LANES;i++){
+    const lx = roadX + laneW*i;
+    ctx.beginPath();
+    ctx.lineDashOffset = -scrollOffset;
+    ctx.moveTo(lx,0); ctx.lineTo(lx,H);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // boost speed streaks
+  if (boosting){
+    ctx.strokeStyle = "rgba(0,224,255,0.25)";
+    ctx.lineWidth = 2;
+    for (let i=0;i<14;i++){
+      const sx = roadX + Math.random()*roadW;
+      const sy = (scrollOffset*4 + i*H/14) % H;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy); ctx.lineTo(sx, sy+40);
+      ctx.stroke();
+    }
+  }
+
+  // nitro cans
+  for (const c of cans){
+    if (c.collected) continue;
+    drawCan(c);
+  }
+
+  // traffic cars
+  for (const c of cars){
+    drawCar(c.x, c.y, c.w, c.h, c.color, false);
+  }
+
+  // player car
+  if (state === STATE.PLAY || state === STATE.OVER){
+    const pw = laneW * CONFIG.CAR_W_RATIO;
+    const ph = laneW * CONFIG.PLAYER_H_RATIO;
+    drawCar(player.x, playerY, pw, ph, CONFIG.PLAYER_COLOR, true);
+    // boost flame
+    if (boosting){
+      drawBoostFlame(player.x, playerY + ph/2, pw);
+    }
+  }
+}
+
+function drawSideScenery(){
+  // simple scrolling side blocks to convey motion
+  ctx.fillStyle = "rgba(40,55,85,0.5)";
+  const blockH = laneW*1.4;
+  const off = (scrollOffset*0.6) % blockH;
+  for (let y=-blockH; y<H+blockH; y+=blockH){
+    // left
+    ctx.fillRect(roadX*0.25, y+off, roadX*0.4, blockH*0.5);
+    // right
+    ctx.fillRect(W - roadX*0.65, y+off, roadX*0.4, blockH*0.5);
+  }
+}
+
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function drawCar(cx, cy, w, h, color, isPlayer){
+  const x = cx - w/2, y = cy - h/2;
+  const r = Math.min(w, h) * 0.18;
+  // body
+  ctx.fillStyle = color;
+  roundRect(x,y,w,h,r); ctx.fill();
+  // darker shade lower half
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  roundRect(x, y+h*0.5, w, h*0.5, r); ctx.fill();
+  // windshield (top portion, since top-down "forward" is up)
+  ctx.fillStyle = "rgba(20,30,50,0.85)";
+  roundRect(x+w*0.12, y+h*0.14, w*0.76, h*0.26, r*0.6); ctx.fill();
+  // rear window
+  ctx.fillStyle = "rgba(20,30,50,0.6)";
+  roundRect(x+w*0.16, y+h*0.62, w*0.68, h*0.2, r*0.6); ctx.fill();
+  // taillights (bottom edge = rear)
+  ctx.fillStyle = isPlayer ? "#ffcc00" : "#ff4444";
+  ctx.fillRect(x+w*0.1, y+h*0.9, w*0.18, h*0.06);
+  ctx.fillRect(x+w*0.72, y+h*0.9, w*0.18, h*0.06);
+  // headlights (top edge = front)
+  ctx.fillStyle = isPlayer ? "#ffffff" : "rgba(255,255,200,0.7)";
+  ctx.fillRect(x+w*0.1, y+h*0.04, w*0.18, h*0.05);
+  ctx.fillRect(x+w*0.72, y+h*0.04, w*0.18, h*0.05);
+  // outline
+  ctx.strokeStyle = "rgba(0,0,0,0.4)";
+  ctx.lineWidth = 1.5;
+  roundRect(x,y,w,h,r); ctx.stroke();
+}
+
+function drawBoostFlame(cx, y, w){
+  ctx.fillStyle = "rgba(255,170,0,0.8)";
+  const fl = laneW*0.5 + Math.random()*laneW*0.3;
+  ctx.beginPath();
+  ctx.moveTo(cx-w*0.3, y);
+  ctx.lineTo(cx, y+fl);
+  ctx.lineTo(cx+w*0.3, y);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "rgba(0,224,255,0.7)";
+  ctx.beginPath();
+  ctx.moveTo(cx-w*0.15, y);
+  ctx.lineTo(cx, y+fl*0.6);
+  ctx.lineTo(cx+w*0.15, y);
+  ctx.closePath(); ctx.fill();
+}
+
+function drawCan(c){
+  // nitro can: rounded body + cap
+  const x = c.x, y = c.y, r = c.r;
+  ctx.save();
+  ctx.translate(x,y);
+  // glow
+  ctx.fillStyle = "rgba(255,208,0,0.18)";
+  ctx.beginPath(); ctx.arc(0,0,r*1.6,0,Math.PI*2); ctx.fill();
+  // body
+  ctx.fillStyle = CONFIG.CAN_COLOR;
+  roundRect(-r, -r*1.1, r*2, r*2.2, r*0.4); ctx.fill();
+  // cap
+  ctx.fillStyle = "#b8860b";
+  ctx.fillRect(-r*0.5, -r*1.3, r, r*0.3);
+  // label "N"
+  ctx.fillStyle = "#3a2a00";
+  ctx.font = `800 ${Math.floor(r*1.1)}px system-ui`;
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText("N", 0, r*0.05);
+  ctx.restore();
+}
+
+/* ---------- HUD update ---------- */
+function updateHUD(){
+  distVal.textContent = Math.floor(distanceMeters);
+  speedVal.textContent = Math.floor(scrollSpeed/10) + (boosting?"+":"");
+  nitroFill.style.width = nitroMeter + "%";
+  nitroFill.classList.toggle('boosting', boosting);
+}
+
+/* ---------- Main loop ---------- */
+let lastTime = performance.now();
+let accumulator = 0;
+function loop(now){
+  let dt = (now - lastTime) / 1000;
+  lastTime = now;
+  if (dt > CONFIG.DT_CLAMP) dt = CONFIG.DT_CLAMP;
+  accumulator += dt;
+
+  let steps = 0;
+  while (accumulator >= CONFIG.FIXED_DT && steps < CONFIG.MAX_STEPS){
+    step(CONFIG.FIXED_DT);
+    accumulator -= CONFIG.FIXED_DT;
+    steps++;
+  }
+  if (steps === CONFIG.MAX_STEPS) accumulator = 0; // drop excess (spiral guard)
+
+  render();
+  if (state === STATE.PLAY) updateHUD();
+  requestAnimationFrame(loop);
+}
+
+/* ---------- Init ---------- */
+loadBest();
+titleBest.textContent = best;
+resize();
+player.x = laneCenter(player.lane);
+player.targetX = player.x;
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
