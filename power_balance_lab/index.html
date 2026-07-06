@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Power Balance Lab — Why the World Isn't a Matriarchy & How to Fix That</title>
+<meta name="description" content="An interactive lab exploring how patriarchy was historically constructed, the societies that prove alternatives work, and the evidence-based levers that rebalance power.">
+<style>
+  :root{
+    --bg:#0b0710;
+    --bg2:#120a1c;
+    --plum:#6d2a8a;
+    --plum2:#a14dba;
+    --teal:#1fb6a6;
+    --teal2:#2dd4bf;
+    --ink:#f4eefb;
+    --muted:#a99bbf;
+    --card:rgba(255,255,255,0.045);
+    --card-border:rgba(255,255,255,0.10);
+    --male:#7aa2ff;
+    --female:#ff8fb0;
+    --skew:#e06a6a;
+    --good:#5fd6a8;
+    --grad:linear-gradient(120deg,var(--plum) 0%,var(--plum2) 45%,var(--teal) 100%);
+    --radius:18px;
+    --maxw:1180px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 800px at 80% -10%,rgba(161,77,186,.18),transparent 60%),
+               radial-gradient(1000px 700px at -10% 20%,rgba(31,182,166,.12),transparent 55%),
+               var(--bg);
+    color:var(--ink);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{line-height:1.15;font-weight:800;letter-spacing:-.02em}
+  h2{font-size:clamp(1.7rem,4vw,2.6rem);margin:0 0 .4rem}
+  .eyebrow{color:var(--teal2);font-weight:700;letter-spacing:.18em;text-transform:uppercase;font-size:.78rem;margin:0 0 .6rem}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  section{padding:clamp(56px,9vw,110px) 0;position:relative}
+  .lead{color:var(--muted);font-size:1.05rem;max-width:60ch}
+
+  /* NAV */
+  nav{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(14px);
+    background:rgba(11,7,16,.72);
+    border-bottom:1px solid var(--card-border);
+  }
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px;gap:14px}
+  .brand{font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+  .brand span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  nav ul{display:flex;gap:6px;list-style:none;margin:0;padding:0;flex-wrap:wrap}
+  nav a{
+    color:var(--muted);text-decoration:none;font-size:.86rem;font-weight:600;
+    padding:7px 11px;border-radius:9px;transition:.2s;
+  }
+  nav a:hover,nav a.active{color:var(--ink);background:rgba(255,255,255,.07)}
+
+  /* HERO */
+  .hero{padding-top:clamp(70px,12vw,140px);padding-bottom:clamp(60px,10vw,120px)}
+  .hero .wrap{display:grid;gap:34px}
+  .hero h1{font-size:clamp(2.2rem,6.4vw,4.4rem);margin:0 0 18px}
+  .hero h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.sub{font-size:clamp(1.05rem,2.4vw,1.35rem);color:var(--muted);max-width:54ch;margin:0 0 26px}
+  .cta{
+    display:inline-flex;align-items:center;gap:9px;cursor:pointer;border:none;
+    background:var(--grad);color:#fff;font-weight:700;font-size:1rem;
+    padding:14px 24px;border-radius:12px;text-decoration:none;transition:transform .2s,box-shadow .2s;
+    box-shadow:0 10px 30px rgba(109,42,138,.4);
+  }
+  .cta:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(31,182,166,.4)}
+
+  /* POWER BAR (hero + default bias) */
+  .powerbar{max-width:680px}
+  .powerbar .scale{display:flex;justify-content:space-between;font-size:.74rem;color:var(--muted);margin-bottom:7px;font-weight:600}
+  .bar{height:30px;border-radius:30px;overflow:hidden;display:flex;background:rgba(255,255,255,.06);border:1px solid var(--card-border)}
+  .bar .m{background:linear-gradient(90deg,#5a7bd6,#7aa2ff);transition:width 1.6s cubic-bezier(.22,1,.36,1)}
+  .bar .f{background:linear-gradient(90deg,#ff8fb0,#e06a9b);transition:width 1.6s cubic-bezier(.22,1,.36,1)}
+  .powerbar .legend{display:flex;gap:18px;margin-top:10px;font-size:.82rem;color:var(--muted);flex-wrap:wrap}
+  .powerbar .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:middle}
+
+  /* CARDS / GLASS */
+  .card{
+    background:var(--card);border:1px solid var(--card-border);
+    border-radius:var(--radius);padding:24px;backdrop-filter:blur(8px);
+    transition:transform .25s,border-color .25s,background .25s;
+  }
+  .card:hover{transform:translateY(-4px);border-color:rgba(31,182,166,.4);background:rgba(255,255,255,.07)}
+  .grid{display:grid;gap:18px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .g4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+
+  /* TIMELINE */
+  .timeline{position:relative;margin-top:34px;padding-left:30px}
+  .timeline::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:3px;background:var(--grad);border-radius:3px}
+  .t-item{position:relative;margin-bottom:26px;opacity:0;transform:translateY(26px);transition:opacity .6s,transform .6s}
+  .t-item.in{opacity:1;transform:none}
+  .t-item::before{content:"";position:absolute;left:-30px;top:6px;width:15px;height:15px;border-radius:50%;background:var(--teal2);box-shadow:0 0 0 4px rgba(31,182,166,.18)}
+  .t-item h3{margin:0 0 4px;font-size:1.18rem}
+  .t-item .when{color:var(--teal2);font-weight:700;font-size:.8rem;letter-spacing:.05em}
+  .t-item p{margin:6px 0 0;color:var(--muted)}
+  .src{display:inline-block;margin-top:8px;font-size:.74rem;color:var(--muted);opacity:.85;font-style:italic}
+
+  /* PRESENT region bars */
+  .layer-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 26px}
+  .layer-tabs button{
+    cursor:pointer;border:1px solid var(--card-border);background:transparent;color:var(--muted);
+    padding:9px 15px;border-radius:30px;font-weight:700;font-size:.85rem;transition:.2s;
+  }
+  .layer-tabs button:hover{color:var(--ink)}
+  .layer-tabs button.on{background:var(--grad);color:#fff;border-color:transparent}
+  .region-row{display:grid;grid-template-columns:150px 1fr 56px;align-items:center;gap:14px;margin-bottom:14px}
+  .region-row .rname{font-weight:700;font-size:.92rem}
+  .rbar{height:16px;border-radius:16px;background:rgba(255,255,255,.06);overflow:hidden}
+  .rbar > span{display:block;height:100%;width:0;background:var(--grad);border-radius:16px;transition:width .9s cubic-bezier(.22,1,.36,1)}
+  .rval{font-weight:800;text-align:right;font-size:.9rem}
+  .present-note{font-size:.78rem;color:var(--muted);margin-top:6px;font-style:italic}
+
+  /* REFORM SIMULATOR */
+  .lab{display:grid;grid-template-columns:1fr 1.2fr;gap:26px}
+  @media(max-width:820px){.lab{grid-template-columns:1fr}}
+  .switches{display:grid;gap:12px}
+  .switch{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:14px 16px;cursor:pointer;
+    transition:.2s;user-select:none;
+  }
+  .switch:hover{border-color:rgba(31,182,166,.4)}
+  .switch.on{border-color:var(--teal2);background:rgba(31,182,166,.10)}
+  .switch .slabel{font-weight:700;font-size:.95rem}
+  .switch .ssub{font-size:.76rem;color:var(--muted);display:block;font-weight:500}
+  .toggle{width:50px;height:28px;border-radius:30px;background:rgba(255,255,255,.12);position:relative;flex-shrink:0;transition:.25s}
+  .toggle::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.25s}
+  .switch.on .toggle{background:var(--teal)}
+  .switch.on .toggle::after{left:25px}
+  .switch input{position:absolute;opacity:0;width:0;height:0}
+
+  .gauges{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  @media(max-width:480px){.gauges{grid-template-columns:1fr}}
+  .gauge-card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:18px;text-align:center}
+  .gauge{width:130px;height:130px;display:block;margin:0 auto}
+  .gauge-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:11}
+  .gauge-fg{fill:none;stroke:url(#ggrad);stroke-width:11;stroke-linecap:round;transform:rotate(-90deg);transform-origin:60px 60px;transition:stroke-dashoffset .9s cubic-bezier(.22,1,.36,1)}
+  .gauge-val{font-size:1.5rem;font-weight:800;fill:var(--ink)}
+  .gauge-label{font-size:.72rem;fill:var(--muted);font-weight:600}
+  .gauge-card .cap{font-size:.78rem;color:var(--muted);margin-top:6px}
+
+  .output{margin-top:22px;background:rgba(31,182,166,.08);border:1px solid rgba(31,182,166,.3);border-radius:14px;padding:18px 20px;font-size:1.05rem;min-height:64px}
+  .output b{color:var(--teal2)}
+  .lab-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;align-items:center}
+  .btn{
+    cursor:pointer;border:1px solid var(--card-border);background:transparent;color:var(--ink);
+    padding:11px 18px;border-radius:11px;font-weight:700;font-size:.9rem;transition:.2s;
+  }
+  .btn:hover{border-color:var(--teal2);color:var(--teal2)}
+  .disclosure{margin-top:14px}
+  .disclosure summary{cursor:pointer;color:var(--muted);font-size:.84rem;font-weight:700;list-style:none}
+  .disclosure summary::-webkit-details-marker{display:none}
+  .disclosure summary::before{content:"▸ ";color:var(--teal2)}
+  .disclosure[open] summary::before{content:"▾ "}
+  .disclosure p{font-size:.8rem;color:var(--muted);margin:10px 0 0}
+
+  /* DEFAULT BIAS */
+  .bias-stage{display:grid;grid-template-columns:1.4fr 1fr;gap:26px}
+  @media(max-width:820px){.bias-stage{grid-template-columns:1fr}}
+  .avatars{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:520px){.avatars{grid-template-columns:repeat(2,1fr)}}
+  .avatar{
+    background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:14px 8px;text-align:center;
+    transition:.3s;position:relative;
+  }
+  .avatar .face{width:46px;height:46px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;color:#0b0710}
+  .avatar.m .face{background:var(--male)}
+  .avatar.f .face{background:var(--female)}
+  .avatar .role{font-weight:700;font-size:.86rem}
+  .avatar .tag{font-size:.68rem;color:var(--muted);margin-top:3px;min-height:14px}
+  .avatar.conform{border-color:var(--skew);box-shadow:0 0 0 2px rgba(224,106,106,.25) inset}
+  .avatar.violate{border-color:var(--good);box-shadow:0 0 0 2px rgba(95,214,168,.25) inset}
+  .bias-controls{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+  .whylist{font-size:.82rem;color:var(--muted);margin-top:14px;padding-left:20px}
+  .whylist li{margin-bottom:5px}
+
+  /* FIX levers */
+  .lever{background:var(--card);border:1px solid var(--card-border);border-radius:14px;overflow:hidden}
+  .lever summary{cursor:pointer;list-style:none;padding:18px 20px;display:flex;justify-content:space-between;gap:12px;align-items:center;font-weight:700;font-size:1rem}
+  .lever summary::-webkit-details-marker{display:none}
+  .lever summary::after{content:"+";color:var(--teal2);font-size:1.3rem;transition:.2s}
+  .lever[open] summary::after{content:"–"}
+  .lever .body{padding:0 20px 20px;color:var(--muted);font-size:.92rem}
+  .lever .body b{color:var(--ink)}
+
+  /* FOOTER */
+  footer{border-top:1px solid var(--card-border);padding:54px 0 70px;background:rgba(0,0,0,.25)}
+  footer .reframe{font-size:1.15rem;max-width:60ch;margin-bottom:30px}
+  footer .reframe b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sources{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;font-size:.8rem;color:var(--muted)}
+  .sources div{background:var(--card);border:1px solid var(--card-border);border-radius:10px;padding:10px 13px}
+
+  .reveal{opacity:0;transform:translateY(30px);transition:opacity .7s,transform .7s}
+  .reveal.in{opacity:1;transform:none}
+
+  @media(prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+    .reveal,.t-item{opacity:1!important;transform:none!important}
+  }
+  @media(max-width:640px){
+    .region-row{grid-template-columns:110px 1fr 48px;gap:10px}
+    nav ul{display:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- SVG gradient def for gauges -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="ggrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a14dba"/>
+      <stop offset="100%" stop-color="#2dd4bf"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">Power Balance <span>Lab</span></div>
+    <ul>
+      <li><a href="#construction">Construction</a></li>
+      <li><a href="#exceptions">Exceptions</a></li>
+      <li><a href="#present">Present</a></li>
+      <li><a href="#simulator">Simulator</a></li>
+      <li><a href="#bias">Default Bias</a></li>
+      <li><a href="#fix">The Fix</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">An interactive lab</p>
+      <h1>Why the world isn't a <span class="g">matriarchy</span> — and what can be done to fix that.</h1>
+      <p class="sub">Patriarchy isn't biology. It's a historical construction — built by agriculture, property, warfare and law. Anything constructed can be dismantled. Step into the lab and rebalance power yourself.</p>
+      <a class="cta" href="#simulator">Run the lab →</a>
+    </div>
+    <div class="powerbar" aria-label="Global power balance">
+      <div class="scale"><span>Power held by men</span><span>Power held by women</span></div>
+      <div class="bar">
+        <div class="m" id="heroM" style="width:85%"></div>
+        <div class="f" id="heroF" style="width:15%"></div>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--male)"></i>Men — 27.5% of parliaments, ~80¢ on the dollar</span>
+        <span><i style="background:var(--female)"></i>Women</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- THE CONSTRUCTION -->
+<section id="construction">
+  <div class="wrap">
+    <p class="eyebrow">01 · The Construction</p>
+    <h2>Patriarchy was built — not born.</h2>
+    <p class="lead">Anthropologist Gerda Lerner showed that male dominance is "the product of historical development and is not 'natural' or biological and hence unchangeable." It emerged through specific, traceable mechanisms.</p>
+    <div class="timeline">
+      <div class="t-item">
+        <div class="when">~10,000 years ago</div>
+        <h3>Agriculture &amp; Property</h3>
+        <p>Farming created surplus, private property and inheritance. To guarantee legitimate heirs, men sought to control women's sexuality. Plow agriculture favored male upper-body strength, marginalizing women's economic role.</p>
+        <span class="src">BBC Future / Angela Saini (2023); UCL analysis (2022)</span>
+      </div>
+      <div class="t-item">
+        <div class="when">3100–600 BC · Near East</div>
+        <h3>Lerner's Historical Process</h3>
+        <p>Women's reproductive capacity was commodified; women were enslaved as war booty; subordination was codified in law (Code of Hammurabi); the patriarchal family became the basic unit of the state.</p>
+        <span class="src">Gerda Lerner, The Creation of Patriarchy (1986)</span>
+      </div>
+      <div class="t-item">
+        <div class="when">Across millennia</div>
+        <h3>Warfare &amp; Militarization</h3>
+        <p>Societies engaged in frequent warfare elevated male warriors to political leadership. Raiding produced captive women, entrenching the patriarchal family.</p>
+        <span class="src">Carol P. Christ; anthropological sources</span>
+      </div>
+      <div class="t-item">
+        <div class="when">The Boserup hypothesis</div>
+        <h3>Plow vs. Hoe</h3>
+        <p>Plow-based farming required upper-body strength, so men dominated food production and political power followed. Hoe-based farming — much of sub-Saharan Africa — kept women central to agriculture, so more egalitarian and matrilineal patterns persisted.</p>
+        <span class="src">Ester Boserup; UCL (2022)</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THE EXCEPTIONS -->
+<section id="exceptions">
+  <div class="wrap">
+    <p class="eyebrow">02 · The Exceptions</p>
+    <h2>Alternatives didn't just exist — they thrived for centuries.</h2>
+    <p class="lead">Matrilineal and matrifocal societies prove that power concentrated in one gender is not the only way to organize a society. (Note: matrilineal — descent through mothers — is not the same as a mirror-image matriarchy.)</p>
+    <div class="grid g4" style="margin-top:26px">
+      <div class="card reveal">
+        <h3>Minangkabau</h3>
+        <p class="lead" style="font-size:.92rem">West Sumatra, Indonesia · ~4 million people — the world's largest matrilineal society. Property and land pass through women; women control household economics. Peggy Reeves Sanday calls it a genuine matriarchy of <em>complementary</em>, not hierarchical, gender roles.</p>
+        <span class="src">Sanday, Women at the Center (2002)</span>
+      </div>
+      <div class="card reveal">
+        <h3>Mosuo</h3>
+        <p class="lead" style="font-size:.92rem">Yunnan/Sichuan, China · ~40,000 people. "Walking marriages" (zouhun): men visit at night, children belong to the mother's family. Women own houses, manage finances and head households; grandmothers lead.</p>
+        <span class="src">BBC</span>
+      </div>
+      <div class="card reveal">
+        <h3>Khasi</h3>
+        <p class="lead" style="font-size:.92rem">Meghalaya, India. Matrilineal society where the youngest daughter (khadduh) inherits the family property and acts as keeper of the ancestral home.</p>
+        <span class="src">Anthropological sources</span>
+      </div>
+      <div class="card reveal">
+        <h3>Bribri</h3>
+        <p class="lead" style="font-size:.92rem">Costa Rica. Matrilineal clan system in which women own and transfer land, preserving an indigenous power structure that predates colonial patriarchy.</p>
+        <span class="src">Anthropological sources</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THE PRESENT -->
+<section id="present">
+  <div class="wrap">
+    <p class="eyebrow">03 · The Present</p>
+    <h2>Where power still sits today.</h2>
+    <p class="lead">Toggle a layer to see how male-concentrated power looks across regions. Politics figures for the Americas and Europe are exact (IPU 2026); other regional values are illustrative approximations drawn from the cited global sources.</p>
+    <div class="layer-tabs" role="tablist" aria-label="Power layers">
+      <button class="on" data-layer="politics" role="tab" aria-selected="true">Politics</button>
+      <button data-layer="economics" role="tab" aria-selected="false">Economics</button>
+      <button data-layer="care" role="tab" aria-selected="false">Care</button>
+      <button data-layer="legal" role="tab" aria-selected="false">Legal</button>
+    </div>
+    <div id="regionChart" aria-live="polite"></div>
+    <p class="present-note" id="presentNote"></p>
+  </div>
+</section>
+
+<!-- INTERACTIVE 1: REFORM SIMULATOR -->
+<section id="simulator">
+  <div class="wrap">
+    <p class="eyebrow">04 · Interactive — Reform Simulator</p>
+    <h2>Flip the levers. Watch power rebalance.</h2>
+    <p class="lead">Each switch is an evidence-based reform. Turn them on and the four gauges animate in real time. This is a transparent model — not a forecast.</p>
+    <div class="lab" style="margin-top:28px">
+      <div>
+        <h3 style="font-size:1.1rem;margin:0 0 14px">Policy levers</h3>
+        <div class="switches" id="switches"></div>
+        <div class="lab-actions">
+          <button class="btn" id="resetBtn">Reset</button>
+        </div>
+        <details class="disclosure">
+          <summary>How we model this</summary>
+          <p>Each lever adds a bounded delta, then values are capped at realistic ceilings (parliament ≤ 61%, pay gap ≥ 5%, unpaid care ≥ 55%, labor lift ≤ 8 pts). Baselines: parliament 27.5% (IPU 2026), pay gap ~20% (ILO/UN Women), unpaid care 76.2% (UNDP 2024), labor lift 0. Effects &amp; evidence strength: <b>quotas</b> → +30 pts parliament (ceiling based on Rwanda 61% / Mexico 50%+; the global average with quotas is lower — IPU, IDEA); <b>childcare</b> → up to +6.6 pts labor (World Bank estimate of the care-burden drag) &amp; −4 pay gap &amp; −8 care; <b>father-paid leave</b> → −13.2 care (the ~55% target is a modeled projection based on most-egalitarian Nordic patterns, OECD — not a direct citation) &amp; −2 pay gap; <b>pay transparency</b> → −11 pay gap (5% is the EU Pay Transparency Directive benchmark threshold, 2023); <b>girls' education</b> → +3 parliament, −2 pay gap, +2 labor (long-term, indirect effect; 10–20% earnings lift per year of schooling, World Bank); <b>legal reform</b> → +2 parliament, −1 pay gap, +1 labor (an enabling factor that removes legal barriers, UN Women Equality in Law; direct quantified gauge impact is not available). Additive and simplified by design — this is a transparent model, not a precise forecast.</p>
+        </details>
+      </div>
+      <div>
+        <h3 style="font-size:1.1rem;margin:0 0 14px">Live outcomes</h3>
+        <div class="gauges" id="gauges"></div>
+        <div class="output" id="output" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERACTIVE 2: DEFAULT BIAS -->
+<section id="bias">
+  <div class="wrap">
+    <p class="eyebrow">05 · Interactive — Default Bias</p>
+    <h2>Neutrality isn't neutral.</h2>
+    <p class="lead">Eight anonymous avatars. Shuffle roles randomly — then reveal the hidden layer: cultural defaults still expect men to lead and women to care. Flip the defaults and watch the power bar move. This is observation, not accusation.</p>
+    <div class="bias-stage" style="margin-top:26px">
+      <div>
+        <div class="avatars" id="avatars"></div>
+        <div class="bias-controls">
+          <button class="btn" id="shuffleBtn">Shuffle roles</button>
+          <button class="btn" id="defaultsBtn">Show cultural defaults</button>
+          <button class="btn" id="flipBtn">Flip the defaults</button>
+        </div>
+        <ul class="whylist" id="whylist" style="display:none"></ul>
+      </div>
+      <div>
+        <div class="card">
+          <h3 style="font-size:1.05rem;margin:0 0 10px">Power held by high-authority roles</h3>
+          <p class="lead" style="font-size:.84rem;margin:0 0 14px">Leader · Decider · Owner · Earner — who holds them?</p>
+          <div class="powerbar">
+            <div class="scale"><span>Men</span><span>Women</span></div>
+            <div class="bar">
+              <div class="m" id="biasM" style="width:50%"></div>
+              <div class="f" id="biasF" style="width:50%"></div>
+            </div>
+          </div>
+          <p class="lead" style="font-size:.84rem;margin:14px 0 0" id="biasReadout">Shuffle to assign roles at random.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THE FIX -->
+<section id="fix">
+  <div class="wrap">
+    <p class="eyebrow">06 · The Fix</p>
+    <h2>Eight evidence-based levers.</h2>
+    <p class="lead">"Fix that" doesn't mean install a mirror-image matriarchy. It means dismantling the structures that concentrate power in one gender — building systems where power is shared. Each lever below has a proven track record.</p>
+    <div class="grid g2" style="margin-top:26px" id="levers"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="reframe">The goal isn't <b>women dominating men</b> — it's <b>shared power</b>. The Minangkabau model shows a society where women hold economic authority and gender roles are complementary, not hierarchical. That's the north star: balance, not reversal.</p>
+    <p class="eyebrow">Sources</p>
+    <div class="sources">
+      <div>Gerda Lerner, <em>The Creation of Patriarchy</em> (1986) — patriarchy as historical process, 3100–600 BC</div>
+      <div>Peggy Reeves Sanday, <em>Women at the Center</em> (2002) — Minangkabau as matriarchy</div>
+      <div>BBC Future / Angela Saini (2023) — origins of patriarchy, agriculture theory</div>
+      <div>IPU (2026) — 27.5% women in parliament globally; Americas 35.6%, Europe 33.4%</div>
+      <div>UN Women — leadership, unpaid care, 2.5B legally discriminated women</div>
+      <div>UNDP (2024) — women perform 76.2% of unpaid care work globally</div>
+      <div>World Bank — unpaid care cuts labor participation 6.6 pts; girls' education ROI</div>
+      <div>OECD (2023/2025) — pay gap 11% median; unpaid work persistence</div>
+      <div>G20/Brazil (2024) — unpaid care subsidizes economy by $10T/year</div>
+      <div>IDEA (2024) — Africa parity not until ~2100 at current rate</div>
+      <div>IPU Atlas of Electoral Gender Quotas / IDEA — quotas most effective tool</div>
+      <div>Electoral Reform Society (UK) / IPU — PR + quotas = fastest path to parity</div>
+      <div>European Commission — EU Pay Transparency Directive (2023)</div>
+    </div>
+    <p class="src" style="margin-top:24px">Power Balance Lab · an interactive explainer. Modeled figures are illustrative and transparent; see "How we model this."</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- NAV active link ---------- */
+  var navLinks = document.querySelectorAll('nav a');
+  var sections = [];
+  navLinks.forEach(function(a){ var id=a.getAttribute('href').slice(1); var s=document.getElementById(id); if(s) sections.push(s); });
+  if('IntersectionObserver' in window){
+    var navObs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          navLinks.forEach(function(l){ l.classList.remove('active'); });
+          var active = document.querySelector('nav a[href="#'+e.target.id+'"]');
+          if(active) active.classList.add('active');
+        }
+      });
+    },{rootMargin:'-45% 0px -50% 0px'});
+    sections.forEach(function(s){ navObs.observe(s); });
+  }
+
+  /* ---------- HERO power bar: skewed -> balanced ---------- */
+  function setHero(mPct){
+    document.getElementById('heroM').style.width = mPct+'%';
+    document.getElementById('heroF').style.width = (100-mPct)+'%';
+  }
+  setTimeout(function(){ setHero(50); }, 500);
+
+  /* ---------- SCROLL REVEAL ---------- */
+  var revealEls = document.querySelectorAll('.reveal, .t-item');
+  if('IntersectionObserver' in window && !reduceMotion){
+    var revObs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); revObs.unobserve(e.target); } });
+    },{threshold:0.18});
+    revealEls.forEach(function(el){ revObs.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add('in'); });
+  }
+
+  /* ---------- THE PRESENT: region bars ---------- */
+  var regionData = {
+    politics:{unit:'%',label:"Women in parliament",note:"Americas 35.6% & Europe 33.4% are exact (IPU 2026); others illustrative. Global avg 27.5%.",regions:{
+      'Americas':35.6,'Europe':33.4,'Sub-Saharan Africa':26,'Asia':22,'Middle East / N. Africa':18,'Pacific':16}},
+    economics:{unit:'%',label:"Gender pay gap",note:"Illustrative regional gaps around the ~20% global average (ILO/UN Women). OECD/Europe ~11%.",regions:{
+      'Middle East / N. Africa':35,'Sub-Saharan Africa':28,'Asia':20,'Americas':18,'Europe':11,'Pacific':15}},
+    care:{unit:'%',label:"Women's share of unpaid care",note:"Around the 76.2% global average (UNDP 2024). Women spend 2.4 more hrs/day than men (World Bank).",regions:{
+      'Asia':80,'Middle East / N. Africa':79,'Sub-Saharan Africa':77,'Pacific':76,'Americas':74,'Europe':72}},
+    legal:{unit:'%',label:"Women facing legal discrimination",note:"Illustrative share of women in countries with ≥1 legal discrimination (UN Women: 2.5B globally).",regions:{
+      'Middle East / N. Africa':80,'Asia':55,'Sub-Saharan Africa':45,'Pacific':40,'Americas':25,'Europe':15}}
+  };
+  var regionChart = document.getElementById('regionChart');
+  var presentNote = document.getElementById('presentNote');
+  function renderRegion(layer){
+    var d = regionData[layer];
+    regionChart.innerHTML = '';
+    Object.keys(d.regions).forEach(function(name){
+      var v = d.regions[name];
+      var row = document.createElement('div');
+      row.className = 'region-row';
+      row.innerHTML = '<div class="rname">'+name+'</div>'+
+        '<div class="rbar"><span></span></div>'+
+        '<div class="rval">'+v+d.unit+'</div>';
+      regionChart.appendChild(row);
+      var span = row.querySelector('span');
+      var w = Math.min(v,100);
+      requestAnimationFrame(function(){ span.style.width = w+'%'; });
+    });
+    presentNote.textContent = d.note;
+  }
+  renderRegion('politics');
+  document.querySelectorAll('.layer-tabs button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.layer-tabs button').forEach(function(b){ b.classList.remove('on'); b.setAttribute('aria-selected','false'); });
+      btn.classList.add('on'); btn.setAttribute('aria-selected','true');
+      renderRegion(btn.getAttribute('data-layer'));
+    });
+  });
+
+  /* ---------- REFORM SIMULATOR ---------- */
+  var levers = [
+    {key:'quotas',label:'Gender quotas',sub:'Reserved/legislated candidate seats'},
+    {key:'childcare',label:'Universal childcare',sub:'Affordable care for all families'},
+    {key:'fatherleave',label:'Father-paid leave',sub:'"Use-it-or-lose-it" dad quotas'},
+    {key:'transparency',label:'Pay transparency',sub:'Report & justify gender pay gaps'},
+    {key:'education',label:"Girls' education",sub:'Keep girls in school longer'},
+    {key:'legal',label:'Legal reform',sub:'Repeal discriminatory laws'}
+  ];
+  var state = {quotas:false,childcare:false,fatherleave:false,transparency:false,education:false,legal:false};
+  var switchesEl = document.getElementById('switches');
+  levers.forEach(function(l){
+    var div = document.createElement('div');
+    div.className = 'switch';
+    div.setAttribute('role','switch'); div.setAttribute('aria-checked','false'); div.tabIndex=0;
+    div.innerHTML = '<div><span class="slabel">'+l.label+'</span><span class="ssub">'+l.sub+'</span></div>'+
+      '<div class="toggle"></div>';
+    function toggle(){
+      state[l.key] = !state[l.key];
+      div.classList.toggle('on', state[l.key]);
+      div.setAttribute('aria-checked', state[l.key]?'true':'false');
+      updateSim();
+    }
+    div.addEventListener('click', toggle);
+    div.addEventListener('keydown', function(e){ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); toggle(); } });
+    switchesEl.appendChild(div);
+  });
+
+  var gauges = [
+    {key:'parl',label:'Women in parliament',unit:'%',max:100,baseline:27.5},
+    {key:'gap',label:'Gender pay gap',unit:'%',max:30,baseline:20},
+    {key:'care',label:"Women's unpaid care",unit:'%',max:100,baseline:76.2},
+    {key:'lift',label:'Labor-force lift',unit:'pts',max:10,baseline:0}
+  ];
+  var CIRC = 2*Math.PI*52;
+  var gaugesEl = document.getElementById('gauges');
+  gauges.forEach(function(g){
+    var card = document.createElement('div');
+    card.className = 'gauge-card';
+    card.innerHTML = '<svg class="gauge" viewBox="0 0 120 120" role="img" aria-label="'+g.label+'">'+
+      '<circle class="gauge-bg" cx="60" cy="60" r="52"></circle>'+
+      '<circle class="gauge-fg" cx="60" cy="60" r="52" stroke-dasharray="'+CIRC.toFixed(2)+'" stroke-dashoffset="'+CIRC.toFixed(2)+'" id="fg_'+g.key+'"></circle>'+
+      '<text class="gauge-val" x="60" y="62" text-anchor="middle" id="val_'+g.key+'">'+g.baseline+g.unit+'</text>'+
+      '<text class="gauge-label" x="60" y="82" text-anchor="middle">'+g.label+'</text>'+
+      '</svg>';
+    gaugesEl.appendChild(card);
+  });
+
+  function compute(){
+    var parl = 27.5 + (state.quotas?30:0) + (state.education?3:0) + (state.legal?2:0);
+    parl = Math.min(parl,61);
+    var gap = 20 - (state.transparency?11:0) - (state.childcare?4:0) - (state.fatherleave?2:0) - (state.education?2:0) - (state.legal?1:0);
+    gap = Math.max(gap,5);
+    var care = 76.2 - (state.childcare?8:0) - (state.fatherleave?13.2:0);
+    care = Math.max(care,55);
+    var lift = 0 + (state.childcare?6.6:0) + (state.education?2:0) + (state.legal?1:0);
+    lift = Math.min(lift,8);
+    return {parl:parl,gap:gap,care:care,lift:lift};
+  }
+
+  var tweenIds = {};
+  function animateGauge(key,val,unit,max){
+    var fg = document.getElementById('fg_'+key);
+    var valEl = document.getElementById('val_'+key);
+    var targetOffset = CIRC*(1 - Math.min(val,max)/max);
+    if(reduceMotion){
+      fg.style.strokeDashoffset = targetOffset;
+      valEl.textContent = (Math.round(val*10)/10)+unit;
+      return;
+    }
+    if(tweenIds[key]) cancelAnimationFrame(tweenIds[key]);
+    var startOff = parseFloat(fg.style.strokeDashoffset)||CIRC;
+    var startVal = parseFloat(valEl.textContent)||0;
+    var t0 = null, dur = 700;
+    function step(ts){
+      if(!t0) t0 = ts;
+      var p = Math.min((ts-t0)/dur,1);
+      var e = 1-Math.pow(1-p,3);
+      fg.style.strokeDashoffset = (startOff+(targetOffset-startOff)*e).toFixed(2);
+      var cur = startVal+(val-startVal)*e;
+      valEl.textContent = (Math.round(cur*10)/10)+unit;
+      if(p<1) tweenIds[key] = requestAnimationFrame(step);
+    }
+    tweenIds[key] = requestAnimationFrame(step);
+  }
+
+  function updateSim(){
+    var r = compute();
+    animateGauge('parl',r.parl,'%',100);
+    animateGauge('gap',r.gap,'%',30);
+    animateGauge('care',r.care,'%',100);
+    animateGauge('lift',r.lift,'pts',10);
+    var active = levers.filter(function(l){ return state[l.key]; }).map(function(l){ return l.label; });
+    var out = document.getElementById('output');
+    if(active.length===0){
+      out.innerHTML = 'No reforms active — the power balance stays where it is: women hold <b>27.5%</b> of parliamentary seats, the pay gap sits at <b>~20%</b>, and women do <b>76.2%</b> of unpaid care.';
+    } else {
+      out.innerHTML = 'With <b>'+active.join(' + ')+'</b>, women would hold <b>~'+Math.round(r.parl)+'%</b> of parliamentary seats, the pay gap would narrow to <b>~'+(Math.round(r.gap*10)/10)+'%</b>, women\'s share of unpaid care would fall to <b>~'+Math.round(r.care)+'%</b>, and female labor-force participation would rise by <b>~'+(Math.round(r.lift*10)/10)+' points</b>.';
+    }
+  }
+  document.getElementById('resetBtn').addEventListener('click', function(){
+    Object.keys(state).forEach(function(k){ state[k]=false; });
+    document.querySelectorAll('.switch').forEach(function(s){ s.classList.remove('on'); s.setAttribute('aria-checked','false'); });
+    updateSim();
+  });
+  updateSim();
+
+  /* ---------- DEFAULT BIAS ---------- */
+  var roles = [
+    {name:'Leader',power:'high',def:'M',why:'Leadership is culturally coded masculine; men are presumed authoritative.'},
+    {name:'Decider',power:'high',def:'M',why:'Final-say roles default to men in most inheritance & family law traditions.'},
+    {name:'Owner',power:'high',def:'M',why:'Property and land ownership has historically been vested in men.'},
+    {name:'Earner',power:'high',def:'M',why:'The "provider" wage is culturally assigned to men; women\'s work is seen as secondary.'},
+    {name:'Provider',power:'mid',def:'N',why:'Provision is shared in theory, but prestige still skews to male earners.'},
+    {name:'Voice',power:'mid',def:'N',why:'Public speech is notionally open, yet men dominate panels, media & debate.'},
+    {name:'Caregiver',power:'low',def:'F',why:'Care is treated as "natural" women\'s work — unpaid and invisible.'},
+    {name:'Support',power:'low',def:'F',why:'Supportive, behind-the-scenes labor defaults to women.'}
+  ];
+  var avatarsG = ['M','M','M','M','F','F','F','F'];
+  var order = [0,1,2,3,4,5,6,7]; // role index held by avatar position
+  var showDefaults = false;
+  var avatarsEl = document.getElementById('avatars');
+  var whylist = document.getElementById('whylist');
+
+  function shuffle(arr){ var a=arr.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+
+  function powerSplit(){
+    var m=0,f=0;
+    order.forEach(function(roleIdx,pos){
+      if(roles[roleIdx].power==='high'){ if(avatarsG[pos]==='M') m++; else f++; }
+    });
+    var tot=m+f; if(tot===0) return {m:50,f:50};
+    return {m:Math.round(m/tot*100), f:Math.round(f/tot*100)};
+  }
+
+  function renderBias(){
+    avatarsEl.innerHTML = '';
+    order.forEach(function(roleIdx,pos){
+      var g = avatarsG[pos];
+      var role = roles[roleIdx];
+      var div = document.createElement('div');
+      div.className = 'avatar '+g.toLowerCase();
+      var tag = '';
+      if(showDefaults){
+        var conform = (role.def===g);
+        if(role.def!=='N'){
+          div.classList.add(conform?'conform':'violate');
+          tag = conform ? 'matches default' : 'breaks default';
+        } else { tag = 'no strong default'; }
+      }
+      div.innerHTML = '<div class="face">'+g+'</div>'+
+        '<div class="role">'+role.name+'</div>'+
+        '<div class="tag">'+tag+'</div>';
+      avatarsEl.appendChild(div);
+    });
+    var sp = powerSplit();
+    document.getElementById('biasM').style.width = sp.m+'%';
+    document.getElementById('biasF').style.width = sp.f+'%';
+    var ro = document.getElementById('biasReadout');
+    if(showDefaults){
+      ro.innerHTML = 'Men hold <b>'+sp.m+'%</b> of high-authority roles. Even under random assignment, cultural defaults push power roles toward men and care roles toward women.';
+    } else {
+      ro.innerHTML = 'Roles assigned at random. Men hold <b>'+sp.m+'%</b> of high-authority roles. Toggle "Show cultural defaults" to see the hidden skew.';
+    }
+    if(showDefaults){
+      whylist.style.display='block';
+      whylist.innerHTML = roles.filter(function(r){return r.def!=='N';}).map(function(r){
+        return '<li><b>'+r.name+'</b> → default '+r.def+': '+r.why+'</li>';
+      }).join('');
+    } else {
+      whylist.style.display='none';
+    }
+  }
+
+  document.getElementById('shuffleBtn').addEventListener('click', function(){
+    order = shuffle([0,1,2,3,4,5,6,7]);
+    renderBias();
+  });
+  document.getElementById('defaultsBtn').addEventListener('click', function(){
+    showDefaults = !showDefaults;
+    this.textContent = showDefaults ? 'Hide cultural defaults' : 'Show cultural defaults';
+    renderBias();
+  });
+  document.getElementById('flipBtn').addEventListener('click', function(){
+    // Rebalance: 2 high-power roles to women, 2 to men => 50/50
+    order = [2,3,4,5,0,1,6,7]; // M:Owner,Earner,Provider,Voice | F:Leader,Decider,Caregiver,Support
+    renderBias();
+  });
+  renderBias();
+
+  /* ---------- THE FIX: expandable levers ---------- */
+  var fixLevers = [
+    {t:'Electoral gender quotas',b:'The single most effective tool for rapidly increasing women\'s representation. <b>Rwanda</b> reached 61% women in parliament — the highest in the world — via constitutional quota. <b>Mexico</b> achieved 50%+ through parity reform.',s:'IPU Atlas of Electoral Gender Quotas; IDEA'},
+    {t:'Universal childcare',b:'The biggest single lever for women\'s labor-force participation. <b>Norway</b> evidence shows a feedback loop: more women in local government → more childcare → more women in government.',s:'World Bank 2024; OECD; ScienceDirect (Norway)'},
+    {t:'Paid parental leave (father quotas)',b:'"Use-it-or-lose-it" father quotas in <b>Iceland, Sweden & Quebec</b> increase men\'s caregiving and reduce the motherhood penalty.',s:'OECD; Factly.co'},
+    {t:'Pay transparency & enforcement',b:'The <b>EU Pay Transparency Directive (2023)</b> requires firms to report gaps and justify any gap &gt;5%. <b>Iceland</b> made it illegal to pay men more for equal work via Equal Pay Certification.',s:'European Commission; OECD'},
+    {t:"Girls' education",b:'The highest-ROI development investment. Each extra year of schooling raises a woman\'s earnings by <b>10–20%</b>, delays marriage, lowers fertility and raises political participation.',s:'World Bank; UN Women'},
+    {t:'Legal reform',b:'Repealing discriminatory property, inheritance, marriage, travel and employment laws. <b>75 countries</b> have reformed such laws since 2015 — but gaps remain.',s:'UN Women "Equality in Law"; World Bank WBL'},
+    {t:'Electoral system reform',b:'Proportional representation (PR) systems consistently elect more women than first-past-the-post. <b>PR + quotas</b> is the fastest documented path to parity.',s:'Electoral Reform Society (UK); IPU'},
+    {t:'Social movements & cultural change',b:'<b>#MeToo</b> and <b>Ni Una Menos</b> shifted norms and policy. Grassroots organizing sustains legal and political gains that laws alone cannot hold.',s:'Multiple sources'}
+  ];
+  var leversEl = document.getElementById('levers');
+  fixLevers.forEach(function(l){
+    var d = document.createElement('details');
+    d.className = 'lever reveal';
+    d.innerHTML = '<summary>'+l.t+'</summary><div class="body"><p>'+l.b+'</p><span class="src">'+l.s+'</span></div>';
+    leversEl.appendChild(d);
+  });
+  // observe newly added reveals
+  if('IntersectionObserver' in window && !reduceMotion){
+    var fixObs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); fixObs.unobserve(e.target); } });
+    },{threshold:0.12});
+    document.querySelectorAll('.lever.reveal').forEach(function(el){ fixObs.observe(el); });
+  } else {
+    document.querySelectorAll('.lever.reveal').forEach(function(el){ el.classList.add('in'); });
+  }
+
+})();
+</script>
+</body>
+</html>
